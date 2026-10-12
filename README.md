@@ -180,7 +180,7 @@ Copyright (C) 2026 Miroslav Bakoš. See [LICENSE](LICENSE) for GPLv3 terms.
 Required library licence texts and matching weak-copyleft source archives are
 preserved under `packaging/third-party-licenses/` and
 `packaging/third-party-sources/`. Astronomy datasets retain their own notices.
-This directory is a private preparation candidate, not a published release.
+This repository publishes source code; validated binary releases are still pending.
 
 ## Optional background
 
