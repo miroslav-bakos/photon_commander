@@ -50,21 +50,14 @@ GPL licence and from the application installers.
 
 </details>
 
-## Live stacking and mobile access
+## Mobile access
 
-Live stacking on desktop, with calibration controls and an accumulating preview:
+The same application on a phone — observing status and equipment details:
 
-![Photon Commander desktop live stacking](docs/images/en/live-stack.jpg)
+<img src=".github/images/mobile-observe.jpg" alt="Photon Commander observing dashboard on mobile" width="300">
 
-The same application on a phone — observing status and live stacking:
-
-<p>
-  <img src=".github/images/mobile-observe.jpg" alt="Photon Commander observing dashboard on mobile" width="300">
-  <img src=".github/images/mobile-live-stack.jpg" alt="Photon Commander live stacking on mobile" width="300">
-</p>
-
-These interface examples use fictional settings and an illustrative star field;
-they are not captured observations or hardware-validation results.
+This interface example uses fictional settings and status;
+it does not represent a hardware-validation result.
 
 ## Platforms
 
