@@ -33,6 +33,13 @@ PyInstaller is a build tool. Its official bootloader exception permits generated
 commercial bundles under the application's own licence. PyInstaller itself is
 not installed as an importable package in the shipped runtime.
 
+`macholib` 1.16.4 is a Darwin build dependency of PyInstaller under the MIT
+licence, copyright Bob Ippolito (2006–2010) and Ronald Oussoren (2010–2020).
+Its exact upstream notice is retained as `third-party-licenses/MIT-macholib.txt`.
+Source: <https://github.com/ronaldoussoren/macholib> and the checksum-pinned
+PyPI source distribution in `uv.lock`. Photon does not import it directly;
+the notice remains included whether or not a native artifact contains it.
+
 ## Bundled astronomy data
 
 - `data/catalog/openngc.csv` is adapted from OpenNGC by Mattia Verga and remains

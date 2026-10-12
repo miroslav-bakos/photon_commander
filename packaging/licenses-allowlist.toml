@@ -149,6 +149,19 @@ status = "ok"
 license = "MIT License"
 status = "ok"
 
+[packages.macholib]
+license = "MIT License"
+status = "ok"
+note = """
+macholib==1.16.4 is PyInstaller's Darwin-only build dependency in uv.lock,
+not a Photon application import. The locked official PyPI source archive was
+SHA256-verified before copying its LICENSE byte-for-byte to
+third-party-licenses/MIT-macholib.txt. Copyright 2006-2010 Bob Ippolito;
+Copyright 2010-2020 Ronald Oussoren. Upstream: https://github.com/ronaldoussoren/macholib
+No runtime bundle exclusion is claimed before inspecting the compiled artifact;
+the notice is shipped with package legal material regardless.
+"""
+
 [packages.mdurl]
 license = "MIT License"
 status = "ok"
