@@ -29,10 +29,14 @@ def test_appimage_extraction_uses_isolation_and_allowlisted_environment(tmp_path
     for key in ['GH_TOKEN', 'ACTIONS_RUNTIME_TOKEN', 'ACTIONS_ID_TOKEN_REQUEST_TOKEN',
                 'ACTIONS_ID_TOKEN_REQUEST_URL', 'GITHUB_TOKEN', 'SSC_SECRET', 'HTTP_PROXY']:
         monkeypatch.setenv(key, 'must-not-reach-candidate')
+    monkeypatch.setenv('HOME', '/home/synthetic-runner')
     calls = []
 
     class Process:
         pid = 123456
+
+        def __init__(self):
+            self.stdout = io.BytesIO()
 
         def wait(self, timeout):
             return 0
@@ -50,7 +54,17 @@ def test_appimage_extraction_uses_isolation_and_allowlisted_environment(tmp_path
                                   'GITHUB_ACTIONS', 'RUNNER_ENVIRONMENT'}
     assert options['start_new_session'] is True
     if system == 'Darwin':
-        assert '(deny network*)' in (tmp_path / 'network.sb').read_text()
+        profile = (tmp_path / 'network.sb').read_text()
+        assert '(deny network*)' in profile
+        assert '127.0.0.1:*' not in profile
+        assert profile.count('localhost:*') == 3
+    else:
+        # sudo may reset HOME; setpriv does not restore it. Reapply the entire
+        # minimal environment after dropping privileges, not before sudo.
+        assert command.index('/usr/bin/env') > command.index('--init-groups')
+        assert command[command.index('/usr/bin/env') + 1] == '-i'
+        assert 'HOME=/home/synthetic-runner' in command
+        assert 'must-not-reach-candidate' not in ' '.join(command)
 
 
 def test_isolation_failure_does_not_fallback(tmp_path, monkeypatch):
@@ -60,12 +74,15 @@ def test_isolation_failure_does_not_fallback(tmp_path, monkeypatch):
     class Process:
         pid = 123456
 
+        def __init__(self):
+            self.stdout = io.BytesIO()
+
         def wait(self, timeout):
             return 1
 
     monkeypatch.setattr(validation.subprocess, 'Popen', lambda cmd, **kwargs: calls.append(cmd) or Process())
     monkeypatch.setattr(validation.os, 'killpg', lambda *_: None)
-    with pytest.raises(RuntimeError, match='isolated candidate failed'):
+    with pytest.raises(RuntimeError, match='candidate process failed'):
         validation.run_isolated(['candidate'], tmp_path)
     assert len(calls) == 1
 
@@ -136,3 +153,135 @@ def test_candidate_identity_independent_of_workflow_revision(tmp_path, monkeypat
     else:
         with pytest.raises(RuntimeError, match='embedded COMMIT mismatch'):
             validation.prepare(args, work)
+
+
+@pytest.mark.parametrize(('message', 'category'), [
+    (b'host must be * or localhost', 'sandbox_profile_invalid'),
+    (b'PermissionError: secret-path', 'permission_denied'),
+    (b'error while loading shared libraries: secret-path', 'dynamic_library_missing'),
+    (b'unknown error: private-token-value', 'unknown'),
+])
+def test_private_output_is_bounded_and_only_classifies(message, category):
+    output = validation.PrivateOutput(io.BytesIO(message + b'private-token-value' * 10000))
+    result = output.diagnostics('backend_startup', 1)
+    assert len(output.data) <= output.LIMIT
+    assert result == {'stage': 'backend_startup', 'returncode': 1, 'classifier': category}
+    assert 'private-token' not in json.dumps(result)
+    assert 'secret-path' not in json.dumps(result)
+
+
+def test_process_failure_preserves_partial_checks():
+    failure = validation.ProcessFailureError({'stage': 'backend_startup', 'returncode': -6, 'classifier': 'unknown'},
+                                        {'cycle_1': {'health': True}})
+    assert failure.checks == {'cycle_1': {'health': True}}
+    assert failure.diagnostics['returncode'] == -6
+
+
+@pytest.mark.parametrize(('failure', 'expected_step', 'http_status'), [
+    ('startup', 'startup', 503),
+    ('pairing', 'pairing', 403),
+    ('location', 'location', 400),
+    ('save', 'save', 500),
+    ('reload', 'reload', 500),
+    ('compile', 'compile', 500),
+    ('schedule', 'compile', None),
+    ('websocket', 'websocket', None),
+    ('final_health', 'final_health', 503),
+])
+def test_smoke_failures_reach_sanitized_evidence(tmp_path, monkeypatch, failure, expected_step, http_status):
+    """Exercise smoke and main's real failure serialization, with no subprocess/network."""
+    monkeypatch.setenv('GITHUB_ACTIONS', 'true')
+    monkeypatch.setenv('RUNNER_ENVIRONMENT', 'github-hosted')
+    monkeypatch.setattr(validation.platform, 'system', lambda: 'Linux')
+    monkeypatch.setattr(validation.platform, 'machine', lambda: 'x86_64')
+    monkeypatch.setattr(validation.platform, 'platform', lambda: 'synthetic-test-platform')
+    monkeypatch.setattr(validation, 'seed', lambda *_: None)
+    monkeypatch.setattr(validation.time, 'sleep', lambda *_: None)
+    ticks = iter(range(0, 10000, 100))
+    monkeypatch.setattr(validation.time, 'monotonic', lambda: next(ticks))
+
+    class FakeSocket:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            pass
+
+        def bind(self, *_):
+            pass
+
+        def getsockname(self):
+            return ('127.0.0.1', 12345)
+
+    class FakeProcess:
+        def __init__(self, *_, **__):
+            self.stdout = io.BytesIO(b'private-token-do-not-publish')
+            self.code = None
+
+        def poll(self):
+            return self.code
+
+        def terminate(self):
+            self.code = 0
+
+        def wait(self, timeout):
+            return self.code
+
+    clients = []
+
+    class FakeClient:
+        def __init__(self, _):
+            self.health_calls = 0
+            self.cycle = len(clients)
+            clients.append(self)
+
+        def request(self, path, body=None, method=None):
+            if path == '/api/health':
+                self.health_calls += 1
+                step = 'startup' if self.health_calls == 1 else 'final_health'
+                result = {'status': 'ok'}
+            elif path == '/api/auth/pairing':
+                step, result = 'pairing', {'token': 'private-token-do-not-publish'}
+            elif path == '/api/auth/pair':
+                step, result = 'pairing', {'scope': 'control'}
+            elif path == '/api/settings/location/fix':
+                step, result = 'location', {}
+            elif path == '/api/plans':
+                step, result = 'save', {}
+            elif path.endswith('/compile'):
+                step = 'compile'
+                result = {'schedule': {'items': [{'start_utc': '2026-10-12T20:00:00Z'}] * 3}}
+                if failure == 'schedule':
+                    result['schedule']['items'] = []
+            else:
+                step, result = 'reload', {'document': {'id': 'native-smoke'}}
+            # Reload fails after a completed first cycle, exercising retained checks.
+            if step == failure and (failure != 'reload' or self.cycle == 1):
+                raise validation.urllib.error.HTTPError('https://private-token-do-not-publish', http_status,
+                                                        'secret body', {}, None)
+            return result
+
+        def websocket(self):
+            if failure == 'websocket':
+                raise RuntimeError('private-token-do-not-publish')
+
+    monkeypatch.setattr(validation.socket, 'socket', FakeSocket)
+    monkeypatch.setattr(validation.subprocess, 'Popen', FakeProcess)
+    monkeypatch.setattr(validation, 'Client', FakeClient)
+    evidence = tmp_path / 'result.json'
+    monkeypatch.setattr(validation.sys, 'argv', ['validate', '--target', 'linux-x86_64', '--commit', 'a' * 40,
+                        '--run', '1', '--evidence', str(evidence), '--isolated-binary', str(tmp_path / 'ssc-core'),
+                        '--work', str(tmp_path)])
+    with pytest.raises(SystemExit) as stopped:
+        validation.main()
+    assert stopped.value.code == 1
+    serialized = evidence.read_text()
+    result = json.loads(serialized)
+    assert result['process_failure']['stage'] == expected_step
+    assert result['process_failure'].get('http_status') == http_status
+    assert 'private-token' not in serialized
+    assert 'secret body' not in serialized
+    if failure == 'startup':
+        assert result['process_failure']['classifier'] == 'timeout'
+    if failure == 'reload':
+        assert result['completed_checks']['cycle_1']['compile_count'] == 3

@@ -22,7 +22,9 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import threading
 import time
+import urllib.error
 import urllib.request
 import zipfile
 from contextlib import suppress
@@ -65,26 +67,76 @@ def candidate_environment():
     return {key: value for key, value in os.environ.items() if key in allowed}
 
 
-def run_isolated(command, work, *, cwd=None, timeout=600):
+class ProcessFailureError(RuntimeError):
+    def __init__(self, diagnostics, checks=None):
+        super().__init__('candidate process failed')
+        self.diagnostics = diagnostics
+        self.checks = checks or {}
+
+
+class PrivateOutput:
+    """Drain the pipe without blocking the child; retain at most 64 KiB privately."""
+    LIMIT = 65536
+
+    def __init__(self, stream):
+        self.data = bytearray()
+        self.thread = threading.Thread(target=self._drain, args=(stream,), daemon=True)
+        self.thread.start()
+
+    def _drain(self, stream):
+        try:
+            while block := stream.read(4096):
+                remaining = self.LIMIT - len(self.data)
+                if remaining > 0:
+                    self.data.extend(block[:remaining])
+        finally:
+            stream.close()
+
+    def diagnostics(self, stage, returncode):
+        self.thread.join(timeout=2)
+        content = bytes(self.data).lower()
+        classifiers = (
+            ('sandbox_profile_invalid', (b'host must be', b'sandbox-exec: error', b'error parsing profile')),
+            ('sandbox_launch_denied', (b'sandbox-exec: sandbox_apply', b'sandbox-exec: exec')),
+            ('python_startup_failed', (b'fatal python error', b'could not find platform independent libraries')),
+            ('dynamic_library_missing', (b'error while loading shared libraries', b'library not loaded', b'dlopen(')),
+            ('configuration_invalid', (b'validationerror', b'validation error for appconfig', b'unrecognized arguments')),
+            ('sqlite_migration_failed', (b'migrationerror', b'sqlite3.operationalerror')),
+            ('alpaca_start_failed', (b'alpacahostingerror', b'ssc-alpaca failed to start')),
+            ('permission_denied', (b'permissionerror', b'permission denied', b'operation not permitted')),
+        )
+        category = next((name for name, patterns in classifiers if any(p in content for p in patterns)), 'unknown')
+        return {'stage': stage, 'returncode': returncode, 'classifier': category}
+
+
+def run_isolated(command, work, *, cwd=None, timeout=600, stage='isolation'):
     """The single fail-closed execution boundary for every candidate process."""
+    environment = candidate_environment()
     if platform.system() == 'Linux':
         command = ['sudo', '--preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT', 'unshare', '--net',
                    '--', 'sh', '-c', 'ip link set lo up && exec "$@"', 'sh',
                    'setpriv', '--reuid', str(os.getuid()), '--regid', str(os.getgid()),
-                   '--init-groups', *command]
+                   '--init-groups', '/usr/bin/env', '-i',
+                   *(f'{key}={value}' for key, value in sorted(environment.items())), *command]
     else:
         require(platform.system() == 'Darwin', 'unsupported isolation platform')
         profile = work / 'network.sb'
         profile.write_text('(version 1) (allow default) (deny network*)\n'
-                           '(allow network-bind (local ip "127.0.0.1:*"))\n'
-                           '(allow network-inbound (local ip "127.0.0.1:*"))\n'
-                           '(allow network-outbound (remote ip "127.0.0.1:*"))\n')
+                           '(allow network-bind (local ip "localhost:*"))\n'
+                           '(allow network-inbound (local ip "localhost:*"))\n'
+                           '(allow network-outbound (remote ip "localhost:*"))\n')
         command = ['/usr/bin/sandbox-exec', '-f', str(profile), *command]
-    isolated = subprocess.Popen(command, env=candidate_environment(), cwd=cwd,
-                                start_new_session=True, stdout=subprocess.DEVNULL,
-                                stderr=subprocess.DEVNULL)
+    isolated = subprocess.Popen(command, env=environment, cwd=cwd,
+                                start_new_session=True, stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT)
+    output = PrivateOutput(isolated.stdout)
     try:
-        require(isolated.wait(timeout=timeout) == 0, 'isolated candidate failed')
+        try:
+            returncode = isolated.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            raise ProcessFailureError({'stage': stage, 'returncode': None, 'classifier': 'timeout'}) from None
+        if returncode != 0:
+            raise ProcessFailureError(output.diagnostics(stage, returncode))
     finally:
         # Candidate descendants share a dedicated process group, including on
         # timeout or failure before the harness can perform normal cleanup.
@@ -99,7 +151,7 @@ def extract_package(package, payload, target, work):
                        env=candidate_environment(), stdout=subprocess.DEVNULL)
     elif target.startswith('linux'):
         package.chmod(0o700)
-        run_isolated([str(package), '--appimage-extract'], work, cwd=payload, timeout=120)
+        run_isolated([str(package), '--appimage-extract'], work, cwd=payload, timeout=120, stage='extraction')
     else:
         require(hasattr(tarfile, 'data_filter'), 'safe tar extraction unavailable')
         with tarfile.open(package) as bundle:
@@ -256,35 +308,59 @@ def smoke(binary, work):
     saved = None
     for cycle in range(2):
         process = subprocess.Popen([str(binary), '--no-mdns'], cwd=binary.parent, env=env,
-                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        output = PrivateOutput(process.stdout)
+        current_step = 'startup'
         try:
             client = Client(port)
             deadline = time.monotonic() + 90
             while True:
-                require(process.poll() is None, 'backend exited before health')
+                returncode = process.poll()
+                if returncode is not None:
+                    raise ProcessFailureError(output.diagnostics(current_step, returncode), checks)
                 try:
                     require(client.request('/api/health')['status'] == 'ok', 'startup health')
                     break
-                except (OSError, ValueError):
-                    require(time.monotonic() < deadline, 'startup timeout')
+                except (OSError, ValueError) as error:
+                    if time.monotonic() >= deadline:
+                        diagnostic = output.diagnostics(current_step, process.poll())
+                        diagnostic['classifier'] = 'timeout'
+                        if isinstance(error, urllib.error.HTTPError):
+                            diagnostic['http_status'] = error.code
+                        raise ProcessFailureError(diagnostic, checks) from None
                     time.sleep(1)
+            current_step = 'pairing'
             token = client.request('/api/auth/pairing')['token']
             require(client.request('/api/auth/pair', {'token': token})['scope'] == 'control', 'loopback pairing')
             if cycle == 0:
+                current_step = 'location'
                 client.request('/api/settings/location/fix', {'source': 'manual', 'latitude_deg': 45.0,
                                'longitude_deg': 10.0, 'timezone': 'Europe/Rome'}, 'PUT')
+                current_step = 'save'
                 client.request('/api/plans', {'document': document})
+                current_step = 'reload'
                 saved = client.request('/api/plans/native-smoke')
             else:
+                current_step = 'reload'
                 require(client.request('/api/plans/native-smoke') == saved, 'restart persistence')
+            current_step = 'compile'
             for _ in range(3):
                 result = client.request('/api/plans/native-smoke/compile', {'night_date': '2026-10-12'})
                 items = result['schedule']['items']
                 require(len(items) == len(document['items']) and all(i['start_utc'] for i in items), 'compiled schedule')
+            current_step = 'websocket'
             client.websocket()
+            current_step = 'final_health'
             require(process.poll() is None and client.request('/api/health')['status'] == 'ok', 'post-compile health')
             checks[f'cycle_{cycle + 1}'] = {'health': True, 'pairing': True, 'compile_count': 3,
                                           'websocket_snapshot': True, 'persistence': True}
+        except ProcessFailureError:
+            raise
+        except Exception as error:
+            diagnostic = output.diagnostics(current_step, process.poll())
+            if isinstance(error, urllib.error.HTTPError):
+                diagnostic['http_status'] = error.code
+            raise ProcessFailureError(diagnostic, checks) from None
         finally:
             if process.poll() is None:
                 process.terminate()
@@ -294,6 +370,7 @@ def smoke(binary, work):
                     process.kill()
                     process.wait(timeout=5)
             require(process.poll() is not None, 'backend cleanup')
+            output.thread.join(timeout=2)
     return checks
 
 
@@ -322,12 +399,14 @@ def main():
             work = Path(directory)
             binary, identity = prepare(args, work)
             evidence.update(identity)
+            run_isolated([sys.executable, '-I', '-c', 'pass'], work, timeout=30, stage='interpreter_probe')
+            evidence['interpreter_probe'] = 'passed'
             child_result = work / 'checks.json'
             command = [sys.executable, str(Path(__file__).resolve()), '--target', args.target,
                        '--commit', args.commit, '--run', args.run, '--evidence', str(child_result),
                        '--isolated-binary', str(binary), '--work', str(work)]
             try:
-                run_isolated(command, work)
+                run_isolated(command, work, stage='smoke_harness')
             finally:
                 if child_result.exists():
                     evidence['checks'] = json.loads(child_result.read_text())
@@ -336,6 +415,10 @@ def main():
     except Exception as error:
         # Do not emit exception text: urllib errors may contain sensitive URLs.
         evidence['failure_type'] = type(error).__name__
+        if isinstance(error, ProcessFailureError):
+            evidence['process_failure'] = error.diagnostics
+            if error.checks:
+                evidence['completed_checks'] = error.checks
         if type(error) is RuntimeError:
             evidence['failure_stage'] = str(error)
         if args.isolated_binary:
