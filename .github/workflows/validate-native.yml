@@ -1,0 +1,65 @@
+name: Validate existing native candidates
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact 40-character candidate source SHA
+        required: true
+        type: string
+      desktop_run:
+        description: Successful existing desktop build run ID
+        required: true
+        type: string
+      rpi_run:
+        description: Successful existing RPi build run ID
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-x86_64
+            runner: ubuntu-22.04
+          - target: macos-x86_64
+            runner: macos-15-intel
+          - target: macos-arm64
+            runner: macos-14
+          - target: rpi-arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      # Validation harness comes from this workflow revision; candidate identity
+      # is separately checked against the original run and downloaded manifest.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install extraction and namespace tools
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends iproute2 util-linux
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884
+        with:
+          python-version: '3.12'
+          enable-cache: false
+      - name: Validate existing artifact in isolated native process
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          BUILD_RUN: ${{ matrix.target == 'rpi-arm64' && inputs.rpi_run || inputs.desktop_run }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          uv run --no-project --python 3.12 python scripts/validate_native_candidate.py --target "$TARGET" --commit "$SOURCE_SHA" --run "$BUILD_RUN" --evidence "evidence/$TARGET.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: native-smoke-${{ matrix.target }}-${{ github.run_id }}
+          path: evidence/*.json
+          if-no-files-found: error
+          retention-days: 7
