@@ -1,4 +1,4 @@
-name: Private Raspberry Pi 5 package candidate
+name: Raspberry Pi 5 package candidate
 
 on:
   workflow_dispatch:
@@ -13,9 +13,7 @@ permissions:
 
 jobs:
   debian-arm64:
-    # Uploaded artifacts also redistribute bundled data. Keep this candidate
-    # private until the applicable survey distribution rights are established.
-    if: ${{ github.event.repository.private }}
+    # Survey pixels are excluded and checked before artifact upload.
     runs-on: ubuntu-24.04-arm
     container: debian:bookworm-slim
     timeout-minutes: 180
@@ -54,7 +52,7 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           bash scripts/ci-build-rpi5.sh
-      - name: Upload private candidate only
+      - name: Upload unsigned candidate only
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: photon-commander-${{ inputs.source_ref }}-bookworm-arm64-unsigned

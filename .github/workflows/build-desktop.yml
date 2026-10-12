@@ -1,4 +1,4 @@
-name: Private Linux and macOS candidates
+name: Linux and macOS candidates
 on:
   workflow_dispatch:
     inputs:
@@ -25,7 +25,6 @@ permissions:
   contents: read
 jobs:
   resolve:
-    if: ${{ github.event.repository.private }}
     runs-on: ubuntu-22.04
     outputs:
       commit: ${{ steps.identity.outputs.commit }}
@@ -59,7 +58,6 @@ jobs:
           PY
   desktop:
     needs: resolve
-    if: ${{ github.event.repository.private }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.resolve.outputs.matrix) }}
@@ -96,7 +94,7 @@ jobs:
         with:
           node-version: '22'
           package-manager-cache: false
-      - name: Build private unsigned native candidate
+      - name: Build unsigned native candidate
         run: bash scripts/ci-build-desktop.sh
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:

@@ -8,7 +8,6 @@ cd "$(dirname "$0")/.."
 [[ $(uname -m) == aarch64 && $(dpkg --print-architecture) == arm64 ]] || { echo 'Native ARM64 is required.' >&2; exit 1; }
 source /etc/os-release
 [[ $ID == debian && $VERSION_ID == 12 ]] || { echo 'Build inside Debian 12/bookworm.' >&2; exit 1; }
-[[ ${SSC_REPOSITORY_PRIVATE:-} == true ]] || { echo 'Candidate builds currently require a private repository.' >&2; exit 1; }
 [[ $(getconf GNU_LIBC_VERSION) == 'glibc 2.36' ]] || { echo 'Unexpected Debian 12 glibc baseline.' >&2; exit 1; }
 for tool in git uv node npm gcc readelf dpkg-deb; do command -v "$tool" >/dev/null; done
 for required in scripts/release_manual.py scripts/build_nuitka.py scripts/build_debian_package.py packaging/linux/environment packaging/linux/photon-commander.service packaging/licenses-allowlist.toml; do [[ -f $required ]] || { echo "Missing packaging prerequisite: $required" >&2; exit 1; }; done
@@ -118,5 +117,5 @@ evidence = {
     'publication_performed': False,
 }
 Path('dist/debian/ci-build-evidence.json').write_text(json.dumps(evidence, indent=2) + '\n')
-print('ARM64 ELF glibc requirements verified; package remains an unsigned private candidate.')
+print('ARM64 ELF glibc requirements verified; package remains an unsigned candidate.')
 PY

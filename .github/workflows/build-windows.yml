@@ -1,4 +1,4 @@
-name: Private Windows source-SHA installer candidate
+name: Windows source-SHA installer candidate
 
 on:
   workflow_dispatch:
@@ -13,8 +13,7 @@ permissions:
 
 jobs:
   windows-installer:
-    # Private candidate builds only; no survey pixels or release publication.
-    if: ${{ github.event.repository.private }}
+    # candidate builds only; no survey pixels or release publication.
     runs-on: windows-2025
     timeout-minutes: 180
     defaults:
@@ -139,7 +138,7 @@ jobs:
             runner_image = $env:ImageVersion; python = '3.12'; node_major = 22
             hardware_validation_performed = $false; publication_performed = $false
           } | ConvertTo-Json | Set-Content -LiteralPath 'dist/windows/ci-build-evidence.json' -Encoding utf8
-      - name: Upload private installer candidate only
+      - name: Upload unsigned installer candidate only
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: Photon-Commander-win64-${{ inputs.source_ref }}-unsigned

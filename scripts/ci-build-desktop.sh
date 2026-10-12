@@ -4,7 +4,6 @@
 # Private unsigned candidates, never publication or device commands.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-[[ ${SSC_REPOSITORY_PRIVATE:-} == true ]] || { echo 'Candidate builds currently require a private repository.' >&2; exit 1; }
 [[ ${SSC_BUILD_COMMIT:-} =~ ^[a-f0-9]{40}$ && $SSC_BUILD_COMMIT == "$(git rev-parse HEAD)" ]] || { echo 'Exact immutable checkout required.' >&2; exit 1; }
 [[ -z $(git status --porcelain=v1 --untracked-files=all) ]] || { echo 'Clean source checkout required.' >&2; exit 1; }
 case ${SSC_DESKTOP_TARGET:-}:$(uname -s):$(uname -m) in
@@ -45,7 +44,7 @@ PY
 uv run python -c 'from pathlib import Path; assert not any(p.is_file() for p in Path("data/hips").rglob("*")), "Survey pixels must not be present"'
 uv run python scripts/check-licenses.py --commercial
 mkdir -p dist/desktop
-# Exact corresponding application source travels with private candidates.
+# Exact corresponding application source travels with unsigned candidates.
 # An explicit tracked-path list excludes Git metadata and README-only imagery.
 uv run python - <<'PY'
 import hashlib,os,subprocess
