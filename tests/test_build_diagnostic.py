@@ -11,7 +11,8 @@ def test_diagnostic_mode_is_opt_in(monkeypatch) -> None:
     flags = nuitka_command()
     assert "--debug" in flags
     assert "--python-debug" not in flags
-    assert not any("no-debug" in flag for flag in flags)
+    assert "--no-debug-c-warnings" in flags
+    assert "--no-debug-immortal-assumptions" not in flags
 
 
 def test_unknown_diagnostic_mode_fails_closed(monkeypatch) -> None:

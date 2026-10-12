@@ -125,6 +125,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Pinned asset acquisition failed.' }
           Invoke-Checked uv @('run', 'python', '-c', 'from pathlib import Path; assert not any(p.is_file() for p in Path("data/hips").rglob("*")), "Survey pixels must not be present"')
           Invoke-Checked uv @('run', 'python', 'scripts/check-licenses.py', '--commercial')
+          $runtimeHash = (& uv run python -c 'import hashlib,sys; from pathlib import Path; p=Path(sys.base_prefix)/"python312.dll"; print(hashlib.sha256(p.read_bytes()).hexdigest())').Trim()
+          if ($LASTEXITCODE -ne 0 -or $runtimeHash -notmatch '^[0-9a-f]{64}$') { throw 'Runtime DLL provenance unavailable.' }
           Invoke-Checked uv @('run', 'python', 'scripts/build_windows_package.py', $commit, '--iscc', $iscc, '--output-dir', 'dist/windows')
 
           $payloadCommit = (Get-Content -LiteralPath 'dist/ssc-core/COMMIT' -Raw).Trim()
@@ -141,6 +143,8 @@ jobs:
           [ordered]@{
             commit = $commit; version = $payloadVersion; bundled_survey_pixels = $false
             diagnostic = ($env:SSC_BUILD_DIAGNOSTIC -eq '1'); nuitka_debug = ($env:SSC_BUILD_DIAGNOSTIC -eq '1')
+            diagnostic_c_warnings_fatal = $false; source_python_dll_sha256 = $runtimeHash
+            payload_python_dll_sha256 = (Get-FileHash -LiteralPath 'dist/ssc-core/python312.dll' -Algorithm SHA256).Hash.ToLowerInvariant()
             architecture = 'win64'; installer = $installer.Name; installer_sha256 = $digest
             runner_image = $env:ImageVersion; python = '3.12'; node_major = 22
             hardware_validation_performed = $false; publication_performed = $false

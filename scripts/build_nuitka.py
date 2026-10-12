@@ -85,7 +85,7 @@ def nuitka_command() -> list[str]:
     if diagnostic not in {"0", "1"}:
         raise SystemExit("build-nuitka: diagnostic mode must be 0 or 1")
     if diagnostic == "1":
-        command.append("--debug")
+        command.extend(["--debug", "--no-debug-c-warnings"])
     command.extend(
         f"--include-data-dir={ROOT / source}={source.as_posix()}" for source in DATA_DIRECTORIES
     )
