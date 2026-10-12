@@ -7,7 +7,7 @@ their own licences and attribution; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOT
 
 ## Support development
 
-[Support Photon Commander on PayPal](https://www.paypal.com/donate/?business=7TG8WFWH5K79Y&no_recurring=0&item_name=for+Photon+Commander+development+and+support+for+new+devices&currency_code=EUR)
+[![Donate via PayPal](https://img.shields.io/badge/Donate_via_PayPal-003087?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/donate/?business=7TG8WFWH5K79Y&no_recurring=0&item_name=for+Photon+Commander+development+and+support+for+new+devices&currency_code=EUR)
 
 Donations help fund continued development and equipment for adding support for
 new devices. Support is voluntary; Photon Commander remains free.
