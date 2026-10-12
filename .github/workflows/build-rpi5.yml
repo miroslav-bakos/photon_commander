@@ -2,6 +2,11 @@ name: Private Raspberry Pi 5 package candidate
 
 on:
   workflow_dispatch:
+    inputs:
+      source_ref:
+        description: "Exact full source commit SHA"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -23,15 +28,16 @@ jobs:
       UV_FROZEN: '1'
       SSC_BUILD_JOBS: '2'
       SSC_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+      SSC_BUILD_COMMIT: ${{ inputs.source_ref }}
     steps:
       - name: Install native Debian 12 build prerequisites
         run: |
           apt-get update
           apt-get install -y --no-install-recommends ca-certificates curl git build-essential binutils dpkg-dev libssl-dev libffi-dev pkg-config zlib1g-dev liblzma-dev
-      - name: Check out the exact release tag
+      - name: Check out the exact source commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: refs/tags/v0.0.1
+          ref: ${{ inputs.source_ref }}
           fetch-depth: 0
           persist-credentials: false
       - name: Install official uv and managed Python 3.12
@@ -51,7 +57,7 @@ jobs:
       - name: Upload private candidate only
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: photon-commander-v0.0.1-bookworm-arm64-unsigned
+          name: photon-commander-${{ inputs.source_ref }}-bookworm-arm64-unsigned
           path: |
             dist/debian/*.deb
             dist/debian/*.deb.sha256

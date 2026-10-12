@@ -1,15 +1,19 @@
-name: Private Windows v0.0.1 installer candidate
+name: Private Windows source-SHA installer candidate
 
 on:
   workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Exact full lowercase 40-character source commit SHA
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   windows-installer:
-    # Artifacts contain locally generated WHAM data. This workflow grants no
-    # public redistribution permission and never publishes a release.
+    # Private candidate builds only; no survey pixels or release publication.
     if: ${{ github.event.repository.private }}
     runs-on: windows-2025
     timeout-minutes: 180
@@ -21,12 +25,12 @@ jobs:
       UV_PYTHON_PREFERENCE: only-managed
       UV_FROZEN: '1'
       SSC_BUILD_JOBS: '2'
-      SSC_EXPECTED_RELEASE_SHA: f1ac372006b9b183e9d45e57a6abc1c623b86c08
+      SSC_EXPECTED_RELEASE_SHA: ${{ inputs.source_ref }}
     steps:
-      - name: Check out the frozen release tag
+      - name: Check out the exact supplied source commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: refs/tags/v0.0.1
+          ref: ${{ inputs.source_ref }}
           fetch-depth: 0
           persist-credentials: false
       - name: Install official uv and managed Python 3.12
@@ -47,9 +51,7 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "Command failed: $Command (exit $LASTEXITCODE)" }
           }
           $commit = (git rev-parse HEAD).Trim()
-          if ($LASTEXITCODE -ne 0 -or $commit -ne $env:SSC_EXPECTED_RELEASE_SHA) { throw 'Checkout does not match frozen v0.0.1 source.' }
-          $tagCommit = (git rev-parse 'refs/tags/v0.0.1^{commit}').Trim()
-          if ($LASTEXITCODE -ne 0 -or $tagCommit -ne $commit) { throw 'Release tag has changed.' }
+          if ($LASTEXITCODE -ne 0 -or $env:SSC_EXPECTED_RELEASE_SHA -cnotmatch '^[a-f0-9]{40}$' -or $commit -cne $env:SSC_EXPECTED_RELEASE_SHA) { throw 'Checkout must match the supplied full immutable source SHA.' }
           $dirty = git status --porcelain=v1 --untracked-files=all
           if ($LASTEXITCODE -ne 0 -or $dirty) { throw 'Release checkout must be clean.' }
           $env:SSC_BUILD_COMMIT = $commit
@@ -75,8 +77,7 @@ jobs:
           Invoke-Checked uv @('run', 'python', '-c', 'import sys,numpy,nuitka,skyfield; assert sys.version_info[:2] == (3,12)')
           Invoke-Checked node @('-e', 'if(Number(process.versions.node.split(".")[0])<22)process.exit(1)')
 
-          # Inline helper exists in this workflow, so the frozen tag does not
-          # need any subsequently added CI script. Read pinned asset metadata
+          # Read pinned asset metadata
           # as literals; never import/start the application or access a device.
           @'
           import ast
@@ -115,25 +116,25 @@ jobs:
           kernel = constants('ssc/astro/events.py', {'KERNEL_FILENAME','KERNEL_URL','KERNEL_SIZE_BYTES','KERNEL_SHA256'})
           assert kernel['KERNEL_FILENAME'] == 'de440s.bsp'
           acquire(kernel['KERNEL_URL'], Path('data/ephemeris') / kernel['KERNEL_FILENAME'], kernel['KERNEL_SHA256'], kernel['KERNEL_SIZE_BYTES'])
-          wham = constants('scripts/build-wham-hips.py', {'SOURCE_URL','SOURCE_SHA256'})
-          acquire(wham['SOURCE_URL'], Path('data/cache/wham-ss-dr1-161116-integrated.fits'), wham['SOURCE_SHA256'])
           '@ | uv run python -
           if ($LASTEXITCODE -ne 0) { throw 'Pinned asset acquisition failed.' }
-          Invoke-Checked uv @('run', 'python', 'scripts/build-wham-hips.py', '--source', 'data/cache/wham-ss-dr1-161116-integrated.fits')
+          Invoke-Checked uv @('run', 'python', '-c', 'from pathlib import Path; assert not any(p.is_file() for p in Path("data/hips").rglob("*")), "Survey pixels must not be present"')
           Invoke-Checked uv @('run', 'python', 'scripts/check-licenses.py', '--commercial')
           Invoke-Checked uv @('run', 'python', 'scripts/build_windows_package.py', $commit, '--iscc', $iscc, '--output-dir', 'dist/windows')
 
           $payloadCommit = (Get-Content -LiteralPath 'dist/ssc-core/COMMIT' -Raw).Trim()
           $payloadVersion = (Get-Content -LiteralPath 'dist/ssc-core/VERSION' -Raw).Trim()
-          if ($payloadCommit -ne $commit -or $payloadVersion -ne '0.0.1') { throw 'Payload release identity mismatch.' }
-          $installer = Get-Item -LiteralPath 'dist/windows/Photon-Commander-0.0.1-win64.exe'
+          $expectedVersion = (uv run python -c 'import os; from pathlib import Path; from scripts.build_release_identity import release_version; print(release_version(Path.cwd(), os.environ["SSC_BUILD_COMMIT"]))').Trim()
+          if ($LASTEXITCODE -ne 0 -or $payloadCommit -cne $commit -or $payloadVersion -cne $expectedVersion) { throw 'Payload release identity mismatch.' }
+          Invoke-Checked uv @('run', 'python', '-c', 'from pathlib import Path; assert not any(p.is_file() for d in Path("dist/ssc-core").rglob("hips") for p in d.rglob("*")), "Bundled survey pixels found"')
+          $installer = Get-Item -LiteralPath ("dist/windows/Photon-Commander-" + $payloadVersion + "-win64.exe")
           $digest = (Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
           $expectedChecksumLine = "$digest  $($installer.Name)"
           if ((Get-Content -LiteralPath ($installer.FullName + '.sha256') -Raw).Trim() -ne $expectedChecksumLine) { throw 'Installer checksum mismatch.' }
           Copy-Item -LiteralPath 'dist/ssc-core/COMMIT' -Destination 'dist/windows/COMMIT'
           Copy-Item -LiteralPath 'dist/ssc-core/VERSION' -Destination 'dist/windows/VERSION'
           [ordered]@{
-            tag = 'v0.0.1'; commit = $commit; version = $payloadVersion
+            commit = $commit; version = $payloadVersion; bundled_survey_pixels = $false
             architecture = 'win64'; installer = $installer.Name; installer_sha256 = $digest
             runner_image = $env:ImageVersion; python = '3.12'; node_major = 22
             hardware_validation_performed = $false; publication_performed = $false
@@ -141,10 +142,10 @@ jobs:
       - name: Upload private installer candidate only
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: Photon-Commander-0.0.1-win64-f1ac372006b9-unsigned
+          name: Photon-Commander-win64-${{ inputs.source_ref }}-unsigned
           path: |
-            dist/windows/Photon-Commander-0.0.1-win64.exe
-            dist/windows/Photon-Commander-0.0.1-win64.exe.sha256
+            dist/windows/Photon-Commander-*-win64.exe
+            dist/windows/Photon-Commander-*-win64.exe.sha256
             dist/windows/INSTALLATION*.txt
             dist/windows/build-manifest.json
             dist/windows/ci-build-evidence.json

@@ -4,7 +4,8 @@
 A **developer-time** tool: run by hand, outputs committed, never imported by
 ``ssc/``. The app serves the committed directory through the tile proxy
 (``ssc.skymap.service`` reads ``properties`` and ``Norder*/``) with no network
-at all — WHAM is the one survey whose terms permit bundling
+at all — WHAM redistribution permission has not been recorded; this tool
+produces local research data only and its output must not be distributed
 (``THIRD_PARTY_NOTICES.md`` "Sky-survey layers", the WHAM rows).
 
 Source

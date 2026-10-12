@@ -133,13 +133,10 @@ and the packaging scripts. No kernel download is performed by the application
 build. Keep its upstream provenance and assess applicable distribution terms.
 
 **Survey tile packs and user caches are not included in this source repository.**
-Current packaging checks require a local
-WHAM H-alpha HiPS pack at `data/hips/wham/`. Acquire the input and assess applicable
-rights before using `scripts/build-wham-hips.py --source <local-source.fits>` to
-generate it. The source recipe, upstream information and acknowledgements are
-retained. Source licensing and credits do not establish WHAM redistribution rights.
-The H-alpha layer remains unavailable without that separately provided asset;
-packaging refuses an incomplete asset set rather than silently omitting it.
+WHAM H-alpha pixels are not bundled: redistribution permission has not been
+recorded, so this layer is disabled even if an old local pack exists.
+Packaging rejects survey tile packs. Source licensing and acknowledgements do
+not establish survey redistribution rights.
 
 DSS2 is fetched only subject to its user consent and applicable personal-use
 restrictions. The credited README illustration contains DSS2 pixels; it is

@@ -27,8 +27,6 @@ cd "$ROOT"
 
 KERNEL="data/ephemeris/de440s.bsp"
 MIGRATIONS="ssc/store/migrations"
-WHAM_PROPERTIES="data/hips/wham/properties"
-WHAM_TILE="data/hips/wham/Norder0/Dir0/Npix0.png"
 
 if [[ ! -f "$KERNEL" ]]; then
     echo "build-package: missing $KERNEL — fetch it first (see ssc/astro/events.py KERNEL_URL)." >&2
@@ -41,10 +39,7 @@ if [[ -z "$(find "$MIGRATIONS" -maxdepth 1 -name '*.sql' -print -quit 2>/dev/nul
     exit 1
 fi
 
-if [[ ! -f "$WHAM_PROPERTIES" || ! -f "$WHAM_TILE" ]]; then
-    echo "build-package: incomplete bundled WHAM H-alpha pack — refusing to build." >&2
-    exit 1
-fi
+
 
 if [[ $PRIVATE_APPLIANCE -eq 1 ]]; then
     # The owner's private Pi may retain explicitly labelled POC survey sources.
@@ -66,9 +61,8 @@ echo "build-package: version $VERSION"
 rm -rf build dist
 uv run pyinstaller --noconfirm --clean packaging/ssc-core.spec
 
-if [[ ! -f dist/ssc-core/_internal/data/hips/wham/properties || \
-      ! -f dist/ssc-core/_internal/data/hips/wham/Norder0/Dir0/Npix0.png ]]; then
-    echo "build-package: PyInstaller artifact omitted the bundled WHAM H-alpha pack." >&2
+if [[ -d dist/ssc-core/_internal/data/hips ]]; then
+    echo "build-package: survey data must not be bundled without recorded rights." >&2
     exit 1
 fi
 

@@ -3,8 +3,6 @@ points at a host the compliance reading forbids."""
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 from pydantic import ValidationError
 
@@ -33,14 +31,14 @@ def test_cutout_route_surveys_are_listed_disabled_with_the_reason() -> None:
     assert find_survey("sdss").credit_url == "https://www.sdss.org"  # type: ignore[union-attr]
 
 
-def test_wham_halpha_is_the_one_bundled_survey_and_blend_only() -> None:
+def test_wham_is_disabled_and_no_survey_pixels_are_bundled() -> None:
     wham = find_survey("wham-halpha")
     assert wham is not None
-    assert wham.bundled and wham.bundle_allowed and wham.blend_only
-    assert wham.kind is SurveyKind.HALPHA
-    assert wham.upstream_base_url == ""
-    assert wham.local_dir == Path("wham"), "relative to AppConfig.bundled_hips_dir"
-    assert [s.id for s in REGISTRY if s.bundled] == ["wham-halpha"]
+    assert not wham.enabled and not wham.production_cleared
+    assert not wham.bundled and not wham.bundle_allowed
+    assert wham.local_dir is None
+    assert wham.rights_notice and "permission" in wham.rights_notice
+    assert not any(s.bundled for s in REGISTRY)
 
 
 def test_no_survey_points_at_uncleared_or_forbidden_servers() -> None:
@@ -264,12 +262,11 @@ def test_mercator_addresses_mirror_the_upstream_xyz_layout() -> None:
     )
 
 
-def test_hips_client_template_and_bundled_surveys_have_no_upstream_url() -> None:
+def test_disabled_wham_retains_template_without_bundled_pixels() -> None:
     wham = registry.WHAM_HALPHA
     assert (
         client_tile_template(wham)
         == "/api/skymap/tiles/wham-halpha/Norder{order}/Dir{dir}/Npix{npix}.png"
     )
     assert local_tile_path(wham, 3, 123, "png") == "Norder3/Dir0/Npix123.png"
-    with pytest.raises(ValueError, match="bundled"):
-        upstream_tile_url(wham, 3, 123, "png")
+    assert not wham.enabled and wham.local_dir is None

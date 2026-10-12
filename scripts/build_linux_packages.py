@@ -128,9 +128,7 @@ def assert_payload_boundary(package_root: Path) -> None:
             failures.append(str(relative))
         parts = [part.lower() for part in relative.parts]
         if "hips" in parts:
-            index = parts.index("hips") + 1
-            if index < len(parts) and parts[index] != "wham":
-                failures.append(str(relative))
+            failures.append(str(relative))
         if any(part.lower() in FORBIDDEN_SURVEY_PAYLOAD_PARTS for part in relative.parts):
             failures.append(str(relative))
         if path.is_file() and path.suffix.lower() in FORBIDDEN_SUFFIXES:

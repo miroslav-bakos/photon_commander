@@ -47,7 +47,6 @@ datas = [
     (str(ROOT / "data" / "profiles"), "data/profiles"),
     # The redistributable bundled sky survey. Runtime resolves this beneath
     # ``_internal/data`` in the one-dir artifact.
-    (str(ROOT / "data" / "hips" / "wham"), "data/hips/wham"),
 ]
 
 binaries: list[tuple[str, str]] = []

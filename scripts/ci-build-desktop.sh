@@ -4,7 +4,7 @@
 # Private unsigned candidates, never publication or device commands.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-[[ ${SSC_REPOSITORY_PRIVATE:-} == true ]] || { echo 'Survey-containing candidates require a private repository.' >&2; exit 1; }
+[[ ${SSC_REPOSITORY_PRIVATE:-} == true ]] || { echo 'Candidate builds currently require a private repository.' >&2; exit 1; }
 [[ ${SSC_BUILD_COMMIT:-} =~ ^[a-f0-9]{40}$ && $SSC_BUILD_COMMIT == "$(git rev-parse HEAD)" ]] || { echo 'Exact immutable checkout required.' >&2; exit 1; }
 [[ -z $(git status --porcelain=v1 --untracked-files=all) ]] || { echo 'Clean source checkout required.' >&2; exit 1; }
 case ${SSC_DESKTOP_TARGET:-}:$(uname -s):$(uname -m) in
@@ -41,10 +41,8 @@ def acquire(url, target, digest, size=None):
 k=constants('ssc/astro/events.py',{'KERNEL_FILENAME','KERNEL_URL','KERNEL_SHA256','KERNEL_SIZE_BYTES'})
 assert k['KERNEL_FILENAME']=='de440s.bsp'
 acquire(k['KERNEL_URL'],Path('data/ephemeris/de440s.bsp'),k['KERNEL_SHA256'],k['KERNEL_SIZE_BYTES'])
-w=constants('scripts/build-wham-hips.py',{'SOURCE_URL','SOURCE_SHA256'})
-acquire(w['SOURCE_URL'],Path('data/cache/wham-ss-dr1-161116-integrated.fits'),w['SOURCE_SHA256'])
 PY
-uv run python scripts/build-wham-hips.py --source data/cache/wham-ss-dr1-161116-integrated.fits
+uv run python -c 'from pathlib import Path; assert not any(p.is_file() for p in Path("data/hips").rglob("*")), "Survey pixels must not be present"'
 uv run python scripts/check-licenses.py --commercial
 mkdir -p dist/desktop
 # Exact corresponding application source travels with private candidates.
@@ -130,9 +128,9 @@ exec "$APPDIR/app/ssc-core" --desktop "$@"
 actual=subprocess.check_output(['lipo','-archs',str(stage/'app/ssc-core')],text=True).split()
 if actual!=[arch]:raise RuntimeError('Backend Mach-O architecture mismatch')
 for hips in stage.rglob('hips'):
- if hips.is_dir() and any(p.name!='wham' for p in hips.iterdir()):raise RuntimeError('Unapproved survey directory in candidate')
+ if hips.is_dir() and any(p.is_file() for p in hips.rglob('*')):raise RuntimeError('Bundled survey pixels found')
 version=release_version(root,commit)
-manifest={'commit':commit,'version':version,'target':target,'build_os':subprocess.check_output(['sw_vers','-productVersion'],text=True).strip(),'signed':False,'notarized':False,'hardware_validation_performed':False,'publication_performed':False}
+manifest={'commit':commit,'version':version,'target':target,'build_os':subprocess.check_output(['sw_vers','-productVersion'],text=True).strip(),'bundled_survey_pixels':False,'signed':False,'notarized':False,'hardware_validation_performed':False,'publication_performed':False}
 (stage/'build-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 out=root/'dist/desktop'/f'Photon-Commander-{version}-{target}.tar.gz'
 with tarfile.open(out,'w:gz') as archive:archive.add(stage,arcname=stage.name)
@@ -145,7 +143,9 @@ uv run python - <<'PY'
 import json,os,platform
 from pathlib import Path
 from scripts.build_release_identity import release_version
+for directory in Path('dist/ssc-core').rglob('hips'):
+ if any(p.is_file() for p in directory.rglob('*')):raise RuntimeError('Bundled survey pixels found')
 commit=os.environ['SSC_BUILD_COMMIT']
-evidence={'commit':commit,'version':release_version(Path.cwd(),commit),'target':os.environ['SSC_DESKTOP_TARGET'],'build_os':platform.platform(),'signed':False,'notarized':False,'hardware_validation_performed':False,'publication_performed':False}
+evidence={'commit':commit,'version':release_version(Path.cwd(),commit),'target':os.environ['SSC_DESKTOP_TARGET'],'build_os':platform.platform(),'bundled_survey_pixels':False,'signed':False,'notarized':False,'hardware_validation_performed':False,'publication_performed':False}
 Path('dist/desktop/ci-build-evidence.json').write_text(json.dumps(evidence,indent=2)+'\n')
 PY

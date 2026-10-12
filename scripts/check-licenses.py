@@ -277,8 +277,8 @@ def _check_commercial_product() -> list[str]:
 
     spec = (ROOT / "packaging" / "ssc-core.spec").read_text()
     build_script = (ROOT / "scripts" / "build-package.sh").read_text()
-    if 'data" / "hips" / "wham' not in spec:
-        failures.append("artifact needs a separately acquired, locally generated WHAM data pack with applicable rights")
+    if 'data" / "hips"' in spec:
+        failures.append("survey data packs must not be bundled without recorded redistribution rights")
     for notice in ("THIRD_PARTY_NOTICES.md", "third-party-licenses", "third-party-sources"):
         if notice not in build_script:
             failures.append(f"packaging build does not ship {notice} beside the executable")

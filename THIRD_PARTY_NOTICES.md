@@ -52,8 +52,8 @@ the notice remains included whether or not a native artifact contains it.
 - `data/ephemeris/de440s.bsp` and the JPL Small-Body Database comet-element
   snapshot are NASA/JPL scientific data. Provenance and refresh details are
   retained beside the data.
-- The separately obtained local `data/hips/wham` pack is derived from WHAM Sky Survey DR1 integrated H-alpha
-  intensity data. Credit: WHAM Sky Survey DR1 — Wisconsin H-Alpha Mapper,
+- WHAM Sky Survey DR1 integrated H-alpha data is not distributed with Photon
+  Commander. No redistribution grant has been recorded; the layer is disabled. Credit: WHAM Sky Survey DR1 — Wisconsin H-Alpha Mapper,
   funded by the U.S. National Science Foundation. Source and acknowledgement:
   <https://www.astro.wisc.edu/research/research-areas/galactic-astronomy/wham/>.
 - The Messier and Sharpless tables are factual/public-domain sources described

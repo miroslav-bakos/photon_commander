@@ -145,8 +145,8 @@ def test_surveys_lists_every_entry_with_credit_and_availability(paired: TestClie
     # The test fixture has no local pack: it remains unavailable and no
     # commercial package copies that data directory.
     wham = by_id["wham-halpha"]
-    assert wham["enabled"] is False and wham["reason"].startswith("bundled H-alpha pack missing")
-    assert wham["bundled"] is True and wham["blend_only"] is True
+    assert wham["enabled"] is False and "permission" in wham["reason"]
+    assert wham["bundled"] is False and wham["blend_only"] is True
     assert body["cache_max_bytes"] > 0
 
     # The cutout-source registry rides alongside the tile registry: the
@@ -289,32 +289,17 @@ def test_unknown_survey_is_404_json(paired: TestClient) -> None:
     assert paired.get("/api/skymap/tiles/nope/1/0.png").json()["reason"] == "unknown_survey"
 
 
-def test_a_bundled_survey_is_served_from_disk_with_no_network(
+def test_wham_remains_disabled_even_with_an_old_local_pack(
     paired: TestClient, config: AppConfig
 ) -> None:
-    # The service checked the directory at startup; this app has none, so a
-    # fresh app over a populated directory is what the bundled path looks like.
     wham = config.bundled_hips_dir / "wham"
-    (wham / "Norder0" / "Dir0").mkdir(parents=True)
-    (wham / "properties").write_text("hips_order = 0\nhips_tile_format = png\n")
-    (wham / "Norder0" / "Dir0" / "Npix5.png").write_bytes(PNG)
-    app = create_app(config, gateway=FakeGateway())
-    with TestClient(app, client=CLIENT_ADDRESS) as fresh:
-        fresh.post("/api/auth/pair", json={"token": pairing_token(fresh)})
-        surveys = {s["id"]: s for s in fresh.get("/api/skymap/surveys").json()["surveys"]}
-        assert surveys["wham-halpha"]["enabled"] is True
-        assert (
-            surveys["wham-halpha"]["properties_url"] == "/api/skymap/tiles/wham-halpha/properties"
-        )
-        with respx.mock(assert_all_called=False) as router:
-            router.get(re.compile(r".*")).mock(side_effect=httpx.ConnectError("offline"))
-            tile = fresh.get("/api/skymap/tiles/wham-halpha/0/5.png")
-            assert tile.status_code == 200 and tile.content == PNG
-            assert tile.headers["x-ssc-tile-source"] == "bundled"
-            props = fresh.get("/api/skymap/tiles/wham-halpha/properties")
-            assert props.status_code == 200 and "hips_order = 0" in props.text
-            hole = fresh.get("/api/skymap/tiles/wham-halpha/0/6.png")
-            assert hole.status_code == 404 and hole.json()["reason"] == "missing"
+    (wham / "Norder0/Dir0").mkdir(parents=True)
+    (wham / "Norder0/Dir0/Npix5.png").write_bytes(PNG)
+    with respx.mock(assert_all_called=False) as router:
+        router.get(re.compile(r".*")).mock(side_effect=httpx.ConnectError("offline"))
+        response = paired.get("/api/skymap/tiles/wham-halpha/0/5.png")
+        assert response.status_code == 404
+        assert not router.calls
 
 
 # -- Mercator tiles (Legacy Surveys) -------------------------------------------------- #

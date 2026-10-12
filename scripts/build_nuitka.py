@@ -23,8 +23,6 @@ DEFAULT_OUTPUT = ROOT / "dist" / "ssc-core-nuitka"
 
 REQUIRED_FILES = (
     Path("data/ephemeris/de440s.bsp"),
-    Path("data/hips/wham/properties"),
-    Path("data/hips/wham/Norder0/Dir0/Npix0.png"),
 )
 DATA_DIRECTORIES = (
     Path("ssc/store/migrations"),
@@ -33,7 +31,6 @@ DATA_DIRECTORIES = (
     Path("data/constellations"),
     Path("data/comets"),
     Path("data/profiles"),
-    Path("data/hips/wham"),
 )
 FORBIDDEN_SUFFIXES = {".py", ".pyi", ".pyc", ".map", ".ts", ".tsx", ".jsx"}
 

@@ -447,26 +447,24 @@ SDSS: Final = Survey(
     pending_clearance=_CUTOUTS_NOT_TILES,
 )
 
-#: H-alpha from WHAM alone (the Finkbeiner composite includes SHASSA, which
-#: forbids commercial use — FAIL). WHAM's terms permit redistribution, so this
-#: is the one survey shipped *with* the product: a HiPS directory generated
-#: at build time under ``data/hips/wham/``. No network is ever involved; the
-#: tile endpoint reads the directory. Enabled only while that directory
-#: exists (``SkymapService.startup`` checks; the reason says so otherwise).
+#: WHAM redistribution permission is not recorded; this layer is unavailable.
 WHAM_HALPHA: Final = Survey(
     id="wham-halpha",
     label="H-alpha (WHAM)",
     kind=SurveyKind.HALPHA,
     scheme=TileScheme.HIPS,
-    upstream_base_url="",
-    local_dir=Path("wham"),
+    upstream_base_url="https://www.astro.wisc.edu/research/research-areas/galactic-astronomy/wham/",
     tile_format="png",
     #: Orders 0..1: the source is 0.25 deg/px and the order-1 tile pixel (3.4')
     #: is already under a quarter of that (scripts/build-wham-hips.py, "Depth").
     max_order=1,
     credit_label="WHAM — Wisconsin H-Alpha Mapper (NSF)",
     credit_url="https://www.astro.wisc.edu/research/research-areas/galactic-astronomy/wham/",
-    bundle_allowed=True,
+    bundle_allowed=False,
+    enabled=False,
+    pending_clearance="WHAM redistribution permission has not been recorded; this layer is unavailable.",
+    production_cleared=False,
+    rights_notice="WHAM redistribution permission has not been recorded; this layer is unavailable.",
     blend_only=True,
 )
 
