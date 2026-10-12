@@ -53,6 +53,15 @@ GPL licence and from the application installers.
 
 </details>
 
+![Whole-night ALT-AZ field rotation preview for IC 1805](.github/images/altaz-whole-night-rotation.jpg)
+
+A 10.5-hour ALT-AZ planning example: the overlaid frames show changing
+orientation, the swept outline shows total coverage, and the central keep region
+shows what remains in every frame. This example predicts about 229° of rotation
+and 44% retained frame area. Geometry uses a fictional reference site;
+solar/lunar context is illustrative, not a measured observing result.
+The DSS2 image credits and restrictions above also apply to this illustration.
+
 ## Live stacking and mobile access
 
 Real observing screenshots: M31 live stacking and equipment status on a phone.
