@@ -30,6 +30,25 @@ their own licences and attribution; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOT
   application with a layout adapted to their screen. Each device needs access
   to the same server and the appropriate viewing or control permission.
 
+![NGC 7000 two-panel mosaic in the DSS2 sky-map planner](.github/images/ngc7000-dss2-mosaic.png)
+
+*Plan a two-panel mosaic across NGC 7000 and the neighbouring Pelican Nebula
+with DSS2 enabled. This is a framing preview, not a captured observation.*
+
+<details>
+<summary>DSS2 image credits and usage terms</summary>
+
+DSS2 colour — Digitized Sky Survey, STScI/NASA; coloured and HEALPixed by
+CDS Aladin Sky Atlas, Unistra/CNRS. Plates © STFC/ROE, Anglo-Australian
+Observatory Board, Caltech and AURA — All Rights Reserved. Free for
+research, teaching and other non-profit use; commercial, for-profit use
+prohibited without written permission. See the
+[MAST data-use policy](https://archive.stsci.edu/publishing/data-use).
+HiPS database: ODbL-1.0. Survey pixels are excluded from the application's
+GPL licence and from the application installers.
+
+</details>
+
 ## Platforms
 
 Photon is designed for **Raspberry Pi, Windows, Linux and macOS**, with desktop
@@ -91,7 +110,8 @@ Store it at `data/ephemeris/de440s.bsp`. It is required for astronomy calculatio
 and the packaging scripts. No kernel download is performed by the application
 build. Keep its upstream provenance and assess applicable distribution terms.
 
-**Survey imagery is not included.** Current packaging checks require a local
+**Survey tile packs and user caches are not included in this source repository.**
+Current packaging checks require a local
 WHAM H-alpha HiPS pack at `data/hips/wham/`. Acquire the input and assess applicable
 rights before using `scripts/build-wham-hips.py --source <local-source.fits>` to
 generate it. The source recipe, upstream information and acknowledgements are
@@ -100,8 +120,10 @@ The H-alpha layer remains unavailable without that separately provided asset;
 packaging refuses an incomplete asset set rather than silently omitting it.
 
 DSS2 is fetched only subject to its user consent and applicable personal-use
-restrictions. DSS pixels, user caches and observing data are not distributed here.
-GPL licensing does not grant survey image rights.
+restrictions. The credited README illustration contains DSS2 pixels; it is
+excluded from application installers and the application's GPL licence.
+User caches and observing data are not distributed here. GPL licensing does
+not grant survey image rights.
 
 After providing the required local assets, build a backend bundle with
 `scripts/build-package.sh`; native platform package scripts are under `scripts/`.
