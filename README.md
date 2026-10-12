@@ -50,14 +50,19 @@ GPL licence and from the application installers.
 
 </details>
 
-## Mobile access
+## Live stacking and mobile access
 
-The same application on a phone — observing status and equipment details:
+Real observing screenshots: M31 live stacking and equipment status on a phone.
 
-<img src=".github/images/mobile-observe.jpg" alt="Photon Commander observing dashboard on mobile" width="300">
+<p>
+  <img src=".github/images/mobile-m31-live-stack.jpg" alt="Real M31 live stack on mobile, Czech interface" width="300">
+  <img src=".github/images/mobile-equipment-real.jpg" alt="Real observing equipment dashboard on mobile, Czech interface" width="300">
+</p>
 
-This interface example uses fictional settings and status;
-it does not represent a hardware-validation result.
+**Languages: English (EN), Slovak (SK) and Czech (CZ) are supported. More
+languages are planned.** These screenshots show the Czech interface from an
+earlier development version; its PRO logo is historical. Photon Commander now
+has one complete free version.
 
 ## Platforms
 
