@@ -25,6 +25,9 @@ their own licences and attribution; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOT
   measurement updates the estimated subexposure limit for polar-alignment drift
   with the supported camera profile. It helps you judge when alignment is good
   enough; tracking, wind, seeing, focus and field rotation still affect stars.
+- **Preview field rotation in ALT-AZ mode.** Inspect how the field of view
+  rotates throughout a planned session, including a whole-night preview, and
+  check target coverage and framing before collecting your lights.
 - **Switch between desktop and mobile while Photon keeps observing.** The
   server owns the session and observing state; paired browsers show the same
   application with a layout adapted to their screen. Each device needs access
