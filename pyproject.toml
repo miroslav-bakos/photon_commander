@@ -39,7 +39,7 @@ dev = [
     "import-linter>=2.1",             # enforces CLAUDE.md invariants 1 and 3
     "pyinstaller>=6.22.2",
     "types-psutil>=7.2.2.20260827",
-    "nuitka>=4.2.2",
+    "nuitka==4.3",                   # includes upstream compiled-frame lifetime fix #4077
     "patchelf>=0.19.1.0; sys_platform == 'linux'",
 ]
 
