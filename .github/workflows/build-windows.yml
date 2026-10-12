@@ -7,6 +7,11 @@ on:
         description: Exact full lowercase 40-character source commit SHA
         required: true
         type: string
+      diagnostic:
+        description: Diagnostic assertions build (not a release)
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -24,6 +29,7 @@ jobs:
       UV_PYTHON_PREFERENCE: only-managed
       UV_FROZEN: '1'
       SSC_BUILD_JOBS: '2'
+      SSC_BUILD_DIAGNOSTIC: ${{ inputs.diagnostic && '1' || '0' }}
       SSC_EXPECTED_RELEASE_SHA: ${{ inputs.source_ref }}
     steps:
       - name: Check out the exact supplied source commit
@@ -134,6 +140,7 @@ jobs:
           Copy-Item -LiteralPath 'dist/ssc-core/VERSION' -Destination 'dist/windows/VERSION'
           [ordered]@{
             commit = $commit; version = $payloadVersion; bundled_survey_pixels = $false
+            diagnostic = ($env:SSC_BUILD_DIAGNOSTIC -eq '1'); nuitka_debug = ($env:SSC_BUILD_DIAGNOSTIC -eq '1')
             architecture = 'win64'; installer = $installer.Name; installer_sha256 = $digest
             runner_image = $env:ImageVersion; python = '3.12'; node_major = 22
             hardware_validation_performed = $false; publication_performed = $false
@@ -141,7 +148,7 @@ jobs:
       - name: Upload unsigned installer candidate only
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: Photon-Commander-win64-${{ inputs.source_ref }}-unsigned
+          name: Photon-Commander-${{ inputs.diagnostic && 'diagnostic' || 'candidate' }}-win64-${{ inputs.source_ref }}-unsigned
           path: |
             dist/windows/Photon-Commander-*-win64.exe
             dist/windows/Photon-Commander-*-win64.exe.sha256
