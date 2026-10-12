@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "id": "golden-plan-ngc2244",
+  "name": "NGC 2244 — golden fixture",
+  "created_at": "2026-08-01T12:00:00Z",
+  "updated_at": "2026-08-01T12:00:00Z",
+  "items": [
+    {
+      "kind": "startup",
+      "id": "startup",
+      "start": { "kind": "event", "event": "astronomical_dusk", "offset_min": 0 },
+      "duration_min": 5
+    },
+    {
+      "kind": "goto_and_stack",
+      "id": "goto-ngc2244",
+      "start": { "kind": "relative", "offset_min": 0 },
+      "duration_min": 60,
+      "target_name": "NGC 2244",
+      "ra_j2000_h": 6.5317,
+      "dec_j2000_deg": 4.9407,
+      "framing": { "mode": "altaz", "pa_offset_deg": 0, "lens": "tele" },
+      "constraints": { "min_alt_deg": 25, "min_moon_sep_deg": 30 }
+    },
+    {
+      "kind": "mosaic",
+      "id": "mosaic-ngc2244",
+      "start": { "kind": "asap" },
+      "duration_min": 15,
+      "target_name": "NGC 2244",
+      "ra_j2000_h": 6.5317,
+      "dec_j2000_deg": 4.9407,
+      "framing": { "mode": "altaz", "pa_offset_deg": 0, "lens": "tele" },
+      "mosaic": { "ra_num": 2, "dec_num": 2, "overlap_pct": 20 },
+      "constraints": { "min_alt_deg": 25, "min_moon_sep_deg": 30 }
+    },
+    {
+      "kind": "slew",
+      "id": "slew-park-target",
+      "start": { "kind": "target_event", "event": "rises_above", "alt_deg": 30, "offset_min": 0 },
+      "target_name": "NGC 2244",
+      "ra_j2000_h": 6.5317,
+      "dec_j2000_deg": 4.9407
+    },
+    {
+      "kind": "capture_calibration",
+      "id": "darks",
+      "start": { "kind": "event", "event": "nautical_dawn", "offset_min": 0 },
+      "duration_min": 20,
+      "frame_type": "dark"
+    },
+    {
+      "kind": "shutdown",
+      "id": "shutdown",
+      "start": { "kind": "relative", "offset_min": 5 }
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+# ZWO Seestar S50 Pro — published hardware profile.
+
+id = "zwo-s50pro"
+name = "ZWO Seestar S50 Pro"
+vendor = "ZWO"
+aliases = ["Seestar S50 Pro", "S50 Pro", "SeestarS50Pro"]
+source_urls = ["https://us.zwoastro.com/products/seestar-s50-pro"]
+mount = "altaz"
+eq_mode_available = true
+
+[capabilities]
+tele_camera = true
+wide_camera = true
+wide_camera_autofocus = true
+focuser = true
+filter_wheel = true
+dew_heater = true
+
+[[optics]]
+id = "tele"
+label = "Telephoto"
+focal_length_mm = 260.0
+aperture_mm = 50.0
+focal_ratio = 5.2
+design = "4-element apochromatic (ED)"
+sensor = { name = "OmniVision OS08B10", w_px = 2160, h_px = 3840, pixel_um = 2.9 }
+
+[[optics]]
+id = "wide"
+label = "Wide-angle"
+focal_length_mm = 6.0
+aperture_mm = 3.4
+focal_ratio = 1.75
+sensor = { name = "Sony IMX586", w_px = 2160, h_px = 3840, pixel_um = 1.6 }
+distortion = "approximate"
+
+[defaults]
+gain = 200
+exposure_stack_ms = 10000
+exposure_preview_ms = 500
+dither_enabled = true
+dither_pixels = 50
+dither_every_n_frames = 10
+lp_filter = false
+dew_heater_percent = 0
+
+[limits]
+min_altitude_deg = 20.0
+battery_low_percent = 15
+max_exposure_eq_s = 60.0
+
+[calibration]
+measured = false

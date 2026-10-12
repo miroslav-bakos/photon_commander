@@ -1,0 +1,349 @@
+/* SPDX-License-Identifier: GPL-3.0-only
+ * Copyright (C) 2026 Miroslav Bakoš
+ * iOS 27 design-system informed web controls. Content remains opaque;
+ * navigation and floating controls use glass with opaque fallbacks.
+ * No Apple fonts or symbol assets are redistributed.
+ */
+
+:root {
+  --ssc-radius-control: 0.75rem;
+  --ssc-radius-panel: 1.25rem;
+  --ssc-chrome: color-mix(in srgb, var(--ssc-surface) 82%, transparent);
+  --ssc-glass-edge: color-mix(in srgb, var(--ssc-fg) 22%, transparent);
+  --ssc-glass-highlight: color-mix(in srgb, var(--ssc-fg) 10%, transparent);
+  --ssc-glass-shadow: inset 0 1px 0 var(--ssc-glass-highlight), 0 6px 20px var(--ssc-shadow);
+  --ssc-panel-shadow: 0 4px 18px var(--ssc-shadow);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-feature-settings: "cv11", "ss01";
+  -webkit-text-size-adjust: 100%;
+}
+
+.app-shell { line-height: 1.5; }
+.app-shell main { scrollbar-gutter: stable; }
+.ssc-card {
+  border-radius: var(--ssc-radius-panel);
+  border-color: var(--ssc-border);
+  box-shadow: var(--ssc-panel-shadow);
+}
+.ssc-card-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.4;
+  color: var(--ssc-fg);
+}
+.app-shell h2.uppercase, .app-shell h3.uppercase {
+  text-transform: none;
+  letter-spacing: -0.015em;
+}
+.ssc-card-disclosure { min-height: 36px; }
+/* A closed card is a compact heading row, without expanded body padding. */
+.ssc-card:has(> .ssc-card-disclosure[aria-expanded="false"]) {
+  padding-block: 4px;
+  border-radius: var(--ssc-radius-control);
+}
+
+.ssc-button {
+  border-radius: 999px;
+  min-height: 36px;
+  padding-inline: 0.875rem;
+  line-height: 1.35;
+  font-weight: 600;
+  transition: background-color 140ms ease, box-shadow 140ms ease;
+}
+.ssc-button-secondary {
+  background: var(--ssc-surface-raised);
+  border-color: var(--ssc-border-strong);
+}
+.ssc-button-danger { background: var(--ssc-surface-raised); }
+.ssc-button:not(:disabled):active { box-shadow: inset 0 0 0 2px var(--ssc-border-strong); }
+.ssc-button:disabled { opacity: 0.55; }
+
+/* Also covers the existing screen-specific native fields and icon controls. */
+.app-shell input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]),
+.app-shell select,
+.app-shell textarea {
+  border-radius: var(--ssc-radius-control);
+  border-color: var(--ssc-border-strong);
+  background-color: var(--ssc-bg);
+  color: var(--ssc-fg);
+  font-variant-numeric: tabular-nums;
+}
+.app-shell input::placeholder, .app-shell textarea::placeholder { color: var(--ssc-fg-muted); }
+.app-shell input[type="checkbox"], .app-shell input[type="radio"], .app-shell input[type="range"] {
+  accent-color: var(--ssc-accent);
+}
+.app-shell button[role="radio"]:not(.ssc-segment), .app-shell button[role="tab"] {
+  border-radius: 999px;
+  padding-inline: 1rem;
+}
+.ssc-segmented {
+  position: relative;
+  isolation: isolate;
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  align-items: stretch;
+  gap: 2px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 3px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.ssc-segmented::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  inset-inline: 0;
+  top: 25%;
+  height: 50%;
+  border: 1px solid var(--ssc-border);
+  border-radius: inherit;
+  background: var(--ssc-bg);
+}
+.ssc-segment {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  flex: 1 0 auto;
+  justify-content: center;
+  align-items: center;
+  min-height: 36px;
+  min-width: 44px;
+  padding: 0.25rem 0.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ssc-fg-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+  transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+.ssc-segment[aria-checked="true"], .ssc-segment[aria-pressed="true"] {
+  color: var(--ssc-fg);
+  font-weight: 600;
+}
+.ssc-segment[aria-checked="true"]::before, .ssc-segment[aria-pressed="true"]::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  inset-inline: 0;
+  top: 25%;
+  height: 50%;
+  border: 1px solid var(--ssc-border-strong);
+  border-radius: inherit;
+  background: var(--ssc-surface-raised);
+  box-shadow: 0 1px 3px var(--ssc-shadow);
+}
+.ssc-segment:not(:disabled):hover { color: var(--ssc-fg); }
+.ssc-segment:focus-visible { outline-offset: -3px; }
+.ssc-segment:disabled { opacity: 0.5; cursor: not-allowed; }
+.ssc-segment:not(:disabled):active { transform: scale(0.97); }
+/* Text choices need their own rows when translated labels exceed the available
+ * width. Keep compact icon toolbars unchanged and preserve a 44px touch target. */
+.ssc-segmented-text {
+  display: grid;
+  grid-auto-flow: row;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  border-radius: 16px;
+  overflow: visible;
+}
+.ssc-segmented-text::before {
+  top: 0;
+  bottom: 0;
+  height: auto;
+}
+.ssc-segmented-text > .ssc-segment {
+  flex: 1 1 7rem;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  border-radius: 12px;
+}
+.ssc-segmented-text > .ssc-segment[aria-checked="true"]::before,
+.ssc-segmented-text > .ssc-segment[aria-pressed="true"]::before {
+  top: 3px;
+  bottom: 3px;
+  height: auto;
+}
+/* The map has one control size, including segmented options and icon actions.
+ * Respect desktop density; touch sizes are kept at 44px below. */
+.ssc-map-toolbar { --ssc-map-control-size: calc(var(--spacing) * 11); }
+:root .ssc-map-toolbar > button,
+:root .ssc-map-toolbar > .ssc-segmented .ssc-segment {
+  width: var(--ssc-map-control-size);
+  height: var(--ssc-map-control-size);
+  min-width: var(--ssc-map-control-size) !important;
+  min-height: var(--ssc-map-control-size) !important;
+  padding: 0 !important;
+}
+.ssc-map-toolbar > .ssc-segmented {
+  padding: 0;
+  border: 0;
+  height: var(--ssc-map-control-size);
+}
+.ssc-map-toolbar > .ssc-segmented .ssc-segment { font-size: 11px; }
+.ssc-field { min-width: 0; }
+.ssc-field-input { width: 100%; min-width: 0; }
+.capture-fields .ssc-field { display: grid; grid-template-rows: subgrid; grid-row: span 3; }
+/* Balanced rows prevent four choices from becoming a 3 + 1 arrangement.
+ * Three choices use one full-width final row rather than an empty cell. */
+.ssc-segmented-text > .ssc-segment:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.ssc-field-label { color: var(--ssc-fg-muted); }
+.ssc-field-hint { line-height: 1.5; }
+.app-shell [role="dialog"]:not(.fixed), .app-shell [role="alertdialog"] {
+  border-radius: var(--ssc-radius-panel);
+  box-shadow: var(--ssc-panel-shadow);
+}
+
+.ssc-toolbar, .app-shell nav, .app-shell [aria-label="Connections"] {
+  background-color: var(--ssc-chrome);
+}
+.ssc-nav-link { border-radius: 999px; transition: background-color 140ms ease; }
+.ssc-nav-link[aria-current="page"] {
+  box-shadow: inset 0 0 0 1px var(--ssc-border);
+}
+.app-shell nav.ssc-mobile-tabbar {
+  border: 1px solid var(--ssc-glass-edge);
+  border-radius: 1.75rem;
+  padding: 3px;
+  height: auto;
+  min-height: 56px;
+  margin-bottom: calc(8px + env(safe-area-inset-bottom));
+  box-shadow: var(--ssc-glass-shadow);
+}
+/* The beta footer below docked navigation owns the home-indicator inset. */
+.app-shell nav.ssc-mobile-tabbar[data-docked="true"] {
+  margin-bottom: 8px;
+}
+.ssc-mobile-tabbar .ssc-mobile-tab-item {
+  min-width: 0;
+  min-height: 50px;
+  border-radius: 1.5rem;
+  padding: 4px 2px;
+  gap: 2px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+.ssc-mobile-tab-item span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ssc-mobile-tabbar .ssc-mobile-tab-item[aria-current="page"] {
+  background: var(--ssc-surface-raised);
+  color: var(--ssc-accent);
+  box-shadow: none;
+}
+.app-shell nav[aria-label="Current workflow"] a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+}
+
+@supports (backdrop-filter: blur(12px)) {
+  .ssc-toolbar, .app-shell nav, .ssc-map-toolbar {
+    background: var(--ssc-chrome);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    backdrop-filter: blur(20px) saturate(1.2);
+    border-color: var(--ssc-glass-edge);
+    box-shadow: var(--ssc-glass-shadow);
+  }
+  .ssc-map-toolbar { border-radius: 999px; }
+  .ssc-map-toolbar .ssc-segmented { background: transparent; border-color: transparent; }
+  .ssc-map-toolbar .ssc-segmented::before { background: var(--ssc-bg); border-color: var(--ssc-border-strong); }
+  .ssc-map-toolbar .ssc-segment[aria-checked="true"]::before,
+  .ssc-map-toolbar .ssc-segment[aria-pressed="true"]::before {
+    background: var(--ssc-surface-raised);
+    border-color: var(--ssc-glass-edge);
+    box-shadow: var(--ssc-glass-shadow);
+  }
+}
+/* Night vision retains an opaque red-only functional layer. */
+[data-theme="red"] .ssc-toolbar, [data-theme="red"] .app-shell nav, [data-theme="red"] .ssc-map-toolbar {
+  background-color: var(--ssc-surface);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-color: var(--ssc-border-strong);
+  box-shadow: none;
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .ssc-toolbar, .app-shell nav, .app-shell nav.ssc-mobile-tabbar, .ssc-map-toolbar, .app-shell [aria-label="Connections"] {
+    background-color: var(--ssc-surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--ssc-border-strong);
+    box-shadow: none;
+  }
+  .app-shell[data-wallpaper="on"]::before { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ssc-segment, .ssc-button, .ssc-nav-link { transition: none; }
+  .ssc-segment:not(:disabled):active { transform: none; }
+}
+@media (prefers-contrast: more) {
+  .ssc-card { border-color: var(--ssc-border-strong); }
+  .ssc-button:disabled { opacity: 1; color: var(--ssc-fg-muted); }
+}
+
+/* The owner's compact status strip is separate from primary touch controls.
+ * Keep its utility buttons inside the row instead of letting the global
+ * mobile minimum overflow into the content and navigation around it. */
+:root .app-shell .ssc-connections-footer {
+  height: 28px;
+  min-height: 28px;
+  padding-block: 0;
+}
+:root .app-shell .ssc-connections-footer button {
+  width: 28px;
+  height: 28px;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+@media (min-width: 768px) and (pointer: fine) {
+  :root .app-shell .ssc-connections-footer { height: 24px; min-height: 24px; }
+  :root .app-shell .ssc-connections-footer button {
+    width: 24px;
+    height: 24px;
+    min-width: 24px !important;
+    min-height: 24px !important;
+  }
+}
+
+/* Owner-selected compact controls apply on phones too. Keep editable text at
+ * 16px to avoid Safari zoom; map icon controls retain their own touch geometry. */
+@media (pointer: coarse), (max-width: 767px) {
+  .ssc-map-toolbar { --ssc-map-control-size: 44px; }
+  :root .app-shell button, :root .app-shell [role="button"] {
+    min-height: 36px !important;
+    min-width: 44px !important;
+  }
+  :root .app-shell input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]),
+  :root .app-shell select { min-height: 36px !important; height: 36px !important; font-size: max(16px, var(--text-base)); }
+  :root .app-shell textarea { min-height: 36px; font-size: max(16px, var(--text-base)); }
+  .app-shell nav[aria-label="Current workflow"] { height: auto; min-height: 44px; }
+  :root .app-shell .ssc-map-toolbar button { min-height: 44px !important; }
+}
+
+/* Desktop primary navigation shares its header, without a second glass frame. */
+.app-shell nav[aria-label="Main"]:not(.ssc-mobile-tabbar) {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.app-shell nav[aria-label="Main"]:not(.ssc-mobile-tabbar) .ssc-nav-link {
+  box-shadow: none;
+}

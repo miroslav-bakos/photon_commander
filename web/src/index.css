@@ -1,0 +1,193 @@
+/*
+ * SPDX-License-Identifier: GPL-3.0-only
+ * Copyright (C) 2026 Miroslav Bakoš
+ */
+
+@import "tailwindcss";
+@import "./theme/tokens.css";
+@import "./theme/interface.css";
+
+@theme {
+  /* Reset Tailwind's default palette entirely. If a colour utility exists
+     that we did not name below, it is not one of our tokens — that is the
+     point. `bg-red-500` should not compile; `bg-danger` should. */
+  --color-*: initial;
+
+  --color-bg: var(--ssc-bg);
+  --color-surface: var(--ssc-surface);
+  --color-surface-raised: var(--ssc-surface-raised);
+  --color-border: var(--ssc-border);
+  --color-border-strong: var(--ssc-border-strong);
+
+  --color-fg: var(--ssc-fg);
+  --color-fg-muted: var(--ssc-fg-muted);
+  --color-fg-disabled: var(--ssc-fg-disabled);
+
+  --color-accent: var(--ssc-accent);
+  --color-accent-fg: var(--ssc-accent-fg);
+  --color-accent-muted: var(--ssc-accent-muted);
+  --color-link: var(--ssc-link);
+
+  --color-success: var(--ssc-success);
+  /* Connection dots — their own scale, because the dark and red-light
+     palettes want different answers (tokens.css explains why). */
+  --color-dot-ok: var(--ssc-dot-ok);
+  --color-dot-unknown: var(--ssc-dot-unknown);
+  --color-dot-bad: var(--ssc-dot-bad);
+  --color-warning: var(--ssc-warning);
+  --color-danger: var(--ssc-danger);
+
+  --color-focus-ring: var(--ssc-focus-ring);
+
+  /* Tailwind's `shadow-*` utilities need a real colour value, not another
+     indirection layer with an alpha baked in twice — kept as one token. */
+  --color-shadow: var(--ssc-shadow);
+
+  /* One breakpoint each for the three layouts (frontend-react.md): phone
+     single column below `sm`, tablet two-pane from `sm`, desktop three-pane
+     from `lg`. */
+  --breakpoint-sm: 640px;
+  --breakpoint-lg: 1024px;
+}
+
+@layer base {
+  html, body, #root {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  html {
+    background-color: var(--ssc-bg);
+  }
+  body {
+    @apply bg-bg text-fg antialiased;
+    /* 44px hit targets (frontend-react.md) start with a body font size that
+       doesn't force everything smaller to compensate. Tied to `--text-base`
+       (Tailwind's own token, `1rem` by default — identical to the old literal
+       `16px`) rather than a literal, so text with no `text-*` class of its
+       own still responds to `data-font-scale` (theme/tokens.css). */
+    font-size: var(--text-base);
+  }
+
+  /* A cold, gloved, imprecise finger needs the browser's own touch
+     affordances left alone — no accidental double-tap-zoom fighting a drag
+     gesture on the FOV rectangle or the timeline. */
+  html {
+    touch-action: manipulation;
+  }
+}
+
+.app-shell {
+  position: relative;
+  /* Older mobile WebKit must retain a viewport height when dvh is unsupported. */
+  height: 100vh;
+  height: 100dvh;
+  isolation: isolate;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  background-color: var(--ssc-bg);
+}
+
+.app-shell::before {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  background: center / cover no-repeat url("/backgrounds/m31.webp");
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease-out;
+}
+
+.app-shell[data-wallpaper="on"] {
+  background-color: transparent;
+}
+
+.app-shell[data-wallpaper="on"]::before {
+  opacity: var(--ssc-wallpaper-opacity, 0.15);
+}
+
+/* Field-style controls share the standard Button component's minimum height.
+   This lives outside Tailwind's cascade layers, and the input exclusions give
+   it enough specificity to supersede legacy local min-height utilities.
+   Checkbox, radio and range controls keep their own visual geometry; their
+   surrounding labels provide the touch target. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]),
+select:not([multiple]) {
+  box-sizing: border-box;
+  height: 36px;
+  min-height: 36px;
+  padding-block: 0;
+}
+
+select[multiple],
+textarea {
+  min-height: 36px;
+}
+
+/* Small Text retains its 33px desktop field size; ordinary phone fields use
+   the owner-selected 36px density independently of text size. */
+:root[data-font-scale="small"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]),
+:root[data-font-scale="small"] select:not([multiple]) {
+  height: 33px;
+  min-height: 33px;
+}
+
+:root[data-font-scale="small"] select[multiple],
+:root[data-font-scale="small"] textarea {
+  min-height: 33px;
+}
+
+/* Large mode keeps its proportional desktop field height. */
+@media (min-width: 1024px) {
+  :root[data-font-scale="large"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]),
+  :root[data-font-scale="large"] select:not([multiple]) {
+    height: 40px;
+    min-height: 40px;
+  }
+}
+
+/* Preview cards fit the phone's visible viewport, including Safari toolbar changes. */
+.image-preview { height: 60vh; min-height: 16rem; }
+.archive-preview > .image-preview { position: absolute; inset: 0; height: 100%; min-height: 0; }
+@media (max-width: 639px), (max-width: 1023px) and (pointer: coarse) {
+  .mobile-preview-card:not(.h-auto) {
+    height: calc(100dvh - 10.25rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    scroll-margin-bottom: calc(8.75rem + env(safe-area-inset-bottom));
+    scroll-margin-top: 1rem;
+    min-height: 20rem;
+    display: flex;
+    flex-direction: column;
+  }
+  .mobile-preview-card .image-preview {
+    height: auto;
+    min-height: 0;
+    flex: 1;
+  }
+  .mobile-preview-card .preview-body { overflow: hidden; }
+  /* Idle previews need room for their message, not a whole image viewport. */
+  .mobile-preview-card:not(:has(.image-preview)) {
+    height: auto;
+    min-height: 0;
+  }
+}
+
+@media (min-width: 1024px), (min-width: 640px) and (pointer: fine) {
+  [data-layout-card-id="liveStack.preview"] .image-preview { height: calc(100dvh - 8rem); }
+}
+
+@media (min-width: 1024px), (min-width: 640px) and (pointer: fine) {
+  [data-layout-card-id="observing-now"] .image-preview { height: auto; min-height: 0; aspect-ratio: 16 / 9; }
+}
+
+/* Portal source wrappers must not consume a compact equipment grid cell. */
+[data-compact-secondary="true"] [data-mount-control-source],
+[data-compact-secondary="true"] [aria-label="Equipment controls"],
+[data-compact-secondary="true"] [data-control-panel] {
+  display: contents;
+}
+
+[data-compact-secondary="true"] { grid-auto-rows: 8px; }
+[data-compact-secondary="true"] > [data-layout-card-id] {
+  grid-row-end: span var(--ssc-equipment-rows, 1);
+}

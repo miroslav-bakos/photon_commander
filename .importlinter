@@ -1,0 +1,115 @@
+# Enforces the architectural invariants in architecture policy that no test can catch.
+# Run: uv run lint-imports
+
+[importlinter]
+root_packages =
+    ssc
+include_external_packages = True
+
+# --- Invariant 1: protocol containment -------------------------------------
+# Only ssc.alpaca may import ssc.seestar. Everything else above the seam knows
+# ASCOM device semantics plus the ssc.* action vocabulary, and nothing more.
+#
+# allow_indirect_imports: this checks direct import edges only. ssc.main hosts
+# ssc.alpaca in-process (architecture policy invariant 2) and so necessarily reaches
+# ssc.seestar *transitively*, through the one package that is allowed to know
+# it; that is the seam working as designed, not a leak. What this contract
+# still catches, unconditionally, is any of these modules writing `import
+# ssc.seestar` (or a submodule of it) themselves.
+[importlinter:contract:protocol-containment]
+name = Only ssc.alpaca may import ssc.seestar
+type = forbidden
+allow_indirect_imports = True
+source_modules =
+    ssc.api
+    ssc.astro
+    ssc.capture
+    ssc.client
+    ssc.main
+    ssc.plan
+    ssc.platesolve
+    ssc.scheduler
+    ssc.settings
+    ssc.skymap
+    ssc.state
+    ssc.store
+    ssc.weather
+forbidden_modules =
+    ssc.seestar
+
+# --- Invariant 3: the device-agnostic core stays pure -----------------------
+# astro/, plan/ and scheduler/ compile and solve with no I/O, no framework and
+# no device. If one of these needs a clock, it takes it as a parameter.
+[importlinter:contract:pure-core]
+name = astro/plan/scheduler are pure — no I/O, no web framework, no device
+type = forbidden
+source_modules =
+    ssc.astro
+    ssc.plan
+    ssc.scheduler
+forbidden_modules =
+    fastapi
+    uvicorn
+    httpx
+    aiosqlite
+    sqlite3
+    keyring
+    zeroconf
+    ssc.alpaca
+    ssc.api
+    ssc.seestar
+    ssc.store
+
+# --- ssc.capture writes FITS and catalogues; it never hosts the web layer ---
+# DESIGN.md §9.5.5: capture knows FITS and the configured capture folder. It
+# reaches the device only through the Alpaca seam (ssc.client/ssc.alpaca —
+# not yet exercised by this package, but not forbidden: a later dispatch
+# drives the exposure loop from here), and never through ssc.seestar
+# directly (protocol-containment, above, already covers that edge). What is
+# categorically wrong is this package knowing FastAPI or its own routers —
+# that direction only ever runs api -> capture, never the reverse.
+[importlinter:contract:capture-is-not-a-router]
+name = ssc.capture never imports the web layer
+type = forbidden
+source_modules =
+    ssc.capture
+forbidden_modules =
+    fastapi
+    ssc.api
+
+# --- ssc.skymap is policy, not plumbing --------------------------------------
+# It may use the store and publish through ssc.state; it never reaches the
+# device (no ssc.alpaca/ssc.seestar) and never the web layer (no ssc.api).
+[importlinter:contract:skymap-layering]
+name = ssc.skymap imports store/state only, never the device or the API
+type = forbidden
+source_modules =
+    ssc.skymap
+forbidden_modules =
+    ssc.alpaca
+    ssc.api
+    ssc.client
+    ssc.seestar
+    fastapi
+
+# --- The spike is throwaway -------------------------------------------------
+[importlinter:contract:spike-is-throwaway]
+name = ssc never imports the M0 spike
+type = forbidden
+source_modules =
+    ssc.alpaca
+    ssc.api
+    ssc.astro
+    ssc.capture
+    ssc.client
+    ssc.plan
+    ssc.platesolve
+    ssc.scheduler
+    ssc.seestar
+    ssc.settings
+    ssc.skymap
+    ssc.state
+    ssc.store
+    ssc.weather
+forbidden_modules =
+    spikes

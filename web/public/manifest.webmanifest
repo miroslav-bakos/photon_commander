@@ -1,0 +1,22 @@
+{
+  "$comment": "Colours here are necessarily literal (a manifest can't read a --ssc-* custom property) and are copied from the *dark* theme in src/theme/tokens.css: --ssc-bg for both background_color and theme_color. Dark is the safe universal choice for a value that has to be picked once and cannot itself respond to the in-app theme switch — a light or accent splash screen would fight the red-light theme's whole point (preserving night vision), and dark is at least correct (never wrong) for users in either theme.",
+  "id": "/",
+  "name": "Photon Commander",
+  "short_name": "Photon Commander",
+  "description": "Control, planning, and automated imaging for smart telescopes.",
+  "lang": "en",
+  "start_url": "/",
+  "scope": "/",
+  "$comment_display": "standalone, not fullscreen (owner, 2026-09-08: 'keep battery and time ... but the browser url bar and bottom menu bar must not be displayed at any point'). standalone removes every piece of *browser* chrome — the URL bar and the browser's own bottom toolbar — while leaving the system status bar, so the clock and battery stay readable. That matters here: this app is used in a field at night, where remaining battery is operational information. fullscreen would take the status bar too and is deliberately NOT in the override chain, so no browser can silently escalate to it.",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0b0d10",
+  "theme_color": "#0b0d10",
+  "icons": [
+    { "src": "/icons/icon-192.png?v=3", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png?v=3", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-192.png?v=3", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon-maskable-512.png?v=3", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

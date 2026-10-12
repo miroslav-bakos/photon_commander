@@ -1,0 +1,21 @@
+{
+  "source": "NASA/JPL Horizons API, solution JPL#113",
+  "source_url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+  "target": "C/2023 A3 (Tsuchinshan-ATLAS)",
+  "instant_utc": "2026-09-13T00:00:00Z",
+  "site": {
+    "longitude_deg": 17.1077,
+    "latitude_deg": 48.1486,
+    "elevation_m": 134.0
+  },
+  "query": {
+    "COMMAND": "DES=2023 A3;",
+    "EPHEM_TYPE": "OBSERVER",
+    "CENTER": "coord@399",
+    "COORD_TYPE": "GEODETIC",
+    "TLIST": "2461296.5",
+    "QUANTITIES": "1"
+  },
+  "apparent_ra_hms": "17 43 56.92",
+  "apparent_dec_dms": "+16 52 24.5"
+}

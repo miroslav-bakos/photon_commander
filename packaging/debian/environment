@@ -1,0 +1,3 @@
+# Optional Photon Commander runtime overrides. Package upgrades preserve this file.
+# SSC_ASTAP_CLI=/usr/bin/astap_cli
+# SSC_ASTAP_DATA_DIR=/opt/astap

@@ -1,0 +1,40 @@
+[Unit]
+Description=Photon Commander
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=photon-commander
+Group=photon-commander
+WorkingDirectory=/opt/photon-commander
+ExecStart=/opt/photon-commander/app/ssc-core --host 0.0.0.0 --port 7777
+Environment=SSC_DATA_DIR=/var/lib/photon-commander
+Environment=SSC_STATIC_DIR=/opt/photon-commander/web
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/etc/photon-commander/environment
+StateDirectory=photon-commander
+UMask=0007
+Restart=always
+RestartSec=3
+TimeoutStopSec=45
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=photon-commander
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=false
+ReadWritePaths=/var/lib/photon-commander
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

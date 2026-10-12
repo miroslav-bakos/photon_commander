@@ -1,0 +1,4659 @@
+{
+  "README": [
+    "Independent cross-check for web/src/skymap/frames/shared/sidereal.ts's",
+    "altAzToRaDec against skyfield (the astro core's own ephemeris library,",
+    "ssc/astro/ CLAUDE.md) -- sidereal.ts is a deliberate, separate TypeScript",
+    "reimplementation of GMST + the alt/az<->ra/dec spherical transform (see its",
+    "own module doc comment), which is exactly the kind of thing that can drift",
+    "unnoticed from the trusted Python model. This fixture pins it down.",
+    "",
+    "Each row is: given a site, a UTC instant and a geometric (alt, az), what",
+    "topocentric apparent-of-date (RA, Dec) does skyfield report for that",
+    "direction. sidereal.ts's altAzToRaDec is expected to agree to within the",
+    "tolerance in sidereal.test.ts, dominated by the mean-vs-apparent sidereal",
+    "time gap (equation of the equinoxes, up to ~1s of time / ~15 arcsec of RA)",
+    "since sidereal.ts deliberately uses mean sidereal time, not apparent",
+    "(see its own doc comment) -- not a bug, but exactly why the tolerance is",
+    "arcminutes, not arcseconds.",
+    "",
+    "Sites: Tromso (69.65N, inside the Arctic Circle), Fairbanks and Nome",
+    "(high north, negative and near-(-180) longitude), London (small negative",
+    "longitude), Sydney and Ushuaia (southern), Suva (near +180 longitude).",
+    "Instants: both solstices, the March equinox, both 2026 EU/US DST",
+    "transition dates, and 2026-09-08 (this task's 'today') -- a spread",
+    "across the year exercising the GMST polynomial's T/T^2/T^3 terms.",
+    "alt/az: alt=0 (horizon, all four cardinal azimuths), mid-altitude,",
+    "high-altitude, near-zenith (89.9 deg) and exactly the zenith (90 deg,",
+    "a documented singularity in both implementations -- azimuth is passed",
+    "through as 0 by convention in each).",
+    "",
+    "Regenerate with skyfield 1.55 by re-running the",
+    "generator described in this file's own accompanying agent report",
+    "(no ephemeris kernel needed: from_altaz()/radec(epoch='date') use only",
+    "Earth orientation, not planetary positions)."
+  ],
+  "generated_utc": "2026-09-08",
+  "skyfield_version": "1.55",
+  "rows": [
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 102.437731045,
+      "decDeg": 20.3508
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 12.437731045,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 282.437731045,
+      "decDeg": -20.3508
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 192.437731045,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 45.607579679,
+      "decDeg": 42.980816325
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 243.132451495,
+      "decDeg": 14.822624657
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 74.025124644,
+      "decDeg": 79.486137405
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 201.204901994,
+      "decDeg": 64.015251066
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 293.027932543,
+      "decDeg": 66.564046424
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 282.623232033,
+      "decDeg": 69.725706869
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 282.437731045,
+      "decDeg": 69.6492
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 152.369430462,
+      "decDeg": 20.3508
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 62.369430462,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 332.369430462,
+      "decDeg": -20.3508
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 242.369430462,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 95.539279096,
+      "decDeg": 42.980816325
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 293.064150912,
+      "decDeg": 14.822624657
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 123.956824062,
+      "decDeg": 79.486137405
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 251.136601411,
+      "decDeg": 64.015251066
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 342.959631961,
+      "decDeg": 66.564046424
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 332.554931451,
+      "decDeg": 69.725706869
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 332.369430462,
+      "decDeg": 69.6492
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 176.099503564,
+      "decDeg": 20.3508
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 86.099503564,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 356.099503564,
+      "decDeg": -20.3508
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 266.099503564,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 119.269352198,
+      "decDeg": 42.980816325
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 316.794224014,
+      "decDeg": 14.822624657
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 147.686897164,
+      "decDeg": 79.486137405
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 274.866674513,
+      "decDeg": 64.015251066
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 6.689705063,
+      "decDeg": 66.564046424
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 356.285004553,
+      "decDeg": 69.725706869
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 356.099503564,
+      "decDeg": 69.6492
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 96.770045111,
+      "decDeg": 20.3508
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 6.770045111,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 276.770045111,
+      "decDeg": -20.3508
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 186.770045111,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 39.939893745,
+      "decDeg": 42.980816325
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 237.464765561,
+      "decDeg": 14.822624657
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 68.35743871,
+      "decDeg": 79.486137405
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 195.53721606,
+      "decDeg": 64.015251066
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 287.360246609,
+      "decDeg": 66.564046424
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 276.955546099,
+      "decDeg": 69.725706869
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 276.770045111,
+      "decDeg": 69.6492
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 18.385311566,
+      "decDeg": 20.3508
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 288.385311566,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 198.385311566,
+      "decDeg": -20.3508
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 108.385311566,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 321.5551602,
+      "decDeg": 42.980816325
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 159.080032016,
+      "decDeg": 14.822624657
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 349.972705166,
+      "decDeg": 79.486137405
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 117.152482515,
+      "decDeg": 64.015251066
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 208.975513065,
+      "decDeg": 66.564046424
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 198.570812555,
+      "decDeg": 69.725706869
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 198.385311566,
+      "decDeg": 69.6492
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 256.684141125,
+      "decDeg": 20.3508
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 166.684141125,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 76.684141125,
+      "decDeg": -20.3508
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 346.684141125,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 199.853989759,
+      "decDeg": 42.980816325
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 37.378861575,
+      "decDeg": 14.822624657
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 228.271534724,
+      "decDeg": 79.486137405
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 355.451312074,
+      "decDeg": 64.015251066
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 87.274342623,
+      "decDeg": 66.564046424
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 76.869642113,
+      "decDeg": 69.725706869
+    },
+    {
+      "site": "Tromso_NO",
+      "latitudeDeg": 69.6492,
+      "longitudeDeg": 18.9553,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 76.684141125,
+      "decDeg": 69.6492
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 295.766031045,
+      "decDeg": 25.1622
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 205.766031045,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 115.766031045,
+      "decDeg": -25.1622
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 25.766031045,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 234.925271902,
+      "decDeg": 45.473302005
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 77.156869058,
+      "decDeg": 11.080266655
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 247.503714176,
+      "decDeg": 83.318219918
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 43.915190321,
+      "decDeg": 62.891080105
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 124.670654224,
+      "decDeg": 61.821512887
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 115.917641664,
+      "decDeg": 64.914327454
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 115.766031045,
+      "decDeg": 64.8378
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 345.697730462,
+      "decDeg": 25.1622
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 255.697730462,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 165.697730462,
+      "decDeg": -25.1622
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 75.697730462,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 284.85697132,
+      "decDeg": 45.473302005
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 127.088568476,
+      "decDeg": 11.080266655
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 297.435413593,
+      "decDeg": 83.318219918
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 93.846889739,
+      "decDeg": 62.891080105
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 174.602353642,
+      "decDeg": 61.821512887
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 165.849341082,
+      "decDeg": 64.914327454
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 165.697730462,
+      "decDeg": 64.8378
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 9.427803564,
+      "decDeg": 25.1622
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 279.427803564,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 189.427803564,
+      "decDeg": -25.1622
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 99.427803564,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 308.587044422,
+      "decDeg": 45.473302005
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 150.818641577,
+      "decDeg": 11.080266655
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 321.165486695,
+      "decDeg": 83.318219918
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 117.57696284,
+      "decDeg": 62.891080105
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 198.332426744,
+      "decDeg": 61.821512887
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 189.579414184,
+      "decDeg": 64.914327454
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 189.427803564,
+      "decDeg": 64.8378
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 290.098345111,
+      "decDeg": 25.1622
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 200.098345111,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 110.098345111,
+      "decDeg": -25.1622
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 20.098345111,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 229.257585969,
+      "decDeg": 45.473302005
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 71.489183124,
+      "decDeg": 11.080266655
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 241.836028242,
+      "decDeg": 83.318219918
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 38.247504387,
+      "decDeg": 62.891080105
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 119.00296829,
+      "decDeg": 61.821512887
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 110.24995573,
+      "decDeg": 64.914327454
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 110.098345111,
+      "decDeg": 64.8378
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 211.713611566,
+      "decDeg": 25.1622
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 121.713611566,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 31.713611566,
+      "decDeg": -25.1622
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 301.713611566,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 150.872852424,
+      "decDeg": 45.473302005
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 353.104449579,
+      "decDeg": 11.080266655
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 163.451294697,
+      "decDeg": 83.318219918
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 319.862770843,
+      "decDeg": 62.891080105
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 40.618234746,
+      "decDeg": 61.821512887
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 31.865222186,
+      "decDeg": 64.914327454
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 31.713611566,
+      "decDeg": 64.8378
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 90.012441125,
+      "decDeg": 25.1622
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 0.012441125,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 270.012441125,
+      "decDeg": -25.1622
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 180.012441125,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 29.171681983,
+      "decDeg": 45.473302005
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 231.403279138,
+      "decDeg": 11.080266655
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 41.750124256,
+      "decDeg": 83.318219918
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 198.161600401,
+      "decDeg": 62.891080105
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 278.917064304,
+      "decDeg": 61.821512887
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 270.164051744,
+      "decDeg": 64.914327454
+    },
+    {
+      "site": "Fairbanks_US",
+      "latitudeDeg": 64.8378,
+      "longitudeDeg": -147.7164,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 270.012441125,
+      "decDeg": 64.8378
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 83.354631045,
+      "decDeg": 38.4926
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 353.354631045,
+      "decDeg": 0.0
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 263.354631045,
+      "decDeg": -38.4926
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 173.354631045,
+      "decDeg": -0.0
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 8.703712997,
+      "decDeg": 50.578305151
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 225.591080311,
+      "decDeg": 0.584161862
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 292.828087853,
+      "decDeg": 79.836109032
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 211.766995612,
+      "decDeg": 56.452872657
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 269.701104932,
+      "decDeg": 48.604689773
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 263.458078357,
+      "decDeg": 51.583959011
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 263.354631045,
+      "decDeg": 51.5074
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 133.286330462,
+      "decDeg": 38.4926
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 43.286330462,
+      "decDeg": -0.0
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 313.286330462,
+      "decDeg": -38.4926
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 223.286330462,
+      "decDeg": 0.0
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 58.635412415,
+      "decDeg": 50.578305151
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 275.522779729,
+      "decDeg": 0.584161862
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 342.759787271,
+      "decDeg": 79.836109032
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 261.69869503,
+      "decDeg": 56.452872657
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 319.63280435,
+      "decDeg": 48.604689773
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 313.389777775,
+      "decDeg": 51.583959011
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 313.286330462,
+      "decDeg": 51.5074
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 157.016403564,
+      "decDeg": 38.4926
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 67.016403564,
+      "decDeg": -0.0
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 337.016403564,
+      "decDeg": -38.4926
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 247.016403564,
+      "decDeg": 0.0
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 82.365485517,
+      "decDeg": 50.578305151
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 299.25285283,
+      "decDeg": 0.584161862
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 6.489860373,
+      "decDeg": 79.836109032
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 285.428768132,
+      "decDeg": 56.452872657
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 343.362877452,
+      "decDeg": 48.604689773
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 337.119850877,
+      "decDeg": 51.583959011
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 337.016403564,
+      "decDeg": 51.5074
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 77.686945111,
+      "decDeg": 38.4926
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 347.686945111,
+      "decDeg": 0.0
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 257.686945111,
+      "decDeg": -38.4926
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 167.686945111,
+      "decDeg": -0.0
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 3.036027063,
+      "decDeg": 50.578305151
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 219.923394377,
+      "decDeg": 0.584161862
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 287.160401919,
+      "decDeg": 79.836109032
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 206.099309678,
+      "decDeg": 56.452872657
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 264.033418998,
+      "decDeg": 48.604689773
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 257.790392423,
+      "decDeg": 51.583959011
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 257.686945111,
+      "decDeg": 51.5074
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 359.302211566,
+      "decDeg": 38.4926
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 269.302211566,
+      "decDeg": 0.0
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 179.302211566,
+      "decDeg": -38.4926
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 89.302211566,
+      "decDeg": -0.0
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 284.651293519,
+      "decDeg": 50.578305151
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 141.538660833,
+      "decDeg": 0.584161862
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 208.775668375,
+      "decDeg": 79.836109032
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 127.714576134,
+      "decDeg": 56.452872657
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 185.648685454,
+      "decDeg": 48.604689773
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 179.405658879,
+      "decDeg": 51.583959011
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 179.302211566,
+      "decDeg": 51.5074
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 237.601041125,
+      "decDeg": 38.4926
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 147.601041125,
+      "decDeg": -0.0
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 57.601041125,
+      "decDeg": -38.4926
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 327.601041125,
+      "decDeg": 0.0
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 162.950123077,
+      "decDeg": 50.578305151
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 19.837490391,
+      "decDeg": 0.584161862
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 87.074497933,
+      "decDeg": 79.836109032
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 6.013405692,
+      "decDeg": 56.452872657
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 63.947515012,
+      "decDeg": 48.604689773
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 57.704488437,
+      "decDeg": 51.583959011
+    },
+    {
+      "site": "London_UK",
+      "latitudeDeg": 51.5074,
+      "longitudeDeg": -0.1278,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 57.601041125,
+      "decDeg": 51.5074
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 54.691731045,
+      "decDeg": 56.1312
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 144.691731045,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 234.691731045,
+      "decDeg": -56.1312
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 324.691731045,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 93.683881782,
+      "decDeg": 13.286241032
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 331.571612016,
+      "decDeg": -51.916165439
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 59.686303004,
+      "decDeg": -4.231080169
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 27.923395899,
+      "decDeg": -15.965051569
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 59.907721711,
+      "decDeg": -36.483136245
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 54.769076497,
+      "decDeg": -33.792171393
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 54.691731045,
+      "decDeg": -33.8688
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 104.623430462,
+      "decDeg": 56.1312
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 194.623430462,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 284.623430462,
+      "decDeg": -56.1312
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 14.623430462,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 143.615581199,
+      "decDeg": 13.286241032
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 21.503311433,
+      "decDeg": -51.916165439
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 109.618002422,
+      "decDeg": -4.231080169
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 77.855095317,
+      "decDeg": -15.965051569
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 109.839421129,
+      "decDeg": -36.483136245
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 104.700775915,
+      "decDeg": -33.792171393
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 104.623430462,
+      "decDeg": -33.8688
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 128.353503564,
+      "decDeg": 56.1312
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 218.353503564,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 308.353503564,
+      "decDeg": -56.1312
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 38.353503564,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 167.345654301,
+      "decDeg": 13.286241032
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 45.233384535,
+      "decDeg": -51.916165439
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 133.348075523,
+      "decDeg": -4.231080169
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 101.585168419,
+      "decDeg": -15.965051569
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 133.569494231,
+      "decDeg": -36.483136245
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 128.430849016,
+      "decDeg": -33.792171393
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 128.353503564,
+      "decDeg": -33.8688
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 49.024045111,
+      "decDeg": 56.1312
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 139.024045111,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 229.024045111,
+      "decDeg": -56.1312
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 319.024045111,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 88.016195848,
+      "decDeg": 13.286241032
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 325.903926082,
+      "decDeg": -51.916165439
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 54.01861707,
+      "decDeg": -4.231080169
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 22.255709965,
+      "decDeg": -15.965051569
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 54.240035777,
+      "decDeg": -36.483136245
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 49.101390563,
+      "decDeg": -33.792171393
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 49.024045111,
+      "decDeg": -33.8688
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 330.639311566,
+      "decDeg": 56.1312
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 60.639311566,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 150.639311566,
+      "decDeg": -56.1312
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 240.639311566,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 9.631462303,
+      "decDeg": 13.286241032
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 247.519192537,
+      "decDeg": -51.916165439
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 335.633883525,
+      "decDeg": -4.231080169
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 303.870976421,
+      "decDeg": -15.965051569
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 335.855302233,
+      "decDeg": -36.483136245
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 330.716657018,
+      "decDeg": -33.792171393
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 330.639311566,
+      "decDeg": -33.8688
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 208.938141125,
+      "decDeg": 56.1312
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 298.938141125,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 28.938141125,
+      "decDeg": -56.1312
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 118.938141125,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 247.930291862,
+      "decDeg": 13.286241032
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 125.818022096,
+      "decDeg": -51.916165439
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 213.932713084,
+      "decDeg": -4.231080169
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 182.169805979,
+      "decDeg": -15.965051569
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 214.154131792,
+      "decDeg": -36.483136245
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 209.015486577,
+      "decDeg": -33.792171393
+    },
+    {
+      "site": "Sydney_AU",
+      "latitudeDeg": -33.8688,
+      "longitudeDeg": 151.2093,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 208.938141125,
+      "decDeg": -33.8688
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 195.179431045,
+      "decDeg": 35.1981
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 285.179431045,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 15.179431045,
+      "decDeg": -35.1981
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 105.179431045,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 233.009483637,
+      "decDeg": -3.187710107
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 86.066637898,
+      "decDeg": -49.601623681
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 200.68031838,
+      "decDeg": -25.078566325
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 163.565637232,
+      "decDeg": -34.303984028
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 202.953297617,
+      "decDeg": -57.28989638
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 195.290736662,
+      "decDeg": -54.725244552
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 195.179431045,
+      "decDeg": -54.8019
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 245.111130462,
+      "decDeg": 35.1981
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 335.111130462,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 65.111130462,
+      "decDeg": -35.1981
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 155.111130462,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 282.941183054,
+      "decDeg": -3.187710107
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 135.998337316,
+      "decDeg": -49.601623681
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 250.612017797,
+      "decDeg": -25.078566325
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 213.497336649,
+      "decDeg": -34.303984028
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 252.884997034,
+      "decDeg": -57.28989638
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 245.222436079,
+      "decDeg": -54.725244552
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 245.111130462,
+      "decDeg": -54.8019
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 268.841203564,
+      "decDeg": 35.1981
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 358.841203564,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 88.841203564,
+      "decDeg": -35.1981
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 178.841203564,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 306.671256156,
+      "decDeg": -3.187710107
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 159.728410418,
+      "decDeg": -49.601623681
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 274.342090899,
+      "decDeg": -25.078566325
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 237.227409751,
+      "decDeg": -34.303984028
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 276.615070136,
+      "decDeg": -57.28989638
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 268.952509181,
+      "decDeg": -54.725244552
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 268.841203564,
+      "decDeg": -54.8019
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 189.511745111,
+      "decDeg": 35.1981
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 279.511745111,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 9.511745111,
+      "decDeg": -35.1981
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 99.511745111,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 227.341797703,
+      "decDeg": -3.187710107
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 80.398951964,
+      "decDeg": -49.601623681
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 195.012632446,
+      "decDeg": -25.078566325
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 157.897951298,
+      "decDeg": -34.303984028
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 197.285611683,
+      "decDeg": -57.28989638
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 189.623050728,
+      "decDeg": -54.725244552
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 189.511745111,
+      "decDeg": -54.8019
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 111.127011566,
+      "decDeg": 35.1981
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 201.127011566,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 291.127011566,
+      "decDeg": -35.1981
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 21.127011566,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 148.957064158,
+      "decDeg": -3.187710107
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 2.01421842,
+      "decDeg": -49.601623681
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 116.627898901,
+      "decDeg": -25.078566325
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 79.513217753,
+      "decDeg": -34.303984028
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 118.900878138,
+      "decDeg": -57.28989638
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 111.238317183,
+      "decDeg": -54.725244552
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 111.127011566,
+      "decDeg": -54.8019
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 349.425841125,
+      "decDeg": 35.1981
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 79.425841125,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 169.425841125,
+      "decDeg": -35.1981
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 259.425841125,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 27.255893717,
+      "decDeg": -3.187710107
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 240.313047978,
+      "decDeg": -49.601623681
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 354.92672846,
+      "decDeg": -25.078566325
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 317.812047312,
+      "decDeg": -34.303984028
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 357.199707697,
+      "decDeg": -57.28989638
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 349.537146742,
+      "decDeg": -54.725244552
+    },
+    {
+      "site": "Ushuaia_AR",
+      "latitudeDeg": -54.8019,
+      "longitudeDeg": -68.303,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 349.425841125,
+      "decDeg": -54.8019
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 81.924331045,
+      "decDeg": 71.8584
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 171.924331045,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 261.924331045,
+      "decDeg": -71.8584
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 351.924331045,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 124.530025165,
+      "decDeg": 25.229690315
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 16.841178198,
+      "decDeg": -47.528609418
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 87.006411521,
+      "decDeg": 11.436113081
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 56.251251211,
+      "decDeg": -1.83829524
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 86.409258141,
+      "decDeg": -20.81124295
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 81.991942675,
+      "decDeg": -18.064983763
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 81.924331045,
+      "decDeg": -18.1416
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 131.856030462,
+      "decDeg": 71.8584
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 221.856030462,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 311.856030462,
+      "decDeg": -71.8584
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 41.856030462,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 174.461724583,
+      "decDeg": 25.229690315
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 66.772877615,
+      "decDeg": -47.528609418
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 136.938110939,
+      "decDeg": 11.436113081
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 106.182950628,
+      "decDeg": -1.83829524
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 136.340957559,
+      "decDeg": -20.81124295
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 131.923642092,
+      "decDeg": -18.064983763
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 131.856030462,
+      "decDeg": -18.1416
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 155.586103564,
+      "decDeg": 71.8584
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 245.586103564,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 335.586103564,
+      "decDeg": -71.8584
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 65.586103564,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 198.191797685,
+      "decDeg": 25.229690315
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 90.502950717,
+      "decDeg": -47.528609418
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 160.66818404,
+      "decDeg": 11.436113081
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 129.91302373,
+      "decDeg": -1.83829524
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 160.071030661,
+      "decDeg": -20.81124295
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 155.653715194,
+      "decDeg": -18.064983763
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 155.586103564,
+      "decDeg": -18.1416
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 76.256645111,
+      "decDeg": 71.8584
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 166.256645111,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 256.256645111,
+      "decDeg": -71.8584
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 346.256645111,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 118.862339231,
+      "decDeg": 25.229690315
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 11.173492264,
+      "decDeg": -47.528609418
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 81.338725587,
+      "decDeg": 11.436113081
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 50.583565277,
+      "decDeg": -1.83829524
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 80.741572207,
+      "decDeg": -20.81124295
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 76.324256741,
+      "decDeg": -18.064983763
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 76.256645111,
+      "decDeg": -18.1416
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 357.871911566,
+      "decDeg": 71.8584
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 87.871911566,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 177.871911566,
+      "decDeg": -71.8584
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 267.871911566,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 40.477605687,
+      "decDeg": 25.229690315
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 292.788758719,
+      "decDeg": -47.528609418
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 2.953992043,
+      "decDeg": 11.436113081
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 332.198831732,
+      "decDeg": -1.83829524
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 2.356838663,
+      "decDeg": -20.81124295
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 357.939523196,
+      "decDeg": -18.064983763
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 357.871911566,
+      "decDeg": -18.1416
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 236.170741125,
+      "decDeg": 71.8584
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 326.170741125,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 56.170741125,
+      "decDeg": -71.8584
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 146.170741125,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 278.776435245,
+      "decDeg": 25.229690315
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 171.087588278,
+      "decDeg": -47.528609418
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 241.252821601,
+      "decDeg": 11.436113081
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 210.497661291,
+      "decDeg": -1.83829524
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 240.655668221,
+      "decDeg": -20.81124295
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 236.238352755,
+      "decDeg": -18.064983763
+    },
+    {
+      "site": "Suva_FJ",
+      "latitudeDeg": -18.1416,
+      "longitudeDeg": 178.4419,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 236.170741125,
+      "decDeg": -18.1416
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 278.076031045,
+      "decDeg": 25.4989
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 188.076031045,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 98.076031045,
+      "decDeg": -25.4989
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 8.076031045,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 216.935052279,
+      "decDeg": 45.636585253
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 59.507495608,
+      "decDeg": 10.817087522
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 227.595579755,
+      "decDeg": 83.537504694
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 26.847639456,
+      "decDeg": 62.784462579
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 106.884558925,
+      "decDeg": 61.488827276
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 98.225764626,
+      "decDeg": 64.577628618
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-08T06:30:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 98.076031045,
+      "decDeg": 64.5011
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 328.007730462,
+      "decDeg": 25.4989
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 238.007730462,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 148.007730462,
+      "decDeg": -25.4989
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 58.007730462,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 266.866751697,
+      "decDeg": 45.636585253
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 109.439195026,
+      "decDeg": 10.817087522
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 277.527279173,
+      "decDeg": 83.537504694
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 76.779338874,
+      "decDeg": 62.784462579
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 156.816258343,
+      "decDeg": 61.488827276
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 148.157464044,
+      "decDeg": 64.577628618
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-03-20T09:02:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 148.007730462,
+      "decDeg": 64.5011
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 351.737803564,
+      "decDeg": 25.4989
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 261.737803564,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 171.737803564,
+      "decDeg": -25.4989
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 81.737803564,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 290.596824799,
+      "decDeg": 45.636585253
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 133.169268128,
+      "decDeg": 10.817087522
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 301.257352275,
+      "decDeg": 83.537504694
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 100.509411975,
+      "decDeg": 62.784462579
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 180.546331445,
+      "decDeg": 61.488827276
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 171.887537146,
+      "decDeg": 64.577628618
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-06-21T04:31:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 171.737803564,
+      "decDeg": 64.5011
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 272.408345111,
+      "decDeg": 25.4989
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 182.408345111,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 92.408345111,
+      "decDeg": -25.4989
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 2.408345111,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 211.267366345,
+      "decDeg": 45.636585253
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 53.839809674,
+      "decDeg": 10.817087522
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 221.927893821,
+      "decDeg": 83.537504694
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 21.179953522,
+      "decDeg": 62.784462579
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 101.216872991,
+      "decDeg": 61.488827276
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 92.558078692,
+      "decDeg": 64.577628618
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-09-08T18:00:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 92.408345111,
+      "decDeg": 64.5011
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 194.023611566,
+      "decDeg": 25.4989
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 104.023611566,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 14.023611566,
+      "decDeg": -25.4989
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 284.023611566,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 132.882632801,
+      "decDeg": 45.636585253
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 335.45507613,
+      "decDeg": 10.817087522
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 143.543160277,
+      "decDeg": 83.537504694
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 302.795219977,
+      "decDeg": 62.784462579
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 22.832139447,
+      "decDeg": 61.488827276
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 14.173345148,
+      "decDeg": 64.577628618
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-11-01T09:15:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 14.023611566,
+      "decDeg": 64.5011
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 0.0,
+      "raDeg": 72.322441125,
+      "decDeg": 25.4989
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 90.0,
+      "raDeg": 342.322441125,
+      "decDeg": 0.0
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 180.0,
+      "raDeg": 252.322441125,
+      "decDeg": -25.4989
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 0.0,
+      "azDeg": 270.0,
+      "raDeg": 162.322441125,
+      "decDeg": -0.0
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 30.0,
+      "azDeg": 45.0,
+      "raDeg": 11.181462359,
+      "decDeg": 45.636585253
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 30.0,
+      "azDeg": 225.0,
+      "raDeg": 213.753905688,
+      "decDeg": 10.817087522
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 60.0,
+      "azDeg": 10.0,
+      "raDeg": 21.841989835,
+      "decDeg": 83.537504694
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 60.0,
+      "azDeg": 300.0,
+      "raDeg": 181.094049536,
+      "decDeg": 62.784462579
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 85.0,
+      "azDeg": 123.0,
+      "raDeg": 261.130969005,
+      "decDeg": 61.488827276
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 89.9,
+      "azDeg": 40.0,
+      "raDeg": 252.472174706,
+      "decDeg": 64.577628618
+    },
+    {
+      "site": "Nome_US",
+      "latitudeDeg": 64.5011,
+      "longitudeDeg": -165.4064,
+      "instant": "2026-12-21T21:49:00Z",
+      "altDeg": 90.0,
+      "azDeg": 0.0,
+      "raDeg": 252.322441125,
+      "decDeg": 64.5011
+    }
+  ]
+}

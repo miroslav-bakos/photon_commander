@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Photon Commander app icon</title>
+  <desc id="desc">A bright photon star held inside an orbital targeting ring.</desc>
+  <rect x="18" y="18" width="988" height="988" rx="210" fill="#06112f"/>
+  <circle cx="512" cy="512" r="294" fill="none" stroke="#35cfee" stroke-width="54" stroke-linecap="round" stroke-dasharray="1510 338" transform="rotate(-35 512 512)"/>
+  <circle cx="718" cy="302" r="42" fill="#8af5ff"/>
+  <path d="M512 252 557 467 772 512 557 557 512 772 467 557 252 512 467 467Z" fill="#f8fdff"/>
+  <circle cx="512" cy="512" r="28" fill="#35cfee"/>
+</svg>

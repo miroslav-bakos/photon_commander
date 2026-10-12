@@ -1,0 +1,300 @@
+# SSC bundled named-bright-star table: proper star names paired with J2000
+# position, apparent magnitude and Bright Star Catalogue (HR) designation,
+# for stars brighter than Vmag 4.0.
+#
+# Source and licence (THIRD_PARTY_NOTICES.md, "Bundled named-bright-star table"
+# — read that section before assuming HEASARC/public-domain the way
+# docs/IMPLEMENTATION.md's M11 table originally, and wrongly, did):
+#
+# The IAU Division C Working Group on Star Names (WGSN)'s "IAU Catalog of
+# Star Names" (IAU-CSN) is the internationally recognised source for which
+# stars have an approved common name (https://www.iau.org/public/themes/naming_stars/).
+# NASA HEASARC hosts a bright-star position/magnitude table (BSC5P,
+# heasarc_bsc5p, Hoffleit & Warren, public domain — no copyright notice on
+# its documentation page) but that table has no field for a star's common
+# name at all, only Bayer/Flamsteed labels; it cannot answer "which stars
+# are named" by itself, so it is not the source of the data below.
+#
+# source: IAU Division C Working Group on Star Names (WGSN), "IAU Catalog of Star Names" (IAU-CSN)
+# license: CC-BY-4.0
+# license_url: https://creativecommons.org/licenses/by/4.0/
+# attribution: IAU Division C Working Group on Star Names (WGSN), "IAU Catalog of Star Names" (IAU-CSN), https://www.iau.org/public/themes/naming_stars/, CC BY 4.0 International (https://www.iau.org/copyright/)
+# upstream: https://www.pas.rochester.edu/~emamajek/WGSN/IAU-CSN.txt (WGSN secretary's working mirror of the IAU-published catalogue)
+# upstream_last_updated: 2022-04-04 (per the file's own header)
+# fetched: 2026-09-07
+# built_by: scripts/build-bright-stars.py
+#
+# credit: Star names: IAU Working Group on Star Names (WGSN), CC BY 4.0
+#   The one-line form of the `# source:`/`# attribution:` block above, for
+#   UI credit lines (`ssc.astro.stars.bright_stars_credit`) — read verbatim,
+#   never assembled in Python, the same discipline
+#   `ssc.astro.constellations.boundaries_credit` applies to its own file.
+#
+# Magnitude cutoff and rationale: see the module docstring of
+# scripts/build-bright-stars.py ("Magnitude cutoff — why 4.0"). 241
+# stars, all carrying an `HR` designation.
+#
+# Changes made to the upstream data:
+#   - only rows with V/G magnitude <= 4.0 are kept (IAU-CSN also names
+#     much fainter exoplanet-host stars; those are dropped, not guessed into
+#     a row with a magnitude the source did not give for this purpose)
+#   - 2 magnitude-less named pulsars (Geminga, Lich) are dropped: `None`
+#     means unknown, never a fabricated zero
+#   - the "Name/Diacritics" column is dropped (every kept star's diacritics
+#     form is byte-identical to its ASCII form; ASCII is what this project's
+#     CSV files use elsewhere, e.g. openngc.csv)
+#   - `id_bayer`/`id_greek`/`constellation`/`WDS`/`HIP`/approval-date columns
+#     are dropped: not part of this deliverable's schema (name, designation,
+#     position, magnitude)
+#
+# Schema (one CSV row per star; a header row names the columns; '#' lines
+# are comments and are skipped by the reader):
+#   name             the star's IAU-approved proper name (ASCII form)
+#   designation      the catalogue's own cross-reference, "HR <number>"
+#                     (Bright Star Catalogue / Harvard Revised number)
+#   ra_j2000_deg     degrees [0, 360)
+#   dec_j2000_deg    degrees [-90, 90]
+#   magnitude        apparent V (or G, IAU-CSN's Gaia-band fallback for a
+#                     handful of stars) magnitude
+name,designation,ra_j2000_deg,dec_j2000_deg,magnitude
+Acamar,HR 897,44.565311,-40.304672,2.88
+Achernar,HR 472,24.428523,-57.236753,0.45
+Achird,HR 219,12.276213,57.815187,3.46
+Acrab,HR 5984,241.359300,-19.805453,2.56
+Acrux,HR 4730,186.649563,-63.099093,1.33
+Adhafera,HR 4031,154.172567,23.417312,3.43
+Adhara,HR 2618,104.656453,-28.972086,1.50
+Ain,HR 1409,67.154163,19.180435,3.53
+Albaldah,HR 7264,287.440971,-21.023615,2.88
+Albali,HR 7950,311.918969,-9.495775,3.78
+Albireo,HR 7417,292.680351,27.959692,3.37
+Alcor,HR 5062,201.306403,54.987954,3.99
+Alcyone,HR 1165,56.871152,24.105136,2.85
+Aldebaran,HR 1457,68.980163,16.509302,0.87
+Alderamin,HR 8162,319.644885,62.585574,2.45
+Aldhanab,HR 8353,328.482192,-37.364855,3.00
+Aldhibah,HR 6396,257.196650,65.714684,3.17
+Alfirk,HR 8238,322.164987,70.560715,3.23
+Algedi,HR 7754,304.513566,-12.544852,3.58
+Algenib,HR 39,3.308963,15.183594,2.83
+Algieba,HR 4057,154.993144,19.841489,2.61
+Algol,HR 936,47.042215,40.955648,2.09
+Algorab,HR 4757,187.466063,-16.515431,2.94
+Alhena,HR 2421,99.427960,16.399280,1.93
+Alioth,HR 4905,193.507290,55.959823,1.76
+Aljanah,HR 7949,311.552843,33.970257,2.48
+Alkaid,HR 5191,206.885157,49.313267,1.85
+Almaaz,HR 1605,75.492219,43.823307,3.03
+Almach,HR 603,30.974804,42.329725,2.10
+Alnair,HR 8425,332.058270,-46.960974,1.73
+Alnasl,HR 6746,271.452025,-30.424100,2.98
+Alnilam,HR 1903,84.053389,-1.201919,1.69
+Alnitak,HR 1948,85.189694,-1.942574,1.74
+Alniyat,HR 6084,245.297149,-25.592792,2.90
+Alphard,HR 3748,141.896847,-8.658602,1.99
+Alphecca,HR 5793,233.671950,26.714693,2.22
+Alpheratz,HR 15,2.096916,29.090431,2.07
+Alpherg,HR 437,22.870873,15.345823,3.83
+Alrescha,HR 596,30.511772,2.763735,3.82
+Alsephina,HR 3485,131.175944,-54.708819,1.99
+Alshain,HR 7602,298.828304,6.406763,3.71
+Altair,HR 7557,297.695827,8.868321,0.76
+Altais,HR 7310,288.138750,67.661541,3.07
+Aludra,HR 2827,111.023760,-29.303106,2.45
+Alula Borealis,HR 4377,169.619737,33.094305,3.49
+Alzirr,HR 2484,101.322351,12.895592,3.35
+Ankaa,HR 99,6.570939,-42.306084,2.40
+Antares,HR 6134,247.351915,-26.432003,1.06
+Arcturus,HR 5340,213.915300,19.182409,-0.05
+Arkab Prior,HR 7337,290.659551,-44.458959,3.96
+Arneb,HR 1865,83.182567,-17.822289,2.58
+Ascella,HR 7194,285.653043,-29.880063,2.60
+Asellus Australis,HR 3461,131.171248,18.154309,3.94
+Ashlesha,HR 3482,131.693794,6.418809,3.49
+Aspidiske,HR 3699,139.272529,-59.275232,2.21
+Athebyne,HR 6132,245.997858,61.514214,2.73
+Atik,HR 1131,56.079720,32.288240,3.84
+Atlas,HR 1178,57.290597,24.053415,3.62
+Atria,HR 6217,252.166229,-69.027712,1.91
+Avior,HR 3307,125.628480,-59.509484,1.86
+Azha,HR 874,44.106873,-8.898145,3.89
+Azmidi,HR 3045,117.323563,-24.859786,3.45
+Baten Kaitos,HR 539,27.865137,-10.335044,3.74
+Beemim,HR 1393,66.009239,-34.016848,3.97
+Bellatrix,HR 1790,81.282764,6.349703,1.64
+Betelgeuse,HR 2061,88.792939,7.407064,0.45
+Bharani,HR 838,42.495972,27.260507,3.61
+Biham,HR 8450,332.549939,6.197863,3.52
+Brachium,HR 5603,226.017567,-25.281961,3.25
+Canopus,HR 2326,95.987958,-52.695661,-0.62
+Capella,HR 1708,79.172328,45.997991,0.08
+Caph,HR 21,2.294522,59.149781,2.28
+Castor,HR 2891,113.649428,31.888276,1.98
+Cebalrai,HR 6603,265.868136,4.567300,2.76
+Chamukuy,HR 1412,67.165586,15.870882,3.73
+Chertan,HR 4359,168.560019,15.429571,3.33
+Cor Caroli,HR 4915,194.006943,38.318376,2.89
+Cursa,HR 1666,76.962440,-5.086446,2.78
+Dabih,HR 7776,305.252803,-14.781405,3.05
+Dalim,HR 963,48.018864,-28.987620,3.86
+Deneb,HR 7924,310.357980,45.280339,1.25
+Deneb Algedi,HR 8322,326.760184,-16.127287,2.85
+Denebola,HR 4534,177.264910,14.572058,2.14
+Diphda,HR 188,10.897379,-17.986606,2.04
+Dschubba,HR 5953,240.083359,-22.621710,2.29
+Dubhe,HR 4301,165.931965,61.751035,1.81
+Edasich,HR 5744,231.232396,58.966063,3.29
+Electra,HR 1142,56.218904,24.113336,3.72
+Elnath,HR 1791,81.572971,28.607452,1.65
+Eltanin,HR 6705,269.151541,51.488896,2.24
+Enif,HR 8308,326.046484,9.875009,2.38
+Errai,HR 8974,354.836655,77.632313,3.21
+Fang,HR 5944,239.712972,-26.114108,2.89
+Fawaris,HR 7528,296.243658,45.130810,2.90
+Fomalhaut,HR 8728,344.412693,-29.622237,1.17
+Fulu,HR 153,9.242851,53.896908,3.69
+Furud,HR 2282,95.078300,-30.063367,3.02
+Fuyue,HR 6630,267.464503,-37.043305,3.19
+Gacrux,HR 4763,187.791498,-57.113213,1.59
+Giausar,HR 4434,172.850920,69.331075,3.82
+Gienah,HR 4662,183.951543,-17.541929,2.58
+Ginan,HR 4700,185.340039,-60.401147,3.59
+Gomeisa,HR 2845,111.787674,8.289316,2.89
+Grumium,HR 6688,268.382207,56.872646,3.73
+Hadar,HR 5267,210.955856,-60.373035,0.61
+Haedus,HR 1641,76.628722,41.234476,3.18
+Hamal,HR 617,31.793357,23.462418,2.01
+Hassaleh,HR 1577,74.248421,33.166100,2.69
+Hatysa,HR 1899,83.858258,-05.909901,2.80
+Heze,HR 5107,203.673300,-0.595820,3.38
+Homam,HR 8634,340.365503,10.831363,3.41
+Iklil,HR 5928,239.221151,-29.214073,3.87
+Imai,HR 4656,183.786320,-58.748927,2.75
+Izar,HR 5506,221.246763,27.074207,2.35
+Kaffaljidhma,HR 804,40.825163,3.235816,3.56
+Kaus Australis,HR 6879,276.042993,-34.384616,1.79
+Kaus Borealis,HR 6913,276.992668,-25.421701,2.82
+Kaus Media,HR 6859,275.248508,-29.828104,2.72
+Kitalpha,HR 8131,318.955949,5.247865,3.92
+Kochab,HR 5563,222.676357,74.155504,2.07
+Kornephoros,HR 6148,247.554998,21.489611,2.78
+Kraz,HR 4786,188.596810,-23.396759,2.65
+Larawag,HR 6241,252.540878,-34.293232,2.29
+Lesath,HR 6508,262.690979,-37.295813,2.70
+Mahasim,HR 2095,89.930292,37.212585,2.65
+Maia,HR 1149,56.456695,24.367751,3.87
+Marfik,HR 6149,247.728453,1.983888,3.82
+Markab,HR 8781,346.190223,15.205267,2.49
+Markeb,HR 3734,140.528407,-55.010667,2.47
+Matar,HR 8650,340.750579,30.221244,2.93
+Mebsuta,HR 2473,100.983026,25.131127,3.06
+Megrez,HR 4660,183.856503,57.032615,3.32
+Meissa,HR 1879,83.784486,9.934156,3.39
+Menkalinan,HR 2088,89.882179,44.947433,1.90
+Menkar,HR 911,45.569885,4.089737,2.54
+Menkent,HR 5288,211.670617,-36.369958,2.06
+Menkib,HR 1228,59.741253,35.791032,3.98
+Merak,HR 4295,165.460319,56.382426,2.34
+Miaplacidus,HR 3685,138.299906,-69.717208,1.67
+Mimosa,HR 4853,191.930263,-59.688764,1.25
+Minelauva,HR 4910,193.900869,3.397470,3.39
+Mintaka,HR 1852,83.001667,-0.299095,2.25
+Mirach,HR 337,17.433013,35.620557,2.07
+Miram,HR 834,42.674207,55.895497,3.77
+Mirfak,HR 1017,51.080709,49.861179,1.79
+Mirzam,HR 2294,95.674939,-17.955919,1.98
+Misam,HR 941,47.374048,44.857541,3.79
+Mizar,HR 5054,200.981429,54.925362,2.23
+Mothallah,HR 544,28.270450,29.578826,3.42
+Muphrid,HR 5235,208.671161,18.397717,2.68
+Muscida,HR 3323,127.566128,60.718170,3.35
+Naos,HR 3165,120.896031,-40.003148,2.21
+Nashira,HR 8278,325.022735,-16.662308,3.69
+Nekkar,HR 5602,225.486510,40.390567,3.49
+Nembus,HR 464,24.498154,48.628214,3.59
+Nganurganity,HR 2646,105.429782,-27.934830,3.49
+Nihal,HR 1829,82.061346,-20.759441,2.83
+Nunki,HR 7121,283.816360,-26.296724,2.05
+Nusakan,HR 5747,231.957211,29.105699,3.90
+Okab,HR 7235,286.352533,13.863477,2.99
+Paikauhale,HR 6165,248.970637,-28.216017,2.82
+Peacock,HR 7790,306.411904,-56.735090,1.94
+Phact,HR 1956,84.912254,-34.074110,2.65
+Phecda,HR 4554,178.457679,53.694758,2.41
+Pherkad,HR 5735,230.182150,71.834017,3.00
+Pipirima,HR 6252,253.083939,-38.017535,3.56
+Polaris,HR 424,37.954561,89.264109,2.13
+Polis,HR 6812,273.440870,-21.058832,3.84
+Pollux,HR 2990,116.328958,28.026199,1.16
+Porrima,HR 4825,190.415181,-1.449373,3.44
+Praecipua,HR 4247,163.327937,34.214872,3.79
+Prima Hyadum,HR 1346,64.948349,15.627643,3.65
+Procyon,HR 2943,114.825493,5.224993,0.40
+Propus,HR 2216,93.719405,22.506794,3.32
+Ran,HR 1084,53.232687,-9.458259,3.73
+Rana,HR 1136,55.812086,-9.763392,3.53
+Rasalas,HR 3905,148.190903,26.006953,3.88
+Rasalgethi,HR 6406,258.661910,14.390333,3.37
+Rasalhague,HR 6556,263.733627,12.560035,2.08
+Rastaban,HR 6536,262.608174,52.301389,2.79
+Regulus,HR 3982,152.092962,11.967209,1.36
+Rigel,HR 1713,78.634467,-8.201638,0.18
+Rigil Kentaurus,HR 5459,219.902066,-60.833975,-0.01
+Rotanev,HR 7882,309.387235,14.595115,3.64
+Ruchbah,HR 403,21.453964,60.235284,2.66
+Rukbat,HR 7348,290.971570,-40.615940,3.96
+Sabik,HR 6378,257.594529,-15.724907,2.43
+Saclateni,HR 1612,75.619531,41.075839,3.69
+Sadachbia,HR 8518,335.414064,-1.387334,3.86
+Sadalbari,HR 8684,342.500809,24.601577,3.51
+Sadalmelik,HR 8414,331.445983,-0.319849,2.95
+Sadalsuud,HR 8232,322.889715,-5.571176,2.90
+Sadr,HR 7796,305.557091,40.256679,2.23
+Saiph,HR 2004,86.939120,-9.669605,2.07
+Sargas,HR 6553,264.329711,-42.997824,1.86
+Sarin,HR 6410,258.757963,24.839204,3.12
+Scheat,HR 8775,345.943572,28.082785,2.44
+Schedar,HR 168,10.126838,56.537331,2.24
+Secunda Hyadum,HR 1373,65.733719,17.542514,3.78
+Segin,HR 0542,28.598857,63.670101,3.35
+Seginus,HR 5435,218.019466,38.308251,3.04
+Shaula,HR 6527,263.402167,-37.103824,2.08
+Sheliak,HR 7106,282.519978,33.362668,3.60
+Sheratan,HR 553,28.660046,20.808031,2.70
+Sirius,HR 2491,101.287155,-16.716116,-1.45
+Skat,HR 8709,343.662556,-15.820827,3.27
+Spica,HR 5056,201.298247,-11.161319,0.98
+Sualocin,HR 7906,309.909530,15.912073,3.86
+Subra,HR 3852,145.287640,9.892308,3.52
+Suhail,HR 3634,136.998993,-43.432589,2.23
+Sulafat,HR 7178,284.735928,32.689557,3.25
+Tabit,HR 1543,72.460045,6.961275,3.19
+Taiyangshou,HR 4518,176.512559,47.779406,3.69
+Talitha,HR 3569,134.801890,48.041826,3.12
+Tania Australis,HR 4069,155.582250,41.499519,3.06
+Tania Borealis,HR 4033,154.274095,42.914356,3.45
+Tarazed,HR 7525,296.564915,10.613262,2.72
+Tarf,HR 3249,124.128838,9.185544,3.53
+Tejat,HR 2286,95.740112,22.513583,2.87
+Theemin,HR 1464,68.887660,-30.562341,3.81
+Thuban,HR 5291,211.097291,64.375851,3.67
+Tiaki,HR 8636,340.666876,-46.884576,2.12
+Tianguan,HR 1910,84.411189,21.142544,2.97
+Toliman,HR 5460,219.896096,-60.837528,1.35
+Tureis,HR 3185,121.886037,-24.304324,2.83
+Ukdah,HR 3845,144.964008,-1.142810,3.90
+Unukalhai,HR 5854,236.066976,6.425629,2.63
+Vega,HR 7001,279.234735,38.783689,0.03
+Vindemiatrix,HR 4932,195.544157,10.959149,2.85
+Wasat,HR 2777,110.030749,21.982316,3.52
+Wazn,HR 2040,87.739968,-35.768310,3.12
+Wezen,HR 2693,107.097850,-26.393200,1.83
+Xamidimura,HR 6247,252.967630,-38.047380,3.00
+Yed Posterior,HR 6075,244.580374,-4.692510,3.23
+Yed Prior,HR 6056,243.586411,-3.694323,2.73
+Zaurak,HR 1231,59.507360,-13.508516,2.97
+Zavijava,HR 4540,177.673826,1.764717,3.59
+Zosma,HR 4357,168.527089,20.523718,2.56
+Zubenelgenubi,HR 5531,222.719638,-16.041777,2.75
+Zubenelhakrabi,HR 5787,233.881578,-14.789536,3.91
+Zubeneschamali,HR 5685,229.251724,-9.382914,2.61

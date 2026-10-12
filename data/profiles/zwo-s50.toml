@@ -1,0 +1,46 @@
+# ZWO Seestar S50 — published hardware profile.
+
+id = "zwo-s50"
+name = "ZWO Seestar S50"
+vendor = "ZWO"
+aliases = ["Seestar S50", "S50", "SeestarS50"]
+source_urls = [
+  "https://us.zwoastro.com/products/seestar-s50",
+  "https://i.zwoastro.com/wp-content/uploads/2025/06/4a9ec16c2b004b518b414facc5eab5e5.pdf",
+]
+mount = "altaz"
+eq_mode_available = true
+
+[capabilities]
+tele_camera = true
+wide_camera = false
+wide_camera_autofocus = false
+focuser = true
+filter_wheel = true
+dew_heater = true
+
+[[optics]]
+id = "tele"
+label = "Telephoto"
+focal_length_mm = 250.0
+aperture_mm = 50.0
+focal_ratio = 5.0
+design = "apochromatic triplet (ED)"
+sensor = { name = "Sony IMX462", w_px = 1080, h_px = 1920, pixel_um = 2.9 }
+
+[defaults]
+gain = 200
+exposure_stack_ms = 10000
+exposure_preview_ms = 500
+dither_enabled = true
+dither_pixels = 50
+dither_every_n_frames = 10
+lp_filter = false
+dew_heater_percent = 0
+
+[limits]
+min_altitude_deg = 20.0
+battery_low_percent = 15
+
+[calibration]
+measured = false

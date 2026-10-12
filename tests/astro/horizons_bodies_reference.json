@@ -1,0 +1,214 @@
+{
+  "source": "JPL Horizons on-line ephemeris system (ssd.jpl.nasa.gov), API v1.2, queried 2026-09-09.",
+  "why": "An independent check of ssc.astro.bodies. Nothing in this file was computed by SSC. Horizons runs DE441 and its own light-time/aberration/precession chain, so agreement here is evidence about the whole pipeline, not just about the kernel.",
+  "query": {
+    "EPHEM_TYPE": "OBSERVER",
+    "CENTER": "coord@399",
+    "SITE_COORD": "17.11,48.15,0.15  (lon E deg, lat N deg, elevation km)",
+    "COORD_TYPE": "GEODETIC",
+    "START_TIME": "2026-09-09 21:00",
+    "STEP_SIZE": "1 m",
+    "QUANTITIES": "1,2,10,13,24",
+    "REF_SYSTEM": "ICRF",
+    "ANG_FORMAT": "DEG",
+    "APPARENT": "AIRLESS",
+    "EXTRA_PREC": "YES",
+    "url_template": "https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND='<id>'&EPHEM_TYPE=OBSERVER&CENTER='coord@399'&SITE_COORD='17.11,48.15,0.15'&COORD_TYPE=GEODETIC&START_TIME='2026-09-09 21:00'&STOP_TIME='2026-09-09 21:01'&STEP_SIZE='1 m'&QUANTITIES='1,2,10,13,24'&REF_SYSTEM='ICRF'&ANG_FORMAT='DEG'&APPARENT='AIRLESS'&CSV_FORMAT='YES'&EXTRA_PREC='YES'"
+  },
+  "columns": {
+    "ra_icrf_deg / dec_icrf_deg": "Horizons quantity 1 - ASTROMETRIC RA/Dec, ICRF frame: light-time corrected, NO aberration.",
+    "ra_apparent_of_date_deg / dec_apparent_of_date_deg": "Horizons quantity 2 - AIRLESS APPARENT RA/Dec, true equator and equinox of date: light-time + deflection + aberration + precession + nutation, no refraction.",
+    "illuminated_percent": "Horizons quantity 10, percent of the disk lit as seen by the observer.",
+    "angular_diameter_arcsec": "Horizons quantity 13, equatorial angular width of the full disk.",
+    "sun_target_observer_deg": "Horizons quantity 24 (S-T-O). Horizons' own note: differs from the true phase angle at the few-arcsecond level because it carries stellar aberration on the down-leg."
+  },
+  "barycentre_vs_centre": "Each body is listed twice where the two differ: at the system barycentre (the SPK target ssc.astro.bodies actually uses for Mars outwards) and at the planet centre. The difference is the justification for that choice and is asserted on in the test.",
+  "site": {
+    "latitude_deg": 48.15,
+    "longitude_deg": 17.11,
+    "elevation_m": 150.0
+  },
+  "instant_utc": "2026-09-09T21:00:00Z",
+  "bodies": {
+    "sun": {
+      "horizons_command_barycentre": "10",
+      "horizons_command_centre": "10",
+      "barycentre": {
+        "ra_icrf_deg": 167.880886218,
+        "dec_icrf_deg": 5.198133313,
+        "ra_apparent_of_date_deg": 168.222937497,
+        "dec_apparent_of_date_deg": 5.054439675
+      },
+      "centre": {
+        "date": "2026-Sep-09 21:00",
+        "ra_icrf_deg": 167.880886218,
+        "dec_icrf_deg": 5.198133313,
+        "ra_apparent_of_date_deg": 168.222937497,
+        "dec_apparent_of_date_deg": 5.054439675,
+        "illuminated_percent": 100.0,
+        "angular_diameter_arcsec": 1904.784,
+        "sun_target_observer_deg": 0.0
+      }
+    },
+    "moon": {
+      "horizons_command_barycentre": "301",
+      "horizons_command_centre": "301",
+      "barycentre": {
+        "ra_icrf_deg": 152.357733582,
+        "dec_icrf_deg": 10.392997493,
+        "ra_apparent_of_date_deg": 152.709845593,
+        "dec_apparent_of_date_deg": 10.26325273
+      },
+      "centre": {
+        "date": "2026-Sep-09 21:00",
+        "ra_icrf_deg": 152.357733582,
+        "dec_icrf_deg": 10.392997493,
+        "ra_apparent_of_date_deg": 152.709845593,
+        "dec_apparent_of_date_deg": 10.26325273,
+        "illuminated_percent": 2.00039,
+        "angular_diameter_arcsec": 1908.29,
+        "sun_target_observer_deg": 163.7328
+      }
+    },
+    "mercury": {
+      "horizons_command_barycentre": "199",
+      "horizons_command_centre": "199",
+      "barycentre": {
+        "ra_icrf_deg": 178.730241492,
+        "dec_icrf_deg": 1.44519517,
+        "ra_apparent_of_date_deg": 179.069577094,
+        "dec_apparent_of_date_deg": 1.297871056
+      },
+      "centre": {
+        "date": "2026-Sep-09 21:00",
+        "ra_icrf_deg": 178.730241492,
+        "dec_icrf_deg": 1.44519517,
+        "ra_apparent_of_date_deg": 179.069577094,
+        "dec_apparent_of_date_deg": 1.297871056,
+        "illuminated_percent": 94.12292,
+        "angular_diameter_arcsec": 4.93975,
+        "sun_target_observer_deg": 28.0652
+      }
+    },
+    "venus": {
+      "horizons_command_barycentre": "299",
+      "horizons_command_centre": "299",
+      "barycentre": {
+        "ra_icrf_deg": 205.598264949,
+        "dec_icrf_deg": -15.475845301,
+        "ra_apparent_of_date_deg": 205.955898697,
+        "dec_apparent_of_date_deg": -15.610366435
+      },
+      "centre": {
+        "date": "2026-Sep-09 21:00",
+        "ra_icrf_deg": 205.598264949,
+        "dec_icrf_deg": -15.475845301,
+        "ra_apparent_of_date_deg": 205.955898697,
+        "dec_apparent_of_date_deg": -15.610366435,
+        "illuminated_percent": 32.64663,
+        "angular_diameter_arcsec": 34.23115,
+        "sun_target_observer_deg": 110.3122
+      }
+    },
+    "mars": {
+      "horizons_command_barycentre": "4",
+      "horizons_command_centre": "499",
+      "barycentre": {
+        "ra_icrf_deg": 110.234196189,
+        "dec_icrf_deg": 22.808624846,
+        "ra_apparent_of_date_deg": 110.634592229,
+        "dec_apparent_of_date_deg": 22.75890899
+      },
+      "centre": {
+        "date": "2026-Sep-09 21:00",
+        "ra_icrf_deg": 110.234196189,
+        "dec_icrf_deg": 22.808624846,
+        "ra_apparent_of_date_deg": 110.634592229,
+        "dec_apparent_of_date_deg": 22.75890899,
+        "illuminated_percent": 91.4505,
+        "angular_diameter_arcsec": 5.203398,
+        "sun_target_observer_deg": 33.9999
+      }
+    },
+    "jupiter": {
+      "horizons_command_barycentre": "5",
+      "horizons_command_centre": "599",
+      "barycentre": {
+        "ra_icrf_deg": 137.795303858,
+        "dec_icrf_deg": 16.808310717,
+        "ra_apparent_of_date_deg": 138.165494547,
+        "dec_apparent_of_date_deg": 16.700098335
+      },
+      "centre": {
+        "date": "2026-Sep-09 21:00",
+        "ra_icrf_deg": 137.795310207,
+        "dec_icrf_deg": 16.808308566,
+        "ra_apparent_of_date_deg": 138.165500888,
+        "dec_apparent_of_date_deg": 16.700096173,
+        "illuminated_percent": 99.75033,
+        "angular_diameter_arcsec": 32.15658,
+        "sun_target_observer_deg": 5.7234
+      }
+    },
+    "saturn": {
+      "horizons_command_barycentre": "6",
+      "horizons_command_centre": "699",
+      "barycentre": {
+        "ra_icrf_deg": 12.777079637,
+        "dec_icrf_deg": 2.570385652,
+        "ra_apparent_of_date_deg": 13.127592677,
+        "dec_apparent_of_date_deg": 2.718811262
+      },
+      "centre": {
+        "date": "2026-Sep-09 21:00",
+        "ra_icrf_deg": 12.777091628,
+        "dec_icrf_deg": 2.570384317,
+        "ra_apparent_of_date_deg": 13.127604668,
+        "dec_apparent_of_date_deg": 2.71880992,
+        "illuminated_percent": 99.945,
+        "angular_diameter_arcsec": 19.49285,
+        "sun_target_observer_deg": 2.6927
+      }
+    },
+    "uranus": {
+      "horizons_command_barycentre": "7",
+      "horizons_command_centre": "799",
+      "barycentre": {
+        "ra_icrf_deg": 63.425823881,
+        "dec_icrf_deg": 21.033858948,
+        "ra_apparent_of_date_deg": 63.822671454,
+        "dec_apparent_of_date_deg": 21.10262625
+      },
+      "centre": {
+        "date": "2026-Sep-09 21:00",
+        "ra_icrf_deg": 63.425839675,
+        "dec_icrf_deg": 21.033862291,
+        "ra_apparent_of_date_deg": 63.822687262,
+        "dec_apparent_of_date_deg": 21.102629556,
+        "illuminated_percent": 99.9355,
+        "angular_diameter_arcsec": 3.667249,
+        "sun_target_observer_deg": 2.9118
+      }
+    },
+    "neptune": {
+      "horizons_command_barycentre": "8",
+      "horizons_command_centre": "899",
+      "barycentre": {
+        "ra_icrf_deg": 3.370216966,
+        "dec_icrf_deg": -0.083619147,
+        "ra_apparent_of_date_deg": 3.71959979,
+        "dec_apparent_of_date_deg": 0.068059109
+      },
+      "centre": {
+        "date": "2026-Sep-09 21:00",
+        "ra_icrf_deg": 3.370215176,
+        "dec_icrf_deg": -0.083619682,
+        "ra_apparent_of_date_deg": 3.719598001,
+        "dec_apparent_of_date_deg": 0.068058574,
+        "illuminated_percent": 99.99776,
+        "angular_diameter_arcsec": 2.362083,
+        "sun_target_observer_deg": 0.5483
+      }
+    }
+  }
+}

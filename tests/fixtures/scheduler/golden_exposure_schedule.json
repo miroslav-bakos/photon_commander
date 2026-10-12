@@ -1,0 +1,180 @@
+{
+  "plan_id": "golden-plan-exposures",
+  "plan_revision": "755006ea8cc38ebc0d9c577e754c9dd5b78dd2ff71e11ddbf6b74b8460e7d085",
+  "compiled_at": "2026-08-28T12:00:00Z",
+  "night": {
+    "date": "2026-08-28",
+    "tz": "Europe/London",
+    "window_start_utc": "2026-08-28T11:00:00Z",
+    "window_end_utc": "2026-08-29T11:00:00Z",
+    "dark_start_utc": "2026-08-28T21:02:59.212703Z",
+    "dark_end_utc": "2026-08-29T02:59:57.825159Z",
+    "solar_events": [
+      {
+        "event": "solar_transit",
+        "when_utc": "2026-08-28T12:01:16.866385Z",
+        "outcome": "occurs",
+        "threshold_deg": 0.0
+      },
+      {
+        "event": "sunset",
+        "when_utc": "2026-08-28T18:56:37.180873Z",
+        "outcome": "occurs",
+        "threshold_deg": -1.0301739820199813
+      },
+      {
+        "event": "civil_dusk",
+        "when_utc": "2026-08-28T19:30:34.890120Z",
+        "outcome": "occurs",
+        "threshold_deg": -6.0
+      },
+      {
+        "event": "nautical_dusk",
+        "when_utc": "2026-08-28T20:14:11.505276Z",
+        "outcome": "occurs",
+        "threshold_deg": -12.0
+      },
+      {
+        "event": "astronomical_dusk",
+        "when_utc": "2026-08-28T21:02:59.212703Z",
+        "outcome": "occurs",
+        "threshold_deg": -18.0
+      },
+      {
+        "event": "astronomical_midnight",
+        "when_utc": "2026-08-29T00:01:28.518931Z",
+        "outcome": "occurs",
+        "threshold_deg": -18.0
+      },
+      {
+        "event": "astronomical_dawn",
+        "when_utc": "2026-08-29T02:59:57.825159Z",
+        "outcome": "occurs",
+        "threshold_deg": -18.0
+      },
+      {
+        "event": "nautical_dawn",
+        "when_utc": "2026-08-29T03:48:47.496353Z",
+        "outcome": "occurs",
+        "threshold_deg": -12.0
+      },
+      {
+        "event": "civil_dawn",
+        "when_utc": "2026-08-29T04:32:26.524683Z",
+        "outcome": "occurs",
+        "threshold_deg": -6.0
+      },
+      {
+        "event": "sunrise",
+        "when_utc": "2026-08-29T05:06:26.671963Z",
+        "outcome": "occurs",
+        "threshold_deg": -1.0301739820199813
+      }
+    ],
+    "lunar_events": [
+      {
+        "event": "moonrise",
+        "when_utc": "2026-08-28T18:56:02.095730Z",
+        "outcome": "occurs",
+        "threshold_deg": -0.5667
+      },
+      {
+        "event": "moon_transit",
+        "when_utc": "2026-08-29T00:36:29.055093Z",
+        "outcome": "occurs",
+        "threshold_deg": 0.0
+      },
+      {
+        "event": "moonset",
+        "when_utc": "2026-08-29T06:32:17.992391Z",
+        "outcome": "occurs",
+        "threshold_deg": -0.5667
+      }
+    ]
+  },
+  "items": [
+    {
+      "item_id": "startup",
+      "kind": "startup",
+      "enabled": true,
+      "start_utc": "2026-08-28T20:42:59.212703Z",
+      "end_utc": "2026-08-28T20:50:59.212703Z",
+      "resolution": "Astronomical dusk -20 → 21:42",
+      "end_resolution": "8 min → 21:50",
+      "target": null,
+      "panels": [],
+      "diagnostics": []
+    },
+    {
+      "item_id": "slew-ngc2244",
+      "kind": "slew",
+      "enabled": true,
+      "start_utc": "2026-08-28T20:50:59.212703Z",
+      "end_utc": "2026-08-28T20:52:59.212703Z",
+      "resolution": "Previous item → 21:50",
+      "end_resolution": "2 min → 21:52",
+      "target": {
+        "kind": "catalog",
+        "name": "NGC 2244",
+        "tracking_rate": "sidereal",
+        "moves": false,
+        "ra_j2000_deg": 97.9755,
+        "dec_j2000_deg": 4.9407,
+        "resolved_at_utc": null,
+        "motion_arcmin_per_hour": null,
+        "drift_arcmin": null,
+        "recentre_interval_min": null
+      },
+      "panels": [],
+      "diagnostics": []
+    },
+    {
+      "item_id": "lights-lp",
+      "kind": "take_exposures",
+      "enabled": true,
+      "start_utc": "2026-08-28T20:52:59.212703Z",
+      "end_utc": "2026-08-28T21:26:59.212703Z",
+      "resolution": "Previous item → 21:52",
+      "end_resolution": "60 x 30 s + 4 s overhead → 22:26",
+      "target": null,
+      "panels": [],
+      "diagnostics": []
+    },
+    {
+      "item_id": "lights-until-dawn",
+      "kind": "take_exposures",
+      "enabled": true,
+      "start_utc": "2026-08-28T21:26:59.212703Z",
+      "end_utc": "2026-08-29T02:29:57.825159Z",
+      "resolution": "Previous item → 22:26",
+      "end_resolution": "Astronomical dawn -30 → 03:29",
+      "target": null,
+      "panels": [],
+      "diagnostics": []
+    },
+    {
+      "item_id": "matched-darks",
+      "kind": "take_exposures",
+      "enabled": true,
+      "start_utc": "2026-08-29T02:29:57.825159Z",
+      "end_utc": "2026-08-29T02:41:17.825159Z",
+      "resolution": "Previous item → 03:29",
+      "end_resolution": "20 x 30 s + 4 s overhead → 03:41",
+      "target": null,
+      "panels": [],
+      "diagnostics": []
+    },
+    {
+      "item_id": "shutdown",
+      "kind": "shutdown",
+      "enabled": true,
+      "start_utc": "2026-08-29T02:41:17.825159Z",
+      "end_utc": "2026-08-29T02:43:17.825159Z",
+      "resolution": "Previous item → 03:41",
+      "end_resolution": "Conservative 2 min planning estimate; actual completion comes from device state",
+      "target": null,
+      "panels": [],
+      "diagnostics": []
+    }
+  ]
+}

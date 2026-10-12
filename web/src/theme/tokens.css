@@ -1,0 +1,532 @@
+/*
+ * SPDX-License-Identifier: GPL-3.0-only
+ * Copyright (C) 2026 Miroslav Bakoš
+ */
+
+/*
+ * The theme token system (architecture policy, frontend-react.md): every colour in this
+ * app is one of these custom properties. Nothing under src/components,
+ * src/tabs or src/app may write a literal colour — `eslint-rules/no-literal-color.js`
+ * enforces that. Swapping `data-theme` on <html> is the entire theme switch;
+ * no component re-renders for it.
+ *
+ * Dark is the default (`:root`, no attribute needed) so an unthemed paint
+ * frame before JS runs is still correct.
+ *
+ * Red-light / night-vision: monochrome red on near-black, luminance capped
+ * well below the dark theme's whites, and — deliberately — no hue anywhere
+ * outside red. success/warning/danger are the same hue at different
+ * lightness/saturation, not colour-coded by hue, because a stoplight palette
+ * defeats the point of the mode. See tokens.md in this directory... actually
+ * see the comment blocks below; there is no separate doc, this file is it.
+ */
+
+/* User-selectable accent presets. Their preview tokens remain available in
+ * red-light mode, but that mode deliberately ignores the user-accent tokens
+ * for UI chrome so the rendered interface stays monochrome. */
+:root {
+  --ssc-accent-choice-blue: #38bdf8;
+  --ssc-accent-choice-violet: #a78bfa;
+  --ssc-accent-choice-green: #34d399;
+  --ssc-accent-choice-amber: #fbbf24;
+  --ssc-accent-choice-rose: #fb7185;
+  --ssc-accent-choice-teal: #2dd4bf;
+  --ssc-accent-choice-indigo: #818cf8;
+  --ssc-accent-choice-fuchsia: #e879f9;
+  --ssc-accent-choice-orange: #fb923c;
+  --ssc-accent-choice-lime: #a3e635;
+  --ssc-accent-choice-blue-bright: color-mix(in srgb, var(--ssc-accent-choice-blue) 80%, white);
+  --ssc-accent-choice-blue-deep: color-mix(in srgb, var(--ssc-accent-choice-blue) 80%, black);
+  --ssc-accent-choice-violet-bright: color-mix(in srgb, var(--ssc-accent-choice-violet) 80%, white);
+  --ssc-accent-choice-violet-deep: color-mix(in srgb, var(--ssc-accent-choice-violet) 80%, black);
+  --ssc-accent-choice-green-bright: color-mix(in srgb, var(--ssc-accent-choice-green) 80%, white);
+  --ssc-accent-choice-green-deep: color-mix(in srgb, var(--ssc-accent-choice-green) 80%, black);
+  --ssc-accent-choice-amber-bright: color-mix(in srgb, var(--ssc-accent-choice-amber) 80%, white);
+  --ssc-accent-choice-amber-deep: color-mix(in srgb, var(--ssc-accent-choice-amber) 80%, black);
+  --ssc-accent-choice-rose-bright: color-mix(in srgb, var(--ssc-accent-choice-rose) 80%, white);
+  --ssc-accent-choice-rose-deep: color-mix(in srgb, var(--ssc-accent-choice-rose) 80%, black);
+  --ssc-accent-choice-teal-bright: color-mix(in srgb, var(--ssc-accent-choice-teal) 80%, white);
+  --ssc-accent-choice-teal-deep: color-mix(in srgb, var(--ssc-accent-choice-teal) 80%, black);
+  --ssc-accent-choice-indigo-bright: color-mix(in srgb, var(--ssc-accent-choice-indigo) 80%, white);
+  --ssc-accent-choice-indigo-deep: color-mix(in srgb, var(--ssc-accent-choice-indigo) 80%, black);
+  --ssc-accent-choice-fuchsia-bright: color-mix(in srgb, var(--ssc-accent-choice-fuchsia) 80%, white);
+  --ssc-accent-choice-fuchsia-deep: color-mix(in srgb, var(--ssc-accent-choice-fuchsia) 80%, black);
+  --ssc-accent-choice-orange-bright: color-mix(in srgb, var(--ssc-accent-choice-orange) 80%, white);
+  --ssc-accent-choice-orange-deep: color-mix(in srgb, var(--ssc-accent-choice-orange) 80%, black);
+  --ssc-accent-choice-lime-bright: color-mix(in srgb, var(--ssc-accent-choice-lime) 80%, white);
+  --ssc-accent-choice-lime-deep: color-mix(in srgb, var(--ssc-accent-choice-lime) 80%, black);
+  --ssc-accent-choice-h-alpha: #f36b67;
+  --ssc-accent-choice-sulfur: #e7af52;
+  --ssc-accent-choice-oiii: #54c9df;
+}
+
+[data-accent$="-bright"],
+[data-accent$="-deep"],
+[data-accent="h-alpha"],
+[data-accent="sulfur"],
+[data-accent="oiii"] {
+  --ssc-user-accent-fg: #041016;
+  --ssc-user-accent-muted: color-mix(in srgb, var(--ssc-user-accent) 16%, transparent);
+  --ssc-user-link: color-mix(in srgb, var(--ssc-user-accent) 75%, white);
+}
+
+[data-accent="indigo-deep"] {
+  --ssc-user-accent-fg: #ffffff;
+}
+
+[data-accent="blue-bright"] { --ssc-user-accent: var(--ssc-accent-choice-blue-bright); }
+[data-accent="blue-deep"] { --ssc-user-accent: var(--ssc-accent-choice-blue-deep); }
+[data-accent="violet-bright"] { --ssc-user-accent: var(--ssc-accent-choice-violet-bright); }
+[data-accent="violet-deep"] { --ssc-user-accent: var(--ssc-accent-choice-violet-deep); }
+[data-accent="green-bright"] { --ssc-user-accent: var(--ssc-accent-choice-green-bright); }
+[data-accent="green-deep"] { --ssc-user-accent: var(--ssc-accent-choice-green-deep); }
+[data-accent="amber-bright"] { --ssc-user-accent: var(--ssc-accent-choice-amber-bright); }
+[data-accent="amber-deep"] { --ssc-user-accent: var(--ssc-accent-choice-amber-deep); }
+[data-accent="rose-bright"] { --ssc-user-accent: var(--ssc-accent-choice-rose-bright); }
+[data-accent="rose-deep"] { --ssc-user-accent: var(--ssc-accent-choice-rose-deep); }
+[data-accent="teal-bright"] { --ssc-user-accent: var(--ssc-accent-choice-teal-bright); }
+[data-accent="teal-deep"] { --ssc-user-accent: var(--ssc-accent-choice-teal-deep); }
+[data-accent="indigo-bright"] { --ssc-user-accent: var(--ssc-accent-choice-indigo-bright); }
+[data-accent="indigo-deep"] { --ssc-user-accent: var(--ssc-accent-choice-indigo-deep); }
+[data-accent="fuchsia-bright"] { --ssc-user-accent: var(--ssc-accent-choice-fuchsia-bright); }
+[data-accent="fuchsia-deep"] { --ssc-user-accent: var(--ssc-accent-choice-fuchsia-deep); }
+[data-accent="orange-bright"] { --ssc-user-accent: var(--ssc-accent-choice-orange-bright); }
+[data-accent="orange-deep"] { --ssc-user-accent: var(--ssc-accent-choice-orange-deep); }
+[data-accent="lime-bright"] { --ssc-user-accent: var(--ssc-accent-choice-lime-bright); }
+[data-accent="lime-deep"] { --ssc-user-accent: var(--ssc-accent-choice-lime-deep); }
+[data-accent="h-alpha"] { --ssc-user-accent: var(--ssc-accent-choice-h-alpha); }
+[data-accent="sulfur"] { --ssc-user-accent: var(--ssc-accent-choice-sulfur); }
+[data-accent="oiii"] { --ssc-user-accent: var(--ssc-accent-choice-oiii); }
+
+[data-accent="blue"] {
+  --ssc-user-accent: #38bdf8;
+  --ssc-user-accent-fg: #041016;
+  --ssc-user-accent-muted: rgb(56 189 248 / 16%);
+  --ssc-user-link: #7dd3fc;
+}
+
+[data-accent="violet"] {
+  --ssc-user-accent: #a78bfa;
+  --ssc-user-accent-fg: #100b1d;
+  --ssc-user-accent-muted: rgb(167 139 250 / 16%);
+  --ssc-user-link: #c4b5fd;
+}
+
+[data-accent="green"] {
+  --ssc-user-accent: #34d399;
+  --ssc-user-accent-fg: #03140e;
+  --ssc-user-accent-muted: rgb(52 211 153 / 16%);
+  --ssc-user-link: #6ee7b7;
+}
+
+[data-accent="amber"] {
+  --ssc-user-accent: #fbbf24;
+  --ssc-user-accent-fg: #1a1000;
+  --ssc-user-accent-muted: rgb(251 191 36 / 16%);
+  --ssc-user-link: #fcd34d;
+}
+
+[data-accent="rose"] {
+  --ssc-user-accent: #fb7185;
+  --ssc-user-accent-fg: #1a0508;
+  --ssc-user-accent-muted: rgb(251 113 133 / 16%);
+  --ssc-user-link: #fda4af;
+}
+
+[data-accent="teal"] {
+  --ssc-user-accent: #2dd4bf;
+  --ssc-user-accent-fg: #031412;
+  --ssc-user-accent-muted: rgb(45 212 191 / 16%);
+  --ssc-user-link: #5eead4;
+}
+
+[data-accent="indigo"] {
+  --ssc-user-accent: #818cf8;
+  --ssc-user-accent-fg: #080b21;
+  --ssc-user-accent-muted: rgb(129 140 248 / 16%);
+  --ssc-user-link: #a5b4fc;
+}
+
+[data-accent="fuchsia"] {
+  --ssc-user-accent: #e879f9;
+  --ssc-user-accent-fg: #19051c;
+  --ssc-user-accent-muted: rgb(232 121 249 / 16%);
+  --ssc-user-link: #f0abfc;
+}
+
+[data-accent="orange"] {
+  --ssc-user-accent: #fb923c;
+  --ssc-user-accent-fg: #1a0901;
+  --ssc-user-accent-muted: rgb(251 146 60 / 16%);
+  --ssc-user-link: #fdba74;
+}
+
+[data-accent="lime"] {
+  --ssc-user-accent: #a3e635;
+  --ssc-user-accent-fg: #0d1602;
+  --ssc-user-accent-muted: rgb(163 230 53 / 16%);
+  --ssc-user-link: #bef264;
+}
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --ssc-bg: #111113;
+  --ssc-surface: #1c1c1e;
+  --ssc-surface-raised: #2c2c2e;
+  --ssc-border: #38383b;
+  --ssc-border-strong: #85858b;
+
+  --ssc-fg: #f2f2f7;
+  --ssc-fg-muted: #aeaeb6;
+  --ssc-fg-disabled: #5b6470;
+
+  --ssc-accent: var(--ssc-user-accent, #38bdf8);
+  --ssc-accent-fg: var(--ssc-user-accent-fg, #041016);
+  --ssc-accent-muted: var(--ssc-user-accent-muted, rgb(56 189 248 / 16%));
+  --ssc-link: var(--ssc-user-link, #7dd3fc);
+
+  --ssc-success: #34d399;
+  --ssc-warning: #fbbf24;
+  --ssc-danger: #f87171;
+  --ssc-filter-ir: #2563eb;
+
+  /* The horizon's N/E/S/W letters (skyLines.ts's `cardinalShapeId`). Owner:
+     "N S W and E on skymap should be bigger bold darker red". A deeper red
+     than --ssc-danger deliberately: these are permanent orientation marks on
+     a dark sky, not a status colour, and a bright red would pull the eye
+     away from the target every time the view moves. Dark enough to sit back,
+     saturated enough to be found instantly when you are looking for which
+     way you are facing.
+
+     Brightened from #c62828 on 2026-09-09: a deep red sits back nicely over
+     a black sky, but the default background is now a bright narrowband
+     composite and it disappeared into it. Legibility over imagery wins —
+     these are the labels you look for when you have lost your bearings. */
+  --ssc-cardinal: #ff4d4d;
+
+  /* Background reference linework drawn over the *sky*, not over a card —
+   * the coordinate grid, catalogue outlines, constellation boundaries and
+   * the skyline (equator/meridian/horizon) — plus their labels, which
+   * inherit this colour directly (`frames/vector/main.ts`'s `syncLabels`).
+   * These used to point at ordinary UI chrome tokens (`--ssc-border`,
+   * `--ssc-border-strong`, `--ssc-fg-muted`, a dim indigo of their own),
+   * each individually tuned for contrast against `--ssc-surface`, a mid-grey
+   * card — and then drawn over `--ssc-bg`, a near-black sky, where
+   * `--ssc-border` in particular was all but invisible even at 100% opacity
+   * (owner, 2026-09-10: "all the lines and the titles and stuff on skymap
+   * should start in white color so opacity can slide it to grey when
+   * needed, but even full opacity now is too dark").
+   *
+   * One shared bright base instead: these roles are drawn over sky, which is
+   * a distinct surface from UI chrome and deserves its own token family the
+   * same way `--ssc-cardinal` already gets one, rather than being repointed
+   * individually at `--ssc-fg`. Sharing it (instead of hue-separating them
+   * the way the FOV roles below are) is deliberate: the four now read as one
+   * family of background reference geometry, and `skyLinesOpacity`/
+   * `catalogueOpacity` (two separate sliders, `DisplayOptions`) still tell
+   * the coordinate grid/skyline/constellation-boundary group apart from
+   * catalogue outlines by *how much* each is dimmed, not by hue. Starting at
+   * white gives the opacity sliders their full range to dim into, rather
+   * than starting dim with nowhere further down to go. */
+  --ssc-sky-ink: #ffffff;
+
+  /* Named bright stars (brightStars.ts): point markers, not reference
+     geometry — a warm starlight white-yellow, distinct from every other
+     overlay token (cyan accent, white --ssc-sky-ink reference linework) so
+     a star dot never reads as any of those. */
+  --ssc-star: #f5eeca;
+
+  /* Solar-system bodies (solarSystem.ts): each its own hue, distinct from
+     --ssc-star (a catalogued fixed star) and from each other, so the Sun,
+     Moon and a planet marker never read as the same kind of dot. */
+  --ssc-sun: #ffd166;
+  --ssc-moon: #d8dee9;
+  --ssc-planet: #9ad1ff;
+
+  /* The alt-az frame stack: the intermediate frame orientations swept over a
+     session. Violet rather than the cyan --ssc-accent, because the stack used
+     to share that token with the FOV rectangle itself and the two were
+     indistinguishable — the rotation indicator read as a second, broken copy
+     of the frame. Distinct from --ssc-sky-ink too, which is background
+     reference geometry drawn under it. */
+  --ssc-stack: #a78bfa;
+
+  /* Connection dots in the footer (owner, 2026-09-10: "green / red dots").
+     Their own tokens rather than reusing --ssc-success/--ssc-danger, because
+     the two palettes want genuinely different answers and a semantic token
+     cannot give both — see the red-light block below, where the mapping
+     inverts. Unknown keeps its own colour in both, never folded into
+     connected or disconnected: this device can report neither. */
+  --ssc-dot-ok: #34d399;
+  --ssc-dot-unknown: #9aa5b1;
+  --ssc-dot-bad: #f87171;
+
+  /* The swept envelope: the outer bound of sky the session touches. Its own
+     token because it shared --ssc-fg-muted with `ghost` (the frame at session
+     end), and the two are drawn together around the same target — a dashed
+     grey outline inside another dashed grey outline. Teal keeps it readable
+     against both the violet stack and the cyan frame without competing with
+     either. */
+  --ssc-envelope: #5eead4;
+
+  /* The believed-pointing indicator (DESIGN.md §3.5.1: "a red FOV indicator
+     showing where the telescope actually points"), from `snapshot.mount` —
+     its own token, not `--ssc-danger` or `--ssc-cardinal`, both already red:
+     this answers a third question ("where is the scope, right now") and
+     must not read as either a status warning or an orientation letter.
+     Set apart from both by hue (a hot magenta-red, not the danger palette's
+     coral or the cardinals' pure red) so a stale/slewing mount reading
+     dashed and dim over this colour is never mistaken for a warning badge. */
+  --ssc-pointing: #ff2d78;
+
+  --ssc-focus-ring: var(--ssc-user-accent, #38bdf8);
+  --ssc-shadow: rgb(0 0 0 / 55%);
+
+  --ssc-scrollbar-thumb: #3a4250;
+  --ssc-scrollbar-track: #14181d;
+
+  /* Scheduling Gantt twilight bands (TimelineStrip): day reads as a genuine
+     red, nautical twilight as a genuine blue, astronomical/full dark as
+     near-black — three distinct hues so the strip reads at a glance, not a
+     single darkening wash. Deliberately distinct from --ssc-danger (a
+     lighter coral, used for diagnostics) and --ssc-accent (a lighter cyan,
+     used for the selected/target block) so the bands never get mistaken for
+     either. Civil and astronomical are the transitions either side of full
+     dark (§ this file's comment at the top): civil blends red toward blue,
+     astronomical blends blue toward black. Alpha rises band to band so the
+     strip still reads as progressively darker even before hue registers. */
+  --ssc-band-day: rgb(153 27 27 / 16%);
+  --ssc-band-civil: rgb(112 26 117 / 19%);
+  --ssc-band-nautical: rgb(30 64 175 / 22%);
+  --ssc-band-astronomical: rgb(6 8 16 / 44%);
+  --ssc-band-night: rgb(0 0 0 / 48%);
+}
+
+[data-theme="red"] {
+  color-scheme: dark;
+
+  --ssc-bg: #0a0202;
+  --ssc-surface: #170505;
+  --ssc-surface-raised: #200707;
+  --ssc-border: #3a0a0a;
+  --ssc-border-strong: #b52e2e;
+
+  --ssc-fg: #ff5b5b;
+  --ssc-fg-muted: #d45a5a;
+  --ssc-fg-disabled: #6b2626;
+
+  /* Monochrome: the "accent" is simply the brightest red the palette allows,
+     reserved for primary actions and the active tab — not a second hue. */
+  --ssc-accent: #ff3b3b;
+  --ssc-accent-fg: #150202;
+  --ssc-accent-muted: rgb(255 59 59 / 16%);
+  --ssc-link: #ff8a8a;
+
+  /* Same hue, stepped by lightness/saturation only — never green/amber/blue.
+     Status is also carried by icon shape and text, never by hue alone. */
+  --ssc-success: #b23d3d;
+  --ssc-warning: #d94f4f;
+  --ssc-danger: #ff3b3b;
+  --ssc-filter-ir: #8b2020;
+
+  /* Same hue as the rest of this palette, stepped down in lightness — the
+     cardinals must not be the brightest thing on a night-vision screen. */
+  --ssc-cardinal: #d92b2b;
+
+  /* Background reference linework over sky (coordinate grid, catalogue
+     outlines, constellation boundaries, skyline) and their labels — see
+     `--ssc-sky-ink`'s own comment in the dark theme above for why these
+     share one token now instead of each pointing at a UI chrome token tuned
+     for a card surface. This mode has no hue to separate it with (see this
+     file's top-of-file comment), so it is the *brightest* red the palette
+     allows — brighter even than `--ssc-star` — rather than white: opacity
+     is still the dimming axis, lightness is still the only other one this
+     mode has to spend, and "start bright, let the sliders dim it" applies
+     here exactly as it does in the dark theme. */
+  --ssc-sky-ink: #ffcccc;
+
+  /* Named bright stars: same red hue as everything else in this mode, but
+     bright enough to read as a point marker rather than background chrome
+     — lighter than --ssc-fg so a star dot still stands out against text. */
+  --ssc-star: #ffb3b3;
+
+  /* Same red hue as the rest of this palette, stepped by lightness only —
+     the Sun brightest (it is the brightest object in the real sky too), the
+     Moon a shade dimmer, a planet marker dimmer again, so the three stay
+     distinguishable without leaving the red-only constraint. */
+  --ssc-sun: #ff9a9a;
+  --ssc-moon: #e08080;
+  --ssc-planet: #c86a6a;
+
+  /* The frame stack, in the red-only palette: separated from --ssc-accent
+     (#ff3b3b, the FOV rectangle) by lightness rather than hue, since hue is
+     not available here. Dimmer than the frame it surrounds, which is also the
+     right visual weight — the stack is context, the frame is the subject. */
+  --ssc-stack: #8f4a4a;
+
+  /* Night mode inverts the dark theme's mapping, and deliberately (owner,
+     2026-09-10: "darkgrey=disconnected, red=connected - that will be better").
+     In a red-only palette red is not an alarm colour, it is *the* colour —
+     the one thing the eye is adapted to see. So a live device is red because
+     it is present, and a dead one is a colourless dark grey because there is
+     nothing there. Carrying the dark theme's "red means problem" across would
+     have been importing a meaning this palette does not have.
+
+     Unknown is a dimmed red rather than a grey: the device is there, its
+     state is not known — nearer to present than to absent. */
+  --ssc-dot-ok: #ff3b3b;
+  --ssc-dot-unknown: #9c5252;
+  --ssc-dot-bad: #4a4442;
+
+  /* The swept envelope in the red-only palette: separated from `ghost`
+     (--ssc-fg-muted) and from --ssc-stack by lightness, the only axis this
+     mode leaves available. */
+  --ssc-envelope: #a86060;
+
+  /* The believed-pointing indicator, in the red-only palette: this mode has
+     no hue to separate it with, so it is the *brightest* red on the map —
+     brighter than --ssc-accent (the FOV rectangle) and --ssc-cardinal (the
+     orientation letters) — since "where the scope actually is" is the one
+     thing worth outranking everything else for. Staleness/slewing are
+     carried by the shape's own dash/opacity, not by dimming this token,
+     so it never has to compete with --ssc-stack/--ssc-envelope for
+     lightness the way those two compete with each other. */
+  --ssc-pointing: #ff8fb3;
+
+  --ssc-focus-ring: #ff6a6a;
+  --ssc-shadow: rgb(10 2 2 / 70%);
+
+  --ssc-scrollbar-thumb: #5c0f0f;
+  --ssc-scrollbar-track: #170505;
+
+  /* Same five bands as the dark theme, but the day/nautical/dark distinction
+     that theme carries by hue has to be carried by lightness and saturation
+     alone here — every value below is the same red hue (0°), never a hue
+     this mode forbids. Day is the brightest/most saturated red (the
+     "attention" end, matching how bright this mode's accent reads), stepping
+     down through civil and nautical to a near-black red for astronomical and
+     full night, so the three-way distinction the request asks for survives
+     the red-only constraint at a glance. */
+  --ssc-band-day: rgb(255 70 70 / 15%);
+  --ssc-band-civil: rgb(196 58 58 / 19%);
+  --ssc-band-nautical: rgb(120 34 34 / 24%);
+  --ssc-band-astronomical: rgb(22 5 5 / 46%);
+  --ssc-band-night: rgb(20 4 4 / 50%);
+}
+
+/*
+ * Font scale: `data-font-scale` on <html>, same mechanism as `data-theme`
+ * (`useFontScaleSync`, applying `settings.font_scale` from the snapshot).
+ *
+ * This overrides Tailwind's own `--text-*` design tokens (src/index.css's
+ * `@theme` block leaves them at Tailwind's defaults; every `text-xs` /
+ * `text-sm` / `text-base` / `text-lg` utility class reads its size from one
+ * of these via `var()`) rather than the root `font-size`. Tailwind's
+ * The compact setting also scales Tailwind's spacing token, so padding, gaps,
+ * dropdowns, buttons and edit fields shrink with the text instead of leaving
+ * oversized controls around tiny labels.
+ *
+ * `data-font-scale="normal"` (or its absence) needs no rule here — Tailwind's
+ * own defaults already are "normal".
+ */
+:root[data-font-scale="small"] {
+  --spacing: 0.1875rem; /* .25rem * .75: compact controls/padding */
+  --text-xs: 0.65625rem; /* 0.75rem * 0.875 */
+  --text-sm: 0.765625rem; /* 0.875rem * 0.875 */
+  --text-base: 0.875rem; /* 1rem * 0.875 */
+  --text-lg: 0.984375rem; /* 1.125rem * 0.875 */
+}
+
+:root[data-font-scale="large"] {
+  --spacing: 0.28125rem; /* .25rem * 1.125 */
+  --text-xs: 0.84375rem; /* 0.75rem * 1.125 */
+  --text-sm: 0.984375rem; /* 0.875rem * 1.125 */
+  --text-base: 1.125rem; /* 1rem * 1.125 */
+  --text-lg: 1.265625rem; /* 1.125rem * 1.125 */
+}
+
+/* Compact typography must also make the controls visibly compact. Most
+ * interactive controls deliberately carry `min-h-11` for the normal gloved-
+ * finger target; in Small mode that class otherwise keeps them at 44px even
+ * after the spacing scale changes. */
+:root[data-font-scale="small"] .min-h-11 {
+  min-height: 2.0625rem; /* 44px * .75 */
+}
+
+:root[data-font-scale="small"] .min-w-11 {
+  min-width: 2.0625rem;
+}
+
+/* A few mobile-first controls use an explicit 44px utility before their
+ * responsive `*-11` class takes over. Small Text is an explicit compact
+ * mode, so scale those fixed targets too instead of leaving phones at the
+ * normal density. Ordinary `h-11`/`w-11` utilities already follow the
+ * reduced `--spacing` token above. */
+:root[data-font-scale="small"] .min-h-\[44px\] {
+  min-height: 2.0625rem;
+}
+
+:root[data-font-scale="small"] .h-\[44px\] {
+  height: 2.0625rem;
+}
+
+:root[data-font-scale="small"] .w-\[44px\] {
+  width: 2.0625rem;
+}
+
+:root[data-font-scale="small"] button,
+:root[data-font-scale="small"] input,
+:root[data-font-scale="small"] select,
+:root[data-font-scale="small"] textarea {
+  padding-block: 0;
+  line-height: 1;
+}
+
+html {
+  background: var(--ssc-bg);
+  color: var(--ssc-fg);
+  scrollbar-color: var(--ssc-scrollbar-thumb) var(--ssc-scrollbar-track);
+}
+
+* {
+  scrollbar-color: var(--ssc-scrollbar-thumb) var(--ssc-scrollbar-track);
+}
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ssc-scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ssc-scrollbar-thumb);
+  border-radius: 6px;
+}
+
+::selection {
+  background: var(--ssc-accent-muted);
+  color: var(--ssc-fg);
+}
+
+/* Visible, theme-appropriate focus. Never suppressed — only redirected to the
+   accent ring so a mouse click doesn't leave one behind unnecessarily. */
+:focus-visible {
+  outline: 2px solid var(--ssc-focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

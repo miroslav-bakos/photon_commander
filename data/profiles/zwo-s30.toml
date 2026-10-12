@@ -1,0 +1,49 @@
+# ZWO Seestar S30 — published hardware profile.
+# The wide camera is recorded as a hardware capability but is intentionally not
+# offered as a framing optic: ZWO publishes its resolution/FOV but not enough
+# lens/sensor geometry for an honest rectilinear overlay.
+
+id = "zwo-s30"
+name = "ZWO Seestar S30"
+vendor = "ZWO"
+aliases = ["Seestar S30", "S30", "SeestarS30"]
+source_urls = [
+  "https://us.zwoastro.com/products/seestar-s30-smart-telescope",
+  "https://i.zwoastro.com/wp-content/uploads/2024/12/dbef2476054318a93b1d44caf88827ee.pdf",
+]
+mount = "altaz"
+eq_mode_available = true
+
+[capabilities]
+tele_camera = true
+wide_camera = true
+wide_camera_autofocus = false
+focuser = true
+filter_wheel = true
+dew_heater = true
+
+[[optics]]
+id = "tele"
+label = "Telephoto"
+focal_length_mm = 150.0
+aperture_mm = 30.0
+focal_ratio = 5.0
+design = "apochromatic"
+sensor = { name = "Sony IMX662", w_px = 1080, h_px = 1920, pixel_um = 2.9 }
+
+[defaults]
+gain = 200
+exposure_stack_ms = 10000
+exposure_preview_ms = 500
+dither_enabled = true
+dither_pixels = 50
+dither_every_n_frames = 10
+lp_filter = false
+dew_heater_percent = 0
+
+[limits]
+min_altitude_deg = 20.0
+battery_low_percent = 15
+
+[calibration]
+measured = false

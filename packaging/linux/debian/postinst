@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+if ! getent group photon-commander >/dev/null; then
+    addgroup --system photon-commander
+fi
+if ! getent passwd photon-commander >/dev/null; then
+    adduser --system --ingroup photon-commander --home /var/lib/photon-commander \
+        --no-create-home --shell /usr/sbin/nologin photon-commander
+fi
+install -d -o photon-commander -g photon-commander -m 0770 /var/lib/photon-commander
+systemctl daemon-reload >/dev/null 2>&1 || true
+systemctl enable photon-commander.service >/dev/null 2>&1 || true
+systemctl try-restart photon-commander.service >/dev/null 2>&1 \
+    || systemctl start photon-commander.service >/dev/null 2>&1 || true
+
+exit 0

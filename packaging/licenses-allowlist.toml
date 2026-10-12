@@ -1,0 +1,417 @@
+# Checked-in license allowlist for `scripts/check-licenses.py` (CI gate 8,
+# Dependency licence inventory for reproducible public builds.
+#
+# Photon Commander is GPL-3.0-only. Permissive dependencies are accepted; weak-copyleft
+# dependencies require an explicit reviewed entry and their notices/source or
+# replacement obligations must be met by the packaged artifact. GPL/AGPL
+# runtime dependencies are not accepted into the application process.
+#
+# A dependency not listed here fails the build. A dependency whose reported
+# license text differs from what is recorded here fails the build too — that
+# is the signal that a transitive dependency changed license on an update and
+# needs a human look, not a silent pass.
+#
+# `status`:
+#   "ok"        permissive / weak-copyleft license accepted as-is.
+#   "reviewed"  copyleft or otherwise notable; `note` records why it is safe.
+#
+# Categories present today:
+#   - permissive (MIT/BSD/Apache/PSF/0BSD/CC0): "ok", no note needed.
+#   - MPL-2.0 (certifi, hypothesis, pathspec): weak (file-level) copyleft,
+#     used unmodified as a library dependency — "ok".
+#   - zeroconf: LGPL-2.1-or-later, used unmodified via normal Python import.
+#     The commercial artifact ships its licence and exact source archive and
+#     preserves replacement/debugging rights. "reviewed".
+#   - pyinstaller / pyinstaller-hooks-contrib: see the note on each package
+#     below — this one needed an actual read of the shipped LICENSE text,
+#     not just the pip-licenses classifier. "reviewed".
+
+[packages.aiosqlite]
+license = "MIT License"
+status = "ok"
+
+[packages.altgraph]
+license = "MIT License"
+status = "ok"
+
+[packages."annotated-doc"]
+license = "MIT"
+status = "ok"
+
+[packages."annotated-types"]
+license = "MIT"
+status = "ok"
+
+[packages.anyio]
+license = "MIT"
+status = "ok"
+
+[packages.ast_serialize]
+license = "MIT"
+status = "ok"
+
+[packages.certifi]
+license = "Mozilla Public License 2.0 (MPL 2.0)"
+status = "ok"
+note = "weak copyleft, used unmodified"
+
+[packages.cffi]
+license = "MIT-0"
+status = "ok"
+
+[packages.click]
+license = "BSD-3-Clause"
+status = "ok"
+
+[packages.colorama]
+license = "BSD License"
+status = "ok"
+note = "Windows-only terminal compatibility dependency"
+
+[packages.cryptography]
+license = "Apache-2.0 OR BSD-3-Clause"
+status = "ok"
+
+[packages.fastapi]
+license = "MIT"
+status = "ok"
+
+[packages.grimp]
+license = "BSD License"
+status = "ok"
+
+[packages.h11]
+license = "MIT License"
+status = "ok"
+
+[packages.httpcore]
+license = "BSD-3-Clause"
+status = "ok"
+
+[packages.httptools]
+license = "MIT"
+status = "ok"
+
+[packages.httpx]
+license = "BSD License"
+status = "ok"
+
+[packages.hypothesis]
+license = "MPL-2.0"
+status = "ok"
+note = "weak copyleft, used unmodified, dev-only"
+
+[packages.idna]
+license = "BSD-3-Clause"
+status = "ok"
+
+[packages.ifaddr]
+license = "MIT License"
+status = "ok"
+
+[packages."import-linter"]
+license = "BSD License"
+status = "ok"
+
+[packages.iniconfig]
+license = "MIT"
+status = "ok"
+
+[packages."jaraco.classes"]
+license = "MIT License"
+status = "ok"
+
+[packages."jaraco.context"]
+license = "MIT"
+status = "ok"
+
+[packages."jaraco.functools"]
+license = "MIT"
+status = "ok"
+
+[packages.jeepney]
+license = "MIT"
+status = "ok"
+
+[packages.jplephem]
+license = "MIT"
+status = "ok"
+
+[packages.keyring]
+license = "MIT"
+status = "ok"
+
+[packages.librt]
+license = "MIT"
+status = "ok"
+
+[packages."markdown-it-py"]
+license = "MIT License"
+status = "ok"
+
+[packages.mdurl]
+license = "MIT License"
+status = "ok"
+
+[packages."more-itertools"]
+license = "MIT"
+status = "ok"
+
+[packages.mypy]
+license = "MIT"
+status = "ok"
+
+[packages.mypy_extensions]
+license = "MIT"
+status = "ok"
+
+[packages.numpy]
+license = "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0"
+status = "ok"
+
+[packages.packaging]
+license = "Apache-2.0 OR BSD-2-Clause"
+status = "ok"
+
+[packages.pathspec]
+license = "Mozilla Public License 2.0 (MPL 2.0)"
+status = "ok"
+note = "weak copyleft, used unmodified, dev-only"
+
+[packages.pefile]
+license = "MIT"
+status = "ok"
+note = "Windows-only PyInstaller build dependency"
+
+[packages.pluggy]
+license = "MIT License"
+status = "ok"
+
+[packages.pycparser]
+license = "BSD-3-Clause"
+status = "ok"
+
+[packages.psutil]
+license = "BSD-3-Clause"
+status = "ok"
+# Runtime dependency. Added so the wildcard bind guard can enumerate the host's
+# real interfaces instead of inferring one from the default route — see
+# ssc/main.py local_ipv4_addresses() and DESIGN.md §9.
+
+[packages."types-psutil"]
+license = "Apache-2.0"
+status = "ok"
+# Dev group only; type stubs, never shipped in the packaged artifact.
+
+[packages."python-multipart"]
+license = "Apache-2.0"
+status = "ok"
+# FastAPI's own requirement for UploadFile (skymap cache import).
+
+[packages.pydantic]
+license = "MIT"
+status = "ok"
+
+[packages."pydantic-settings"]
+license = "MIT"
+status = "ok"
+
+[packages.pydantic_core]
+license = "MIT"
+status = "ok"
+
+[packages.Pygments]
+license = "BSD-2-Clause"
+status = "ok"
+
+[packages.Nuitka]
+license = "GNU Affero General Public License v3 or later (AGPLv3+)"
+status = "reviewed"
+note = """
+Nuitka is a build-tool-only development dependency. Its Runtime Library
+Exception 1.0 explicitly permits proprietary Python programs compiled by
+Nuitka to convey the resulting target code under terms of their choice. The
+compiler itself is not included in Photon Commander artifacts. See
+https://github.com/Nuitka/Nuitka/blob/develop/LICENSE-RUNTIME.txt and
+https://nuitka.net/doc/download.html.
+"""
+
+[packages.patchelf]
+license = "Apache Software License; GNU General Public License v3 or later (GPLv3+)"
+status = "reviewed"
+note = """
+Build-tool-only dependency used by Nuitka to adjust ELF metadata in the
+standalone Linux artifact. patchelf is executed during the build and is not
+copied into the Photon Commander package. The PyPI wrapper reports Apache-2.0
+and the patchelf executable reports GPL-3.0-or-later; neither license extends
+to binaries that the unmodified tool processes.
+"""
+
+[packages.pyinstaller]
+license = "GNU General Public License v2 (GPLv2)"
+status = "reviewed"
+note = """
+pip-licenses reports this as bare 'GPLv2' from PyInstaller's trove classifier,
+which is incomplete — the shipped COPYING.txt (read for pyinstaller==6.22.2,
+the version pinned in uv.lock) actually says: "PyInstaller is licensed under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version." That is SPDX GPL-2.0-or-later, not GPL-2.0-only.
+
+That compatibility question would not even need to be reached, though, because
+COPYING.txt also grants an explicit, separate "Bootloader Exception":
+"In addition to the permissions in the GNU General Public License, the
+authors give you unlimited permission to link or embed compiled bootloader
+and related files into combinations with other programs, and to distribute
+those combinations without any restriction coming from the use of those
+files." Our packaged ssc-core artifact embeds exactly that: the compiled
+bootloader PyInstaller builds, nothing from PyInstaller's own Python source.
+The exception covers our use plainly and says so in its own words — this is
+not a case where a blocker was papered over.
+
+Separately, and independently sufficient on its own: pyinstaller is a
+dev-dependency-group, build-tool-only package. Its source is never vendored
+into ssc/ and never shipped as a Python package inside the artifact.
+"""
+
+[packages."pyinstaller-hooks-contrib"]
+license = "Apache Software License; GNU General Public License v2 (GPLv2)"
+status = "reviewed"
+note = """
+Same pip-licenses classifier imprecision as pyinstaller above. Its own
+LICENSE file states hooks are "licensed ... either version 2 of the License,
+or (at your option) any later version (SPDX GPL-2.0-or-later)"; runtime hooks
+bundled into built executables are separately licensed Apache-2.0. GPL-2.0-
+or-later is GPL-3-compatible; Apache-2.0 is permissive. Also build-tool only
+(dev group); never shipped as a Python package inside the packaged artifact.
+"""
+
+[packages.pytest]
+license = "MIT"
+status = "ok"
+
+[packages."pytest-asyncio"]
+license = "Apache-2.0"
+status = "ok"
+
+[packages."pytest-socket"]
+license = "MIT"
+status = "ok"
+
+[packages."python-dotenv"]
+license = "BSD-3-Clause"
+status = "ok"
+
+[packages.PyYAML]
+license = "MIT License"
+status = "ok"
+
+[packages."pywin32-ctypes"]
+license = "BSD-3-Clause"
+status = "ok"
+note = "Windows-only PyInstaller build dependency"
+
+[packages.respx]
+license = "BSD License"
+status = "ok"
+
+[packages.rich]
+license = "MIT License"
+status = "ok"
+
+[packages.ruff]
+license = "MIT"
+status = "ok"
+
+[packages.SecretStorage]
+license = "BSD-3-Clause"
+status = "ok"
+
+[packages.sgp4]
+license = "MIT"
+status = "ok"
+
+[packages.skyfield]
+license = "MIT License"
+status = "ok"
+
+[packages.sortedcontainers]
+license = "Apache Software License"
+status = "ok"
+
+[packages.ssc]
+license = "GPL-3.0-only"
+status = "ok"
+note = "this project, not a dependency; pip-licenses lists it because it is installed editable"
+
+[packages.starlette]
+license = "BSD-3-Clause"
+status = "ok"
+
+[packages.tomlkit]
+license = "MIT License"
+status = "ok"
+
+[packages.tzdata]
+license = "Apache-2.0"
+status = "ok"
+note = "Windows-only IANA time-zone database"
+
+[packages."typing-inspection"]
+license = "MIT"
+status = "ok"
+
+[packages.typing_extensions]
+license = "PSF-2.0"
+status = "ok"
+
+[packages.uvicorn]
+license = "BSD-3-Clause"
+status = "ok"
+
+[packages.uvloop]
+license = "Apache Software License; MIT License"
+status = "ok"
+
+[packages.watchfiles]
+license = "MIT License"
+status = "ok"
+
+[packages.websockets]
+license = "BSD-3-Clause"
+status = "ok"
+
+[packages.zeroconf]
+license = "LGPL-2.1-or-later"
+status = "reviewed"
+note = "used unmodified for mDNS; commercial package ships LGPL-2.1 text, source location, replacement/debugging rights, and keeps the component separately identifiable"
+
+# --- JavaScript / web ------------------------------------------------------
+#
+# Allow-by-license rather than allow-by-package. The Python side lists every
+# package because that tree is stable; the JS tree will be hundreds of entries
+# once Aladin's ecosystem lands in M4, and a per-package list there would be
+# pure noise — and noise is how a gate gets disabled. Anything outside this
+# permissive set needs an explicit exception below, with a note.
+#
+# The production browser bundle is permissive-only. GPL, LGPL, AGPL,
+# non-commercial, no-derivatives, UNLICENSED and missing licence grants fail.
+
+[javascript]
+allowed_licenses = [
+    "MIT",
+    "ISC",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "Apache-2.0",
+    "CC0-1.0",
+    "0BSD",
+    "Unlicense",
+    "Python-2.0",
+    "(MIT OR CC0-1.0)",
+]
+
+# [javascript.packages."some-pkg"]
+# license = "LGPL-3.0-or-later"
+# status = "reviewed"
+# note = "why this is acceptable, and how the obligation is met"

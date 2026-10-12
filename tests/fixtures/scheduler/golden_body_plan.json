@@ -1,0 +1,38 @@
+{
+  "schema_version": 2,
+  "id": "golden-plan-bodies",
+  "name": "Moon and Jupiter — golden fixture",
+  "created_at": "2026-08-01T12:00:00Z",
+  "updated_at": "2026-08-01T12:00:00Z",
+  "items": [
+    {
+      "kind": "goto_and_stack",
+      "id": "goto-moon",
+      "start": { "kind": "absolute", "local_datetime": "2026-08-28T23:00:00", "fold": 0 },
+      "end": { "kind": "duration", "minutes": 180 },
+      "target": { "kind": "body", "body": "moon" },
+      "framing": { "mode": "altaz", "pa_offset_deg": 0, "lens": "tele" },
+      "constraints": { "min_alt_deg": 10, "min_moon_sep_deg": null }
+    },
+    {
+      "kind": "goto_and_stack",
+      "id": "goto-jupiter",
+      "start": { "kind": "relative", "offset_min": 5 },
+      "end": { "kind": "duration", "minutes": 180 },
+      "target": { "kind": "body", "body": "jupiter" },
+      "framing": { "mode": "altaz", "pa_offset_deg": 0, "lens": "tele" },
+      "constraints": { "min_alt_deg": null, "min_moon_sep_deg": null }
+    },
+    {
+      "kind": "slew",
+      "id": "slew-mars",
+      "start": { "kind": "relative", "offset_min": 1 },
+      "target": { "kind": "body", "body": "mars" }
+    },
+    {
+      "kind": "shutdown",
+      "id": "shutdown",
+      "start": { "kind": "relative", "offset_min": 1 }
+    }
+  ]
+}

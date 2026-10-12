@@ -1,0 +1,249 @@
+{
+  "plan_id": "golden-plan-ngc2244",
+  "plan_revision": "9450728dbd1ff74c750ad43dec3e51b37931d3be9943c9fa1647631781256caf",
+  "compiled_at": "2026-08-28T12:00:00Z",
+  "night": {
+    "date": "2026-08-28",
+    "tz": "Europe/London",
+    "window_start_utc": "2026-08-28T11:00:00Z",
+    "window_end_utc": "2026-08-29T11:00:00Z",
+    "dark_start_utc": "2026-08-28T21:02:59.212703Z",
+    "dark_end_utc": "2026-08-29T02:59:57.825159Z",
+    "solar_events": [
+      {
+        "event": "solar_transit",
+        "when_utc": "2026-08-28T12:01:16.866385Z",
+        "outcome": "occurs",
+        "threshold_deg": 0.0
+      },
+      {
+        "event": "sunset",
+        "when_utc": "2026-08-28T18:56:37.180873Z",
+        "outcome": "occurs",
+        "threshold_deg": -1.0301739820199813
+      },
+      {
+        "event": "civil_dusk",
+        "when_utc": "2026-08-28T19:30:34.890120Z",
+        "outcome": "occurs",
+        "threshold_deg": -6.0
+      },
+      {
+        "event": "nautical_dusk",
+        "when_utc": "2026-08-28T20:14:11.505276Z",
+        "outcome": "occurs",
+        "threshold_deg": -12.0
+      },
+      {
+        "event": "astronomical_dusk",
+        "when_utc": "2026-08-28T21:02:59.212703Z",
+        "outcome": "occurs",
+        "threshold_deg": -18.0
+      },
+      {
+        "event": "astronomical_midnight",
+        "when_utc": "2026-08-29T00:01:28.518931Z",
+        "outcome": "occurs",
+        "threshold_deg": -18.0
+      },
+      {
+        "event": "astronomical_dawn",
+        "when_utc": "2026-08-29T02:59:57.825159Z",
+        "outcome": "occurs",
+        "threshold_deg": -18.0
+      },
+      {
+        "event": "nautical_dawn",
+        "when_utc": "2026-08-29T03:48:47.496353Z",
+        "outcome": "occurs",
+        "threshold_deg": -12.0
+      },
+      {
+        "event": "civil_dawn",
+        "when_utc": "2026-08-29T04:32:26.524683Z",
+        "outcome": "occurs",
+        "threshold_deg": -6.0
+      },
+      {
+        "event": "sunrise",
+        "when_utc": "2026-08-29T05:06:26.671963Z",
+        "outcome": "occurs",
+        "threshold_deg": -1.0301739820199813
+      }
+    ],
+    "lunar_events": [
+      {
+        "event": "moonrise",
+        "when_utc": "2026-08-28T18:56:02.095730Z",
+        "outcome": "occurs",
+        "threshold_deg": -0.5667
+      },
+      {
+        "event": "moon_transit",
+        "when_utc": "2026-08-29T00:36:29.055093Z",
+        "outcome": "occurs",
+        "threshold_deg": 0.0
+      },
+      {
+        "event": "moonset",
+        "when_utc": "2026-08-29T06:32:17.992391Z",
+        "outcome": "occurs",
+        "threshold_deg": -0.5667
+      }
+    ]
+  },
+  "items": [
+    {
+      "item_id": "startup",
+      "kind": "startup",
+      "enabled": true,
+      "start_utc": "2026-08-28T21:02:59.212703Z",
+      "end_utc": "2026-08-28T21:07:59.212703Z",
+      "resolution": "Astronomical dusk → 22:02",
+      "end_resolution": "5 min → 22:07",
+      "target": null,
+      "panels": [],
+      "diagnostics": []
+    },
+    {
+      "item_id": "goto-ngc2244",
+      "kind": "goto_and_stack",
+      "enabled": true,
+      "start_utc": "2026-08-28T21:07:59.212703Z",
+      "end_utc": "2026-08-28T22:07:59.212703Z",
+      "resolution": "Previous item → 22:07",
+      "end_resolution": "60 min → 23:07",
+      "target": {
+        "kind": "catalog",
+        "name": "NGC 2244",
+        "tracking_rate": "sidereal",
+        "moves": false,
+        "ra_j2000_deg": 97.9755,
+        "dec_j2000_deg": 4.9407,
+        "resolved_at_utc": null,
+        "motion_arcmin_per_hour": null,
+        "drift_arcmin": null,
+        "recentre_interval_min": null
+      },
+      "panels": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "item_id": "goto-ngc2244",
+          "code": "below_min_altitude",
+          "message": "the target never reaches min_alt_deg=25.0 during this item's window"
+        }
+      ]
+    },
+    {
+      "item_id": "mosaic-ngc2244",
+      "kind": "mosaic",
+      "enabled": true,
+      "start_utc": "2026-08-28T22:07:59.212703Z",
+      "end_utc": "2026-08-28T23:07:59.212703Z",
+      "resolution": "ASAP after previous item → 23:07",
+      "end_resolution": "15 min → 00:07",
+      "target": {
+        "kind": "catalog",
+        "name": "NGC 2244",
+        "tracking_rate": "sidereal",
+        "moves": false,
+        "ra_j2000_deg": 97.9755,
+        "dec_j2000_deg": 4.9407,
+        "resolved_at_utc": null,
+        "motion_arcmin_per_hour": null,
+        "drift_arcmin": null,
+        "recentre_interval_min": null
+      },
+      "panels": [
+        {
+          "row": 0,
+          "col": 0,
+          "ra_j2000_deg": 98.87428454558358,
+          "dec_j2000_deg": 3.3455839999999997,
+          "start_utc": "2026-08-28T22:07:59.212703Z",
+          "end_utc": "2026-08-28T22:22:59.212703Z"
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "ra_j2000_deg": 97.07671545441642,
+          "dec_j2000_deg": 3.3455839999999997,
+          "start_utc": "2026-08-28T22:22:59.212703Z",
+          "end_utc": "2026-08-28T22:37:59.212703Z"
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "ra_j2000_deg": 98.87862223403933,
+          "dec_j2000_deg": 6.535816,
+          "start_utc": "2026-08-28T22:37:59.212703Z",
+          "end_utc": "2026-08-28T22:52:59.212703Z"
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "ra_j2000_deg": 97.07237776596067,
+          "dec_j2000_deg": 6.535816,
+          "start_utc": "2026-08-28T22:52:59.212703Z",
+          "end_utc": "2026-08-28T23:07:59.212703Z"
+        }
+      ],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "item_id": "mosaic-ngc2244",
+          "code": "below_min_altitude",
+          "message": "the target never reaches min_alt_deg=25.0 during this item's window"
+        }
+      ]
+    },
+    {
+      "item_id": "slew-park-target",
+      "kind": "slew",
+      "enabled": true,
+      "start_utc": "2026-08-29T05:00:39.266880Z",
+      "end_utc": "2026-08-29T05:01:09.266880Z",
+      "resolution": "Rises above 30° → 06:00",
+      "end_resolution": "Estimated from 0.0° route at conservative 2°/s + 20 s settle; actual completion comes from Telescope.Slewing",
+      "target": {
+        "kind": "catalog",
+        "name": "NGC 2244",
+        "tracking_rate": "sidereal",
+        "moves": false,
+        "ra_j2000_deg": 97.9755,
+        "dec_j2000_deg": 4.9407,
+        "resolved_at_utc": null,
+        "motion_arcmin_per_hour": null,
+        "drift_arcmin": null,
+        "recentre_interval_min": null
+      },
+      "panels": [],
+      "diagnostics": []
+    },
+    {
+      "item_id": "darks",
+      "kind": "capture_calibration",
+      "enabled": true,
+      "start_utc": "2026-08-29T03:48:47.496353Z",
+      "end_utc": "2026-08-29T04:08:47.496353Z",
+      "resolution": "Nautical dawn → 04:48",
+      "end_resolution": "20 min → 05:08",
+      "target": null,
+      "panels": [],
+      "diagnostics": []
+    },
+    {
+      "item_id": "shutdown",
+      "kind": "shutdown",
+      "enabled": true,
+      "start_utc": "2026-08-29T04:13:47.496353Z",
+      "end_utc": "2026-08-29T04:15:47.496353Z",
+      "resolution": "Previous item +5 → 05:13",
+      "end_resolution": "Conservative 2 min planning estimate; actual completion comes from device state",
+      "target": null,
+      "panels": [],
+      "diagnostics": []
+    }
+  ]
+}

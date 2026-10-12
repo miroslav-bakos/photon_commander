@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Photon Commander Beta
+Comment=Telescope imaging and observation planning
+Exec=AppRun
+Icon=photon-commander
+Terminal=true
+Categories=Science;Astronomy;

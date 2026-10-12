@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 360" role="img" aria-labelledby="title desc">
+  <title id="title">Photon Commander</title>
+  <desc id="desc">Photon Commander logo: a bright photon star held inside an orbital targeting ring.</desc>
+  <defs>
+    <linearGradient id="word" x1="390" y1="72" x2="1290" y2="274" gradientUnits="userSpaceOnUse"><stop stop-color="#35cce8"/><stop offset=".55" stop-color="#1881e2"/><stop offset="1" stop-color="#9d62ff"/></linearGradient>
+  </defs>
+  <g transform="translate(18 18)">
+    <rect width="324" height="324" rx="72" fill="#06112f"/>
+    <circle cx="162" cy="162" r="94" fill="none" stroke="#35cfee" stroke-width="12" stroke-linecap="round" stroke-dasharray="484 107" transform="rotate(-35 162 162)"/>
+    <circle cx="228" cy="95" r="14" fill="#8af5ff"/>
+    <path d="M162 75 177 147 249 162 177 177 162 249 147 177 75 162 147 147Z" fill="#f8fdff"/>
+    <circle cx="162" cy="162" r="9" fill="#35cfee"/>
+  </g>
+  <g font-family="Inter, Arial, Helvetica, sans-serif">
+    <text x="394" y="170" font-size="118" font-weight="750" letter-spacing="-5" fill="url(#word)">Photon</text>
+    <text x="401" y="260" font-size="68" font-weight="650" letter-spacing="12" fill="#6698e8">COMMANDER</text>
+  </g>
+</svg>

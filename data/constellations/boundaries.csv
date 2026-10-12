@@ -1,0 +1,1639 @@
+# SSC bundled constellation boundary data: the 88 IAU constellation regions
+# defined by Eugène Delporte, "Délimitation Scientifique des Constellations"
+# (Cambridge University Press, on behalf of the IAU, 1930).
+#
+# Public-domain reasoning (THIRD_PARTY_NOTICES.md, "Constellations — gate
+# reading of 2026-09-07"): Delporte died 1955-10-19; under EU rule of the
+# shorter term / life+70, his original 1930 published work entered the
+# public domain on 2026-01-01. The two ready machine-readable
+# transcriptions of it, VizieR VI/49 (Davenhall & Leggett) and VI/42
+# (Roman 1987, bundled by astropy), carry no licence statement of their own
+# from CDS and are explicitly NOT used here, even to cross-check — see the
+# gate reading. This file is instead derived from a third, independent
+# transcription: Pierre Barbier's "Constellation Boundaries" page states it
+# was compiled directly from Delporte's own printed tables (sexagesimal,
+# B1875.0, book vertex order, no rounding or added plotting vertices — the
+# opposite of what VI/49's own ReadMe says it did), and is licensed by its
+# author under CC BY-SA 4.0. Kept in its own data file, like openngc.csv,
+# so the share-alike obligation attaches to this file alone (see that
+# file's header for the identical reasoning), even though the underlying
+# vertex coordinates are historical measurements a court would likely find
+# below the threshold of copyrightable expression on their own — this is
+# the conservative reading, matching the NGC/IC precedent's rigor.
+#
+# source: Pierre Barbier, "Constellation Boundaries" (bound_ed.dat), CC BY-SA 4.0,
+#   compiled directly from E. Delporte, Délimitation Scientifique des
+#   Constellations, Cambridge University Press, 1930 (public domain: EU
+#   life+70, Delporte d. 1955-10-19)
+# license: CC-BY-SA-4.0
+# license_url: https://creativecommons.org/licenses/by-sa/4.0/
+# attribution: Pierre Barbier, https://watcheroftheskies.net/constellations/boundaries.html (CC BY-SA 4.0), transcribing E. Delporte (1930)
+# upstream: https://watcheroftheskies.net/constellations/bound_ed.dat
+# upstream_last_modified: 2016-01-01 (HTTP Last-Modified; unchanged for a decade as of fetch)
+# fetched: 2026-09-07
+# built_by: scripts/build-constellation-boundaries.py
+#
+# credit: Constellation boundaries: E. Delporte 1930, via Pierre Barbier, CC BY-SA 4.0
+#   The one-line form of the `# source:`/`# attribution:` block above, for
+#   UI credit lines (`ssc.astro.constellations.boundaries_credit`) — kept as
+#   its own header field, read verbatim, rather than assembled in Python, so
+#   the displayed text is still driven by this file, not a literal string in
+#   code (CLAUDE.md invariant 10's same reasoning, applied to attribution
+#   text instead of a licence gate).
+#
+# NOT sourced from, and not cross-checked against: VizieR VI/49 or VI/42
+# (THIRD_PARTY_NOTICES.md 2026-09-07 gate: no licence statement of their own).
+#
+# Schema (one CSV row per boundary vertex; '#' lines are comments, skipped
+# by the reader):
+#   abbreviation      IAU 3-letter constellation abbreviation (e.g. "UMI")
+#   name              full constellation name (e.g. "Ursa Minor")
+#   ring              0-indexed polygon number within this abbreviation; 0
+#                     for every constellation except Serpens ("SER"), whose
+#                     boundary is two disjoint pieces (Caput, ring 0; Cauda,
+#                     ring 1) sharing one abbreviation, per Delporte.
+#   ra_b1875_deg      right ascension, degrees [0, 360), EQUINOX B1875.0 —
+#                     the epoch Delporte defined these boundaries in. Not
+#                     J2000: ssc.astro.constellations precesses the *query*
+#                     point to B1875 instead of precessing ~1500 boundary
+#                     vertices, so every edge here stays the exact
+#                     axis-aligned constant-RA/constant-Dec line Delporte
+#                     drew, with no interpolation or curve-approximation
+#                     error at all.
+#   dec_b1875_deg     declination, degrees [-90, 90], EQUINOX B1875.0
+#
+# Vertices are listed in ring order; the closing edge (last vertex -> first)
+# is implied, never duplicated. Consecutive vertices differ in only one of
+# RA or Dec — every edge is a segment of a meridian or a parallel, exactly
+# as Delporte's tables define the boundaries, never a straight-line chord
+# between two arbitrary points.
+#
+# Full names are the standard IAU constellation nomenclature fixed in 1922
+# (H.N. Russell, on behalf of the IAU) and Delporte's own 1930 tables;
+# reproduced identically across every authoritative source and, as a
+# closed, universally-agreed list of 88 names and abbreviations, below the
+# threshold of copyrightable expression — not sourced from VI/49's
+# constell.txt.
+abbreviation,name,ring,ra_b1875_deg,dec_b1875_deg
+AND,Andromeda,0,343.0,34.5
+AND,Andromeda,0,343.0,52.5
+AND,Andromeda,0,350.0,52.5
+AND,Andromeda,0,350.0,50.0
+AND,Andromeda,0,353.75,50.0
+AND,Andromeda,0,353.75,48.0
+AND,Andromeda,0,2.5,48.0
+AND,Andromeda,0,2.5,46.0
+AND,Andromeda,0,13.0,46.0
+AND,Andromeda,0,13.0,48.0
+AND,Andromeda,0,16.75,48.0
+AND,Andromeda,0,16.75,50.0
+AND,Andromeda,0,20.5,50.0
+AND,Andromeda,0,24.999999999999996,50.0
+AND,Andromeda,0,24.999999999999996,47.0
+AND,Andromeda,0,30.624999999999996,47.0
+AND,Andromeda,0,30.624999999999996,50.5
+AND,Andromeda,0,37.75,50.5
+AND,Andromeda,0,37.75,36.75
+AND,Andromeda,0,30.0,36.75
+AND,Andromeda,0,30.0,35.0
+AND,Andromeda,0,21.125,35.0
+AND,Andromeda,0,21.125,33.0
+AND,Andromeda,0,10.75,33.0
+AND,Andromeda,0,10.75,23.75
+AND,Andromeda,0,12.75,23.75
+AND,Andromeda,0,12.75,21.0
+AND,Andromeda,0,2.125,21.0
+AND,Andromeda,0,2.125,22.0
+AND,Andromeda,0,1.0,22.0
+AND,Andromeda,0,1.0,28.0
+AND,Andromeda,0,0.0,28.0
+AND,Andromeda,0,0.0,31.333333333333332
+AND,Andromeda,0,356.25,31.333333333333332
+AND,Andromeda,0,356.25,32.083333333333336
+AND,Andromeda,0,352.5,32.083333333333336
+AND,Andromeda,0,352.5,34.5
+ANT,Antlia,0,140.5,-24.0
+ANT,Antlia,0,140.5,-36.75
+ANT,Antlia,0,140.5,-39.75
+ANT,Antlia,0,165.0,-39.75
+ANT,Antlia,0,165.0,-35.0
+ANT,Antlia,0,162.5,-35.0
+ANT,Antlia,0,162.5,-31.166666666666668
+ANT,Antlia,0,158.75,-31.166666666666668
+ANT,Antlia,0,158.75,-29.166666666666668
+ANT,Antlia,0,153.75,-29.166666666666668
+ANT,Antlia,0,153.75,-26.5
+ANT,Antlia,0,146.25,-26.5
+ANT,Antlia,0,146.25,-24.0
+APS,Apus,0,205.0,-82.5
+APS,Apus,0,270.0,-82.5
+APS,Apus,0,270.0,-75.0
+APS,Apus,0,270.0,-67.5
+APS,Apus,0,262.5,-67.5
+APS,Apus,0,255.0,-67.5
+APS,Apus,0,255.0,-70.0
+APS,Apus,0,221.25,-70.0
+APS,Apus,0,205.0,-70.0
+APS,Apus,0,205.0,-75.0
+AQL,Aquila,0,278.75,0.0
+AQL,Aquila,0,278.75,2.0
+AQL,Aquila,0,283.0,2.0
+AQL,Aquila,0,283.0,6.25
+AQL,Aquila,0,279.9333333333333,6.25
+AQL,Aquila,0,279.9333333333333,12.0
+AQL,Aquila,0,283.0,12.0
+AQL,Aquila,0,283.0,18.5
+AQL,Aquila,0,285.0,18.5
+AQL,Aquila,0,285.0,16.166666666666668
+AQL,Aquila,0,297.5,16.166666666666668
+AQL,Aquila,0,297.5,15.75
+AQL,Aquila,0,302.125,15.75
+AQL,Aquila,0,302.125,8.5
+AQL,Aquila,0,304.5,8.5
+AQL,Aquila,0,304.5,2.0
+AQL,Aquila,0,308.0,2.0
+AQL,Aquila,0,308.0,0.0
+AQL,Aquila,0,308.0,-9.0
+AQL,Aquila,0,300.0,-9.0
+AQL,Aquila,0,300.0,-12.033333333333333
+AQL,Aquila,0,283.0,-12.033333333333333
+AQL,Aquila,0,283.0,-4.0
+AQL,Aquila,0,278.75,-4.0
+AQR,Aquarius,0,308.0,0.0
+AQR,Aquarius,0,308.0,2.0
+AQR,Aquarius,0,312.5,2.0
+AQR,Aquarius,0,320.0,2.0
+AQR,Aquarius,0,322.0,2.0
+AQR,Aquarius,0,322.0,2.75
+AQR,Aquarius,0,325.0,2.75
+AQR,Aquarius,0,325.0,1.75
+AQR,Aquarius,0,330.0,1.75
+AQR,Aquarius,0,330.0,2.0
+AQR,Aquarius,0,341.25,2.0
+AQR,Aquarius,0,341.25,0.0
+AQR,Aquarius,0,341.25,-4.0
+AQR,Aquarius,0,357.5,-4.0
+AQR,Aquarius,0,357.5,-7.0
+AQR,Aquarius,0,357.5,-25.5
+AQR,Aquarius,0,345.0,-25.5
+AQR,Aquarius,0,328.0,-25.5
+AQR,Aquarius,0,328.0,-9.0
+AQR,Aquarius,0,320.0,-9.0
+AQR,Aquarius,0,320.0,-15.0
+AQR,Aquarius,0,308.0,-15.0
+AQR,Aquarius,0,308.0,-9.0
+ARA,Ara,0,246.3125,-60.0
+ARA,Ara,0,246.3125,-45.5
+ARA,Ara,0,267.5,-45.5
+ARA,Ara,0,270.0,-45.5
+ARA,Ara,0,270.0,-57.0
+ARA,Ara,0,262.5,-57.0
+ARA,Ara,0,262.5,-67.5
+ARA,Ara,0,255.0,-67.5
+ARA,Ara,0,252.49999999999997,-67.5
+ARA,Ara,0,252.49999999999997,-65.0
+ARA,Ara,0,251.25,-65.0
+ARA,Ara,0,251.25,-63.583333333333336
+ARA,Ara,0,248.74999999999997,-63.583333333333336
+ARA,Ara,0,248.74999999999997,-61.0
+ARA,Ara,0,246.3125,-61.0
+ARI,Aries,0,30.0,9.916666666666666
+ARI,Aries,0,24.999999999999996,9.916666666666666
+ARI,Aries,0,24.999999999999996,25.0
+ARI,Aries,0,28.749999999999996,25.0
+ARI,Aries,0,28.749999999999996,27.25
+ARI,Aries,0,36.25,27.25
+ARI,Aries,0,36.25,30.666666666666668
+ARI,Aries,0,40.75,30.666666666666668
+ARI,Aries,0,50.5,30.666666666666668
+ARI,Aries,0,50.5,19.0
+ARI,Aries,0,49.25,19.0
+ARI,Aries,0,49.25,9.916666666666666
+AUR,Auriga,0,67.5,30.666666666666668
+AUR,Auriga,0,67.5,36.0
+AUR,Auriga,0,70.37500000000001,36.0
+AUR,Auriga,0,70.37500000000001,52.5
+AUR,Auriga,0,75.0,52.5
+AUR,Auriga,0,75.0,56.0
+AUR,Auriga,0,91.5,56.0
+AUR,Auriga,0,91.5,54.0
+AUR,Auriga,0,97.5,54.0
+AUR,Auriga,0,97.5,50.0
+AUR,Auriga,0,102.0,50.0
+AUR,Auriga,0,102.0,44.5
+AUR,Auriga,0,110.5,44.5
+AUR,Auriga,0,110.5,35.5
+AUR,Auriga,0,98.0,35.5
+AUR,Auriga,0,98.0,28.0
+AUR,Auriga,0,88.25,28.0
+AUR,Auriga,0,88.25,28.5
+AUR,Auriga,0,71.25,28.5
+AUR,Auriga,0,71.25,30.0
+AUR,Auriga,0,67.5,30.0
+BOO,Boötes,0,226.25,8.0
+BOO,Boötes,0,202.5,8.0
+BOO,Boötes,0,202.5,15.0
+BOO,Boötes,0,202.5,28.5
+BOO,Boötes,0,209.37499999999997,28.5
+BOO,Boötes,0,209.37499999999997,30.75
+BOO,Boötes,0,210.5,30.75
+BOO,Boötes,0,210.5,48.5
+BOO,Boötes,0,210.5,55.5
+BOO,Boötes,0,216.25,55.5
+BOO,Boötes,0,228.75,55.5
+BOO,Boötes,0,228.75,53.0
+BOO,Boötes,0,236.25,53.0
+BOO,Boötes,0,236.25,51.5
+BOO,Boötes,0,236.25,40.0
+BOO,Boötes,0,231.5,40.0
+BOO,Boötes,0,231.5,33.0
+BOO,Boötes,0,227.75,33.0
+BOO,Boötes,0,227.75,26.0
+BOO,Boötes,0,226.25,26.0
+CAE,Caelum,0,64.0,-40.0
+CAE,Caelum,0,64.0,-49.0
+CAE,Caelum,0,67.5,-49.0
+CAE,Caelum,0,67.5,-46.5
+CAE,Caelum,0,72.5,-46.5
+CAE,Caelum,0,72.5,-43.0
+CAE,Caelum,0,75.0,-43.0
+CAE,Caelum,0,75.0,-27.25
+CAE,Caelum,0,72.5,-27.25
+CAE,Caelum,0,70.5,-27.25
+CAE,Caelum,0,70.5,-30.0
+CAE,Caelum,0,68.75,-30.0
+CAE,Caelum,0,68.75,-37.0
+CAE,Caelum,0,64.0,-37.0
+CAM,Camelopardalis,0,91.5,56.0
+CAM,Camelopardalis,0,75.0,56.0
+CAM,Camelopardalis,0,75.0,52.5
+CAM,Camelopardalis,0,70.37500000000001,52.5
+CAM,Camelopardalis,0,50.0,52.5
+CAM,Camelopardalis,0,50.0,55.0
+CAM,Camelopardalis,0,47.5,55.0
+CAM,Camelopardalis,0,47.5,57.0
+CAM,Camelopardalis,0,46.5,57.0
+CAM,Camelopardalis,0,46.5,68.0
+CAM,Camelopardalis,0,51.25,68.0
+CAM,Camelopardalis,0,51.25,77.0
+CAM,Camelopardalis,0,52.625,77.0
+CAM,Camelopardalis,0,52.625,80.0
+CAM,Camelopardalis,0,75.0,80.0
+CAM,Camelopardalis,0,75.0,85.0
+CAM,Camelopardalis,0,120.0,85.0
+CAM,Camelopardalis,0,120.0,86.5
+CAM,Camelopardalis,0,217.5,86.5
+CAM,Camelopardalis,0,217.5,80.0
+CAM,Camelopardalis,0,203.75,80.0
+CAM,Camelopardalis,0,203.75,77.0
+CAM,Camelopardalis,0,195.0,77.0
+CAM,Camelopardalis,0,172.5,77.0
+CAM,Camelopardalis,0,172.5,80.0
+CAM,Camelopardalis,0,160.0,80.0
+CAM,Camelopardalis,0,160.0,82.0
+CAM,Camelopardalis,0,137.5,82.0
+CAM,Camelopardalis,0,137.5,73.5
+CAM,Camelopardalis,0,119.5,73.5
+CAM,Camelopardalis,0,119.5,60.0
+CAM,Camelopardalis,0,105.0,60.0
+CAM,Camelopardalis,0,105.0,62.0
+CAM,Camelopardalis,0,91.5,62.0
+CAP,Capricornus,0,308.0,-9.0
+CAP,Capricornus,0,300.0,-9.0
+CAP,Capricornus,0,300.0,-12.033333333333333
+CAP,Capricornus,0,300.0,-28.0
+CAP,Capricornus,0,305.0,-28.0
+CAP,Capricornus,0,320.0,-28.0
+CAP,Capricornus,0,320.0,-25.5
+CAP,Capricornus,0,328.0,-25.5
+CAP,Capricornus,0,328.0,-9.0
+CAP,Capricornus,0,320.0,-9.0
+CAP,Capricornus,0,320.0,-15.0
+CAP,Capricornus,0,308.0,-15.0
+CAR,Carina,0,168.75,-56.5
+CAR,Carina,0,165.0,-56.5
+CAR,Carina,0,132.5,-56.5
+CAR,Carina,0,132.5,-54.5
+CAR,Carina,0,126.74999999999999,-54.5
+CAR,Carina,0,126.74999999999999,-53.0
+CAR,Carina,0,122.49999999999999,-53.0
+CAR,Carina,0,122.49999999999999,-50.75
+CAR,Carina,0,120.0,-50.75
+CAR,Carina,0,90.0,-50.75
+CAR,Carina,0,90.0,-52.5
+CAR,Carina,0,92.5,-52.5
+CAR,Carina,0,92.5,-55.0
+CAR,Carina,0,97.5,-55.0
+CAR,Carina,0,97.5,-58.0
+CAR,Carina,0,102.5,-58.0
+CAR,Carina,0,102.5,-64.0
+CAR,Carina,0,135.5,-64.0
+CAR,Carina,0,135.5,-75.0
+CAR,Carina,0,168.75,-75.0
+CAR,Carina,0,168.75,-64.0
+CAS,Cassiopeia,0,343.0,52.5
+CAS,Cassiopeia,0,343.0,56.25
+CAS,Cassiopeia,0,343.0,59.083333333333336
+CAS,Cassiopeia,0,347.5,59.083333333333336
+CAS,Cassiopeia,0,347.5,63.0
+CAS,Cassiopeia,0,353.75,63.0
+CAS,Cassiopeia,0,353.75,66.0
+CAS,Cassiopeia,0,5.0,66.0
+CAS,Cassiopeia,0,5.0,77.0
+CAS,Cassiopeia,0,51.25,77.0
+CAS,Cassiopeia,0,51.25,68.0
+CAS,Cassiopeia,0,46.5,68.0
+CAS,Cassiopeia,0,46.5,57.0
+CAS,Cassiopeia,0,36.5,57.0
+CAS,Cassiopeia,0,36.5,58.5
+CAS,Cassiopeia,0,28.625,58.5
+CAS,Cassiopeia,0,28.625,57.5
+CAS,Cassiopeia,0,25.5,57.5
+CAS,Cassiopeia,0,25.5,54.0
+CAS,Cassiopeia,0,20.5,54.0
+CAS,Cassiopeia,0,20.5,50.0
+CAS,Cassiopeia,0,16.75,50.0
+CAS,Cassiopeia,0,16.75,48.0
+CAS,Cassiopeia,0,13.0,48.0
+CAS,Cassiopeia,0,13.0,46.0
+CAS,Cassiopeia,0,2.5,46.0
+CAS,Cassiopeia,0,2.5,48.0
+CAS,Cassiopeia,0,353.75,48.0
+CAS,Cassiopeia,0,353.75,50.0
+CAS,Cassiopeia,0,350.0,50.0
+CAS,Cassiopeia,0,350.0,52.5
+CEN,Centaurus,0,165.0,-35.0
+CEN,Centaurus,0,165.0,-39.75
+CEN,Centaurus,0,165.0,-56.5
+CEN,Centaurus,0,168.75,-56.5
+CEN,Centaurus,0,168.75,-64.0
+CEN,Centaurus,0,177.5,-64.0
+CEN,Centaurus,0,177.5,-55.0
+CEN,Centaurus,0,192.5,-55.0
+CEN,Centaurus,0,192.5,-64.0
+CEN,Centaurus,0,202.5,-64.0
+CEN,Centaurus,0,218.0,-64.0
+CEN,Centaurus,0,218.0,-55.0
+CEN,Centaurus,0,212.5,-55.0
+CEN,Centaurus,0,212.5,-42.0
+CEN,Centaurus,0,223.75,-42.0
+CEN,Centaurus,0,223.75,-29.5
+CEN,Centaurus,0,188.75,-29.5
+CEN,Centaurus,0,188.75,-33.0
+CEN,Centaurus,0,183.75,-33.0
+CEN,Centaurus,0,183.75,-35.0
+CEP,Cepheus,0,300.0,59.5
+CEP,Cepheus,0,300.0,61.5
+CEP,Cepheus,0,306.25,61.5
+CEP,Cepheus,0,306.25,67.0
+CEP,Cepheus,0,310.0,67.0
+CEP,Cepheus,0,310.0,75.0
+CEP,Cepheus,0,302.5,75.0
+CEP,Cepheus,0,302.5,80.0
+CEP,Cepheus,0,315.0,80.0
+CEP,Cepheus,0,315.0,86.0
+CEP,Cepheus,0,315.0,86.16666666666667
+CEP,Cepheus,0,345.0,86.16666666666667
+CEP,Cepheus,0,345.0,88.0
+CEP,Cepheus,0,120.0,88.0
+CEP,Cepheus,0,120.0,86.5
+CEP,Cepheus,0,120.0,85.0
+CEP,Cepheus,0,75.0,85.0
+CEP,Cepheus,0,75.0,80.0
+CEP,Cepheus,0,52.625,80.0
+CEP,Cepheus,0,52.625,77.0
+CEP,Cepheus,0,51.25,77.0
+CEP,Cepheus,0,5.0,77.0
+CEP,Cepheus,0,5.0,66.0
+CEP,Cepheus,0,353.75,66.0
+CEP,Cepheus,0,353.75,63.0
+CEP,Cepheus,0,347.5,63.0
+CEP,Cepheus,0,347.5,59.083333333333336
+CEP,Cepheus,0,343.0,59.083333333333336
+CEP,Cepheus,0,343.0,56.25
+CEP,Cepheus,0,334.75,56.25
+CEP,Cepheus,0,334.75,55.0
+CEP,Cepheus,0,332.0,55.0
+CEP,Cepheus,0,332.0,52.75
+CEP,Cepheus,0,329.5,52.75
+CEP,Cepheus,0,329.5,54.833333333333336
+CEP,Cepheus,0,309.0,54.833333333333336
+CEP,Cepheus,0,309.0,60.916666666666664
+CEP,Cepheus,0,308.05,60.916666666666664
+CEP,Cepheus,0,308.05,59.5
+CET,Cetus,0,5.0,0.0
+CET,Cetus,0,5.0,2.0
+CET,Cetus,0,30.0,2.0
+CET,Cetus,0,30.0,9.916666666666666
+CET,Cetus,0,49.25,9.916666666666666
+CET,Cetus,0,49.25,0.0
+CET,Cetus,0,49.25,-1.75
+CET,Cetus,0,39.75,-1.75
+CET,Cetus,0,39.75,-24.383333333333333
+CET,Cetus,0,24.999999999999996,-24.383333333333333
+CET,Cetus,0,24.999999999999996,-25.5
+CET,Cetus,0,357.5,-25.5
+CET,Cetus,0,357.5,-7.0
+CET,Cetus,0,5.0,-7.0
+CHA,Chamaeleon,0,115.0,-82.5
+CHA,Chamaeleon,0,205.0,-82.5
+CHA,Chamaeleon,0,205.0,-75.0
+CHA,Chamaeleon,0,168.75,-75.0
+CHA,Chamaeleon,0,135.5,-75.0
+CHA,Chamaeleon,0,115.0,-75.0
+CIR,Circinus,0,202.5,-64.0
+CIR,Circinus,0,202.5,-65.0
+CIR,Circinus,0,205.0,-65.0
+CIR,Circinus,0,205.0,-70.0
+CIR,Circinus,0,221.25,-70.0
+CIR,Circinus,0,221.25,-67.5
+CIR,Circinus,0,223.75,-67.5
+CIR,Circinus,0,223.75,-63.583333333333336
+CIR,Circinus,0,227.5,-63.583333333333336
+CIR,Circinus,0,227.5,-61.0
+CIR,Circinus,0,230.0,-61.0
+CIR,Circinus,0,230.0,-60.0
+CIR,Circinus,0,230.0,-55.0
+CIR,Circinus,0,225.75,-55.0
+CIR,Circinus,0,218.0,-55.0
+CIR,Circinus,0,218.0,-64.0
+CMA,Canis Major,0,91.75,-11.0
+CMA,Canis Major,0,110.5,-11.0
+CMA,Canis Major,0,110.5,-33.0
+CMA,Canis Major,0,98.75,-33.0
+CMA,Canis Major,0,91.75,-33.0
+CMA,Canis Major,0,91.75,-27.25
+CMI,Canis Minor,0,121.25000000000001,0.0
+CMI,Canis Minor,0,108.0,0.0
+CMI,Canis Minor,0,108.0,1.5
+CMI,Canis Minor,0,105.25,1.5
+CMI,Canis Minor,0,105.25,5.5
+CMI,Canis Minor,0,105.0,5.5
+CMI,Canis Minor,0,105.0,10.0
+CMI,Canis Minor,0,105.0,12.5
+CMI,Canis Minor,0,112.5,12.5
+CMI,Canis Minor,0,112.5,13.5
+CMI,Canis Minor,0,117.125,13.5
+CMI,Canis Minor,0,117.125,10.0
+CMI,Canis Minor,0,118.87500000000001,10.0
+CMI,Canis Minor,0,118.87500000000001,7.0
+CMI,Canis Minor,0,121.25000000000001,7.0
+CNC,Cancer,0,138.75,7.0
+CNC,Cancer,0,121.25000000000001,7.0
+CNC,Cancer,0,118.87500000000001,7.0
+CNC,Cancer,0,118.87500000000001,10.0
+CNC,Cancer,0,117.125,10.0
+CNC,Cancer,0,117.125,13.5
+CNC,Cancer,0,117.125,20.0
+CNC,Cancer,0,118.25,20.0
+CNC,Cancer,0,118.25,28.0
+CNC,Cancer,0,120.0,28.0
+CNC,Cancer,0,120.0,33.5
+CNC,Cancer,0,138.75,33.5
+COL,Columba,0,75.0,-43.0
+COL,Columba,0,75.0,-27.25
+COL,Columba,0,91.75,-27.25
+COL,Columba,0,91.75,-33.0
+COL,Columba,0,98.75,-33.0
+COL,Columba,0,98.75,-43.0
+COL,Columba,0,90.0,-43.0
+COM,Coma Berenices,0,178.0,14.0
+COM,Coma Berenices,0,178.0,29.0
+COM,Coma Berenices,0,180.0,29.0
+COM,Coma Berenices,0,180.0,34.0
+COM,Coma Berenices,0,185.0,34.0
+COM,Coma Berenices,0,185.0,32.0
+COM,Coma Berenices,0,198.75,32.0
+COM,Coma Berenices,0,198.75,28.5
+COM,Coma Berenices,0,202.5,28.5
+COM,Coma Berenices,0,202.5,15.0
+COM,Coma Berenices,0,192.5,15.0
+COM,Coma Berenices,0,192.5,14.0
+CRA,Corona Australis,0,267.5,-37.0
+CRA,Corona Australis,0,287.5,-37.0
+CRA,Corona Australis,0,287.5,-45.5
+CRA,Corona Australis,0,270.0,-45.5
+CRA,Corona Australis,0,267.5,-45.5
+CRB,Corona Borealis,0,227.75,26.0
+CRB,Corona Borealis,0,227.75,33.0
+CRB,Corona Borealis,0,231.5,33.0
+CRB,Corona Borealis,0,231.5,40.0
+CRB,Corona Borealis,0,236.25,40.0
+CRB,Corona Borealis,0,244.99999999999997,40.0
+CRB,Corona Borealis,0,244.99999999999997,27.0
+CRB,Corona Borealis,0,242.50000000000003,27.0
+CRB,Corona Borealis,0,242.50000000000003,26.0
+CRB,Corona Borealis,0,240.50000000000003,26.0
+CRT,Crater,0,161.25,-6.0
+CRT,Crater,0,161.25,-11.0
+CRT,Crater,0,161.25,-19.0
+CRT,Crater,0,162.5,-19.0
+CRT,Crater,0,162.5,-24.5
+CRT,Crater,0,177.5,-24.5
+CRT,Crater,0,177.5,-11.0
+CRT,Crater,0,177.5,-6.0
+CRT,Crater,0,172.75,-6.0
+CRU,Crux,0,177.5,-55.0
+CRU,Crux,0,177.5,-64.0
+CRU,Crux,0,192.5,-64.0
+CRU,Crux,0,192.5,-55.0
+CRV,Corvus,0,192.5,-11.0
+CRV,Corvus,0,177.5,-11.0
+CRV,Corvus,0,177.5,-24.5
+CRV,Corvus,0,188.75,-24.5
+CRV,Corvus,0,188.75,-22.0
+CRV,Corvus,0,192.5,-22.0
+CVN,Canes Venatici,0,180.0,34.0
+CVN,Canes Venatici,0,180.0,45.0
+CVN,Canes Venatici,0,181.25,45.0
+CVN,Canes Venatici,0,181.25,53.0
+CVN,Canes Venatici,0,202.5,53.0
+CVN,Canes Venatici,0,202.5,48.5
+CVN,Canes Venatici,0,210.5,48.5
+CVN,Canes Venatici,0,210.5,30.75
+CVN,Canes Venatici,0,209.37499999999997,30.75
+CVN,Canes Venatici,0,209.37499999999997,28.5
+CVN,Canes Venatici,0,202.5,28.5
+CVN,Canes Venatici,0,198.75,28.5
+CVN,Canes Venatici,0,198.75,32.0
+CVN,Canes Venatici,0,185.0,32.0
+CVN,Canes Venatici,0,185.0,34.0
+CYG,Cygnus,0,288.875,27.5
+CYG,Cygnus,0,288.875,30.0
+CYG,Cygnus,0,290.375,30.0
+CYG,Cygnus,0,290.375,36.5
+CYG,Cygnus,0,291.0,36.5
+CYG,Cygnus,0,291.0,43.5
+CYG,Cygnus,0,287.5,43.5
+CYG,Cygnus,0,287.5,47.5
+CYG,Cygnus,0,286.25,47.5
+CYG,Cygnus,0,286.25,55.5
+CYG,Cygnus,0,291.25,55.5
+CYG,Cygnus,0,291.25,58.0
+CYG,Cygnus,0,296.5,58.0
+CYG,Cygnus,0,296.5,59.5
+CYG,Cygnus,0,300.0,59.5
+CYG,Cygnus,0,308.05,59.5
+CYG,Cygnus,0,308.05,60.916666666666664
+CYG,Cygnus,0,309.0,60.916666666666664
+CYG,Cygnus,0,309.0,54.833333333333336
+CYG,Cygnus,0,329.5,54.833333333333336
+CYG,Cygnus,0,329.5,52.75
+CYG,Cygnus,0,329.5,44.0
+CYG,Cygnus,0,328.625,44.0
+CYG,Cygnus,0,328.625,43.75
+CYG,Cygnus,0,328.125,43.75
+CYG,Cygnus,0,328.125,36.0
+CYG,Cygnus,0,326.0,36.0
+CYG,Cygnus,0,326.0,28.0
+CYG,Cygnus,0,321.25,28.0
+CYG,Cygnus,0,313.75,28.0
+CYG,Cygnus,0,313.75,29.0
+CYG,Cygnus,0,295.0,29.0
+CYG,Cygnus,0,295.0,27.5
+DEL,Delphinus,0,308.0,2.0
+DEL,Delphinus,0,304.5,2.0
+DEL,Delphinus,0,304.5,8.5
+DEL,Delphinus,0,302.125,8.5
+DEL,Delphinus,0,302.125,15.75
+DEL,Delphinus,0,303.75,15.75
+DEL,Delphinus,0,303.75,20.5
+DEL,Delphinus,0,308.5,20.5
+DEL,Delphinus,0,308.5,19.5
+DEL,Delphinus,0,315.75,19.5
+DEL,Delphinus,0,315.75,11.833333333333334
+DEL,Delphinus,0,313.125,11.833333333333334
+DEL,Delphinus,0,313.125,6.0
+DEL,Delphinus,0,312.5,6.0
+DEL,Delphinus,0,312.5,2.0
+DOR,Dorado,0,57.5,-53.166666666666664
+DOR,Dorado,0,60.0,-53.166666666666664
+DOR,Dorado,0,60.0,-56.5
+DOR,Dorado,0,65.0,-56.5
+DOR,Dorado,0,65.0,-59.0
+DOR,Dorado,0,68.75,-59.0
+DOR,Dorado,0,68.75,-67.5
+DOR,Dorado,0,68.75,-70.0
+DOR,Dorado,0,98.75,-70.0
+DOR,Dorado,0,98.75,-64.0
+DOR,Dorado,0,90.0,-64.0
+DOR,Dorado,0,90.0,-61.0
+DOR,Dorado,0,82.5,-61.0
+DOR,Dorado,0,82.5,-57.5
+DOR,Dorado,0,75.0,-57.5
+DOR,Dorado,0,75.0,-54.0
+DOR,Dorado,0,67.5,-54.0
+DOR,Dorado,0,67.5,-49.0
+DOR,Dorado,0,64.0,-49.0
+DOR,Dorado,0,61.24999999999999,-49.0
+DOR,Dorado,0,61.24999999999999,-51.0
+DOR,Dorado,0,57.5,-51.0
+DRA,Draco,0,137.5,73.5
+DRA,Draco,0,137.5,82.0
+DRA,Draco,0,160.0,82.0
+DRA,Draco,0,160.0,80.0
+DRA,Draco,0,172.5,80.0
+DRA,Draco,0,172.5,77.0
+DRA,Draco,0,195.0,77.0
+DRA,Draco,0,195.0,70.0
+DRA,Draco,0,210.0,70.0
+DRA,Draco,0,210.0,66.0
+DRA,Draco,0,235.0,66.0
+DRA,Draco,0,235.0,70.0
+DRA,Draco,0,248.00000000000003,70.0
+DRA,Draco,0,248.00000000000003,75.0
+DRA,Draco,0,262.5,75.0
+DRA,Draco,0,262.5,80.0
+DRA,Draco,0,270.0,80.0
+DRA,Draco,0,270.0,86.0
+DRA,Draco,0,315.0,86.0
+DRA,Draco,0,315.0,80.0
+DRA,Draco,0,302.5,80.0
+DRA,Draco,0,302.5,75.0
+DRA,Draco,0,310.0,75.0
+DRA,Draco,0,310.0,67.0
+DRA,Draco,0,306.25,67.0
+DRA,Draco,0,306.25,61.5
+DRA,Draco,0,300.0,61.5
+DRA,Draco,0,300.0,59.5
+DRA,Draco,0,296.5,59.5
+DRA,Draco,0,296.5,58.0
+DRA,Draco,0,291.25,58.0
+DRA,Draco,0,291.25,55.5
+DRA,Draco,0,286.25,55.5
+DRA,Draco,0,286.25,47.5
+DRA,Draco,0,273.5,47.5
+DRA,Draco,0,273.5,50.5
+DRA,Draco,0,255.0,50.5
+DRA,Draco,0,255.0,51.5
+DRA,Draco,0,236.25,51.5
+DRA,Draco,0,236.25,53.0
+DRA,Draco,0,228.75,53.0
+DRA,Draco,0,228.75,55.5
+DRA,Draco,0,216.25,55.5
+DRA,Draco,0,216.25,63.0
+DRA,Draco,0,202.5,63.0
+DRA,Draco,0,202.5,64.0
+DRA,Draco,0,180.0,64.0
+DRA,Draco,0,180.0,66.5
+DRA,Draco,0,170.0,66.5
+DRA,Draco,0,170.0,73.5
+EQU,Equuleus,0,312.5,2.0
+EQU,Equuleus,0,312.5,6.0
+EQU,Equuleus,0,313.125,6.0
+EQU,Equuleus,0,313.125,11.833333333333334
+EQU,Equuleus,0,315.75,11.833333333333334
+EQU,Equuleus,0,316.75,11.833333333333334
+EQU,Equuleus,0,316.75,12.5
+EQU,Equuleus,0,320.0,12.5
+EQU,Equuleus,0,320.0,2.0
+ERI,Eridanus,0,53.75,0.0
+ERI,Eridanus,0,69.25,0.0
+ERI,Eridanus,0,70.0,0.0
+ERI,Eridanus,0,70.0,-4.0
+ERI,Eridanus,0,76.25,-4.0
+ERI,Eridanus,0,76.25,-11.0
+ERI,Eridanus,0,73.75,-11.0
+ERI,Eridanus,0,73.75,-14.5
+ERI,Eridanus,0,72.5,-14.5
+ERI,Eridanus,0,72.5,-27.25
+ERI,Eridanus,0,70.5,-27.25
+ERI,Eridanus,0,70.5,-30.0
+ERI,Eridanus,0,68.75,-30.0
+ERI,Eridanus,0,68.75,-37.0
+ERI,Eridanus,0,64.0,-37.0
+ERI,Eridanus,0,64.0,-40.0
+ERI,Eridanus,0,58.0,-40.0
+ERI,Eridanus,0,58.0,-44.0
+ERI,Eridanus,0,51.25,-44.0
+ERI,Eridanus,0,51.25,-46.0
+ERI,Eridanus,0,45.0,-46.0
+ERI,Eridanus,0,45.0,-49.0
+ERI,Eridanus,0,40.0,-49.0
+ERI,Eridanus,0,40.0,-51.0
+ERI,Eridanus,0,36.25,-51.0
+ERI,Eridanus,0,36.25,-54.0
+ERI,Eridanus,0,32.5,-54.0
+ERI,Eridanus,0,32.5,-58.5
+ERI,Eridanus,0,20.0,-58.5
+ERI,Eridanus,0,20.0,-53.5
+ERI,Eridanus,0,23.750000000000004,-53.5
+ERI,Eridanus,0,23.750000000000004,-51.5
+ERI,Eridanus,0,27.500000000000004,-51.5
+ERI,Eridanus,0,27.500000000000004,-48.166666666666664
+ERI,Eridanus,0,35.0,-48.166666666666664
+ERI,Eridanus,0,35.0,-40.0
+ERI,Eridanus,0,45.0,-40.0
+ERI,Eridanus,0,45.0,-39.583333333333336
+ERI,Eridanus,0,52.5,-39.583333333333336
+ERI,Eridanus,0,52.5,-36.0
+ERI,Eridanus,0,56.25,-36.0
+ERI,Eridanus,0,56.25,-24.383333333333333
+ERI,Eridanus,0,39.75,-24.383333333333333
+ERI,Eridanus,0,39.75,-1.75
+ERI,Eridanus,0,49.25,-1.75
+ERI,Eridanus,0,53.75,-1.75
+FOR,Fornax,0,24.999999999999996,-24.383333333333333
+FOR,Fornax,0,39.75,-24.383333333333333
+FOR,Fornax,0,56.25,-24.383333333333333
+FOR,Fornax,0,56.25,-36.0
+FOR,Fornax,0,52.5,-36.0
+FOR,Fornax,0,52.5,-39.583333333333336
+FOR,Fornax,0,45.0,-39.583333333333336
+FOR,Fornax,0,45.0,-40.0
+FOR,Fornax,0,35.0,-40.0
+FOR,Fornax,0,24.999999999999996,-40.0
+FOR,Fornax,0,24.999999999999996,-25.5
+GEM,Gemini,0,94.625,12.0
+GEM,Gemini,0,94.625,17.5
+GEM,Gemini,0,93.25,17.5
+GEM,Gemini,0,93.25,21.5
+GEM,Gemini,0,88.25,21.5
+GEM,Gemini,0,88.25,22.833333333333332
+GEM,Gemini,0,88.25,28.0
+GEM,Gemini,0,98.0,28.0
+GEM,Gemini,0,98.0,35.5
+GEM,Gemini,0,110.5,35.5
+GEM,Gemini,0,116.25,35.5
+GEM,Gemini,0,116.25,33.5
+GEM,Gemini,0,120.0,33.5
+GEM,Gemini,0,120.0,28.0
+GEM,Gemini,0,118.25,28.0
+GEM,Gemini,0,118.25,20.0
+GEM,Gemini,0,117.125,20.0
+GEM,Gemini,0,117.125,13.5
+GEM,Gemini,0,112.5,13.5
+GEM,Gemini,0,112.5,12.5
+GEM,Gemini,0,105.0,12.5
+GEM,Gemini,0,105.0,10.0
+GEM,Gemini,0,104.0,10.0
+GEM,Gemini,0,104.0,12.0
+GRU,Grus,0,320.0,-37.0
+GRU,Grus,0,320.0,-45.5
+GRU,Grus,0,320.0,-50.0
+GRU,Grus,0,330.0,-50.0
+GRU,Grus,0,330.0,-57.0
+GRU,Grus,0,350.0,-57.0
+GRU,Grus,0,350.0,-40.0
+GRU,Grus,0,350.0,-37.0
+GRU,Grus,0,345.0,-37.0
+HER,Hercules,0,244.0,4.0
+HER,Hercules,0,241.24999999999997,4.0
+HER,Hercules,0,241.24999999999997,16.0
+HER,Hercules,0,238.75,16.0
+HER,Hercules,0,238.75,22.0
+HER,Hercules,0,240.50000000000003,22.0
+HER,Hercules,0,240.50000000000003,26.0
+HER,Hercules,0,242.50000000000003,26.0
+HER,Hercules,0,242.50000000000003,27.0
+HER,Hercules,0,244.99999999999997,27.0
+HER,Hercules,0,244.99999999999997,40.0
+HER,Hercules,0,236.25,40.0
+HER,Hercules,0,236.25,51.5
+HER,Hercules,0,255.0,51.5
+HER,Hercules,0,255.0,50.5
+HER,Hercules,0,273.5,50.5
+HER,Hercules,0,273.5,47.5
+HER,Hercules,0,272.625,47.5
+HER,Hercules,0,272.625,30.0
+HER,Hercules,0,275.5,30.0
+HER,Hercules,0,275.5,26.0
+HER,Hercules,0,283.0,26.0
+HER,Hercules,0,283.0,25.5
+HER,Hercules,0,283.0,21.083333333333332
+HER,Hercules,0,283.0,18.5
+HER,Hercules,0,283.0,12.0
+HER,Hercules,0,279.9333333333333,12.0
+HER,Hercules,0,273.75,12.0
+HER,Hercules,0,273.75,14.333333333333334
+HER,Hercules,0,258.75,14.333333333333334
+HER,Hercules,0,258.75,12.833333333333334
+HER,Hercules,0,251.25,12.833333333333334
+HER,Hercules,0,251.25,4.0
+HOR,Horologium,0,64.0,-40.0
+HOR,Horologium,0,64.0,-49.0
+HOR,Horologium,0,61.24999999999999,-49.0
+HOR,Horologium,0,61.24999999999999,-51.0
+HOR,Horologium,0,57.5,-51.0
+HOR,Horologium,0,57.5,-53.166666666666664
+HOR,Horologium,0,52.5,-53.166666666666664
+HOR,Horologium,0,52.5,-57.5
+HOR,Horologium,0,48.0,-57.5
+HOR,Horologium,0,48.0,-67.5
+HOR,Horologium,0,32.5,-67.5
+HOR,Horologium,0,32.5,-58.5
+HOR,Horologium,0,32.5,-54.0
+HOR,Horologium,0,36.25,-54.0
+HOR,Horologium,0,36.25,-51.0
+HOR,Horologium,0,40.0,-51.0
+HOR,Horologium,0,40.0,-49.0
+HOR,Horologium,0,45.0,-49.0
+HOR,Horologium,0,45.0,-46.0
+HOR,Horologium,0,51.25,-46.0
+HOR,Horologium,0,51.25,-44.0
+HOR,Horologium,0,58.0,-44.0
+HOR,Horologium,0,58.0,-40.0
+HYA,Hydra,0,121.25000000000001,0.0
+HYA,Hydra,0,121.25000000000001,7.0
+HYA,Hydra,0,138.75,7.0
+HYA,Hydra,0,143.75,7.0
+HYA,Hydra,0,143.75,0.0
+HYA,Hydra,0,143.75,-11.0
+HYA,Hydra,0,161.25,-11.0
+HYA,Hydra,0,161.25,-19.0
+HYA,Hydra,0,162.5,-19.0
+HYA,Hydra,0,162.5,-24.5
+HYA,Hydra,0,177.5,-24.5
+HYA,Hydra,0,188.75,-24.5
+HYA,Hydra,0,188.75,-22.0
+HYA,Hydra,0,192.5,-22.0
+HYA,Hydra,0,213.75,-22.0
+HYA,Hydra,0,213.75,-24.5
+HYA,Hydra,0,223.75,-24.5
+HYA,Hydra,0,223.75,-29.5
+HYA,Hydra,0,188.75,-29.5
+HYA,Hydra,0,188.75,-33.0
+HYA,Hydra,0,183.75,-33.0
+HYA,Hydra,0,183.75,-35.0
+HYA,Hydra,0,165.0,-35.0
+HYA,Hydra,0,162.5,-35.0
+HYA,Hydra,0,162.5,-31.166666666666668
+HYA,Hydra,0,158.75,-31.166666666666668
+HYA,Hydra,0,158.75,-29.166666666666668
+HYA,Hydra,0,153.75,-29.166666666666668
+HYA,Hydra,0,153.75,-26.5
+HYA,Hydra,0,146.25,-26.5
+HYA,Hydra,0,146.25,-24.0
+HYA,Hydra,0,140.5,-24.0
+HYA,Hydra,0,136.25,-24.0
+HYA,Hydra,0,136.25,-19.0
+HYA,Hydra,0,128.75,-19.0
+HYA,Hydra,0,128.75,-17.0
+HYA,Hydra,0,125.5,-17.0
+HYA,Hydra,0,125.5,-11.0
+HYA,Hydra,0,121.25000000000001,-11.0
+HYI,Hydrus,0,68.75,-67.5
+HYI,Hydrus,0,68.75,-70.0
+HYI,Hydrus,0,68.75,-75.0
+HYI,Hydrus,0,52.5,-75.0
+HYI,Hydrus,0,52.5,-82.5
+HYI,Hydrus,0,0.0,-82.5
+HYI,Hydrus,0,0.0,-75.0
+HYI,Hydrus,0,11.25,-75.0
+HYI,Hydrus,0,11.25,-76.0
+HYI,Hydrus,0,20.0,-76.0
+HYI,Hydrus,0,20.0,-58.5
+HYI,Hydrus,0,32.5,-58.5
+HYI,Hydrus,0,32.5,-67.5
+HYI,Hydrus,0,48.0,-67.5
+IND,Indus,0,320.0,-75.0
+IND,Indus,0,350.0,-75.0
+IND,Indus,0,350.0,-67.5
+IND,Indus,0,330.0,-67.5
+IND,Indus,0,330.0,-57.0
+IND,Indus,0,330.0,-50.0
+IND,Indus,0,320.0,-50.0
+IND,Indus,0,320.0,-45.5
+IND,Indus,0,305.0,-45.5
+IND,Indus,0,305.0,-57.0
+IND,Indus,0,305.0,-60.0
+IND,Indus,0,320.0,-60.0
+LAC,Lacerta,0,328.125,36.0
+LAC,Lacerta,0,328.125,43.75
+LAC,Lacerta,0,328.625,43.75
+LAC,Lacerta,0,328.625,44.0
+LAC,Lacerta,0,329.5,44.0
+LAC,Lacerta,0,329.5,52.75
+LAC,Lacerta,0,332.0,52.75
+LAC,Lacerta,0,332.0,55.0
+LAC,Lacerta,0,334.75,55.0
+LAC,Lacerta,0,334.75,56.25
+LAC,Lacerta,0,343.0,56.25
+LAC,Lacerta,0,343.0,52.5
+LAC,Lacerta,0,343.0,34.5
+LAC,Lacerta,0,342.25,34.5
+LAC,Lacerta,0,342.25,35.0
+LAC,Lacerta,0,330.0,35.0
+LAC,Lacerta,0,330.0,36.0
+LEO,Leo,0,161.25,0.0
+LEO,Leo,0,161.25,7.0
+LEO,Leo,0,143.75,7.0
+LEO,Leo,0,138.75,7.0
+LEO,Leo,0,138.75,33.5
+LEO,Leo,0,148.25,33.5
+LEO,Leo,0,148.25,28.5
+LEO,Leo,0,157.5,28.5
+LEO,Leo,0,157.5,23.5
+LEO,Leo,0,161.25,23.5
+LEO,Leo,0,161.25,25.5
+LEO,Leo,0,165.0,25.5
+LEO,Leo,0,165.0,29.0
+LEO,Leo,0,178.0,29.0
+LEO,Leo,0,178.0,14.0
+LEO,Leo,0,178.0,11.0
+LEO,Leo,0,172.75,11.0
+LEO,Leo,0,172.75,0.0
+LEO,Leo,0,172.75,-6.0
+LEO,Leo,0,161.25,-6.0
+LEP,Lepus,0,72.5,-27.25
+LEP,Lepus,0,75.0,-27.25
+LEP,Lepus,0,91.75,-27.25
+LEP,Lepus,0,91.75,-11.0
+LEP,Lepus,0,87.5,-11.0
+LEP,Lepus,0,76.25,-11.0
+LEP,Lepus,0,73.75,-11.0
+LEP,Lepus,0,73.75,-14.5
+LEP,Lepus,0,72.5,-14.5
+LIB,Libra,0,226.25,0.0
+LIB,Libra,0,220.0,0.0
+LIB,Libra,0,220.0,-8.0
+LIB,Libra,0,213.75,-8.0
+LIB,Libra,0,213.75,-22.0
+LIB,Libra,0,213.75,-24.5
+LIB,Libra,0,223.75,-24.5
+LIB,Libra,0,223.75,-29.5
+LIB,Libra,0,235.0,-29.5
+LIB,Libra,0,235.0,-20.0
+LIB,Libra,0,238.75,-20.0
+LIB,Libra,0,238.75,-8.0
+LIB,Libra,0,238.75,-3.25
+LIB,Libra,0,226.25,-3.25
+LMI,Leo Minor,0,138.75,33.5
+LMI,Leo Minor,0,138.75,39.75
+LMI,Leo Minor,0,143.75,39.75
+LMI,Leo Minor,0,143.75,42.0
+LMI,Leo Minor,0,152.5,42.0
+LMI,Leo Minor,0,152.5,40.0
+LMI,Leo Minor,0,161.75,40.0
+LMI,Leo Minor,0,161.75,34.0
+LMI,Leo Minor,0,165.0,34.0
+LMI,Leo Minor,0,165.0,29.0
+LMI,Leo Minor,0,165.0,25.5
+LMI,Leo Minor,0,161.25,25.5
+LMI,Leo Minor,0,161.25,23.5
+LMI,Leo Minor,0,157.5,23.5
+LMI,Leo Minor,0,157.5,28.5
+LMI,Leo Minor,0,148.25,28.5
+LMI,Leo Minor,0,148.25,33.5
+LUP,Lupus,0,212.5,-55.0
+LUP,Lupus,0,218.0,-55.0
+LUP,Lupus,0,225.75,-55.0
+LUP,Lupus,0,225.75,-54.0
+LUP,Lupus,0,230.0,-54.0
+LUP,Lupus,0,230.0,-48.0
+LUP,Lupus,0,235.0,-48.0
+LUP,Lupus,0,235.0,-42.0
+LUP,Lupus,0,240.0,-42.0
+LUP,Lupus,0,240.0,-29.5
+LUP,Lupus,0,235.0,-29.5
+LUP,Lupus,0,223.75,-29.5
+LUP,Lupus,0,223.75,-42.0
+LUP,Lupus,0,212.5,-42.0
+LYN,Lynx,0,110.5,35.5
+LYN,Lynx,0,110.5,44.5
+LYN,Lynx,0,102.0,44.5
+LYN,Lynx,0,102.0,50.0
+LYN,Lynx,0,97.5,50.0
+LYN,Lynx,0,97.5,54.0
+LYN,Lynx,0,91.5,54.0
+LYN,Lynx,0,91.5,56.0
+LYN,Lynx,0,91.5,62.0
+LYN,Lynx,0,105.0,62.0
+LYN,Lynx,0,105.0,60.0
+LYN,Lynx,0,119.5,60.0
+LYN,Lynx,0,126.24999999999999,60.0
+LYN,Lynx,0,126.24999999999999,47.0
+LYN,Lynx,0,137.5,47.0
+LYN,Lynx,0,137.5,42.0
+LYN,Lynx,0,143.75,42.0
+LYN,Lynx,0,143.75,39.75
+LYN,Lynx,0,138.75,39.75
+LYN,Lynx,0,138.75,33.5
+LYN,Lynx,0,120.0,33.5
+LYN,Lynx,0,116.25,33.5
+LYN,Lynx,0,116.25,35.5
+LYR,Lyra,0,283.0,25.5
+LYR,Lyra,0,283.0,26.0
+LYR,Lyra,0,275.5,26.0
+LYR,Lyra,0,275.5,30.0
+LYR,Lyra,0,272.625,30.0
+LYR,Lyra,0,272.625,47.5
+LYR,Lyra,0,273.5,47.5
+LYR,Lyra,0,286.25,47.5
+LYR,Lyra,0,287.5,47.5
+LYR,Lyra,0,287.5,43.5
+LYR,Lyra,0,291.0,43.5
+LYR,Lyra,0,291.0,36.5
+LYR,Lyra,0,290.375,36.5
+LYR,Lyra,0,290.375,30.0
+LYR,Lyra,0,288.875,30.0
+LYR,Lyra,0,288.875,27.5
+LYR,Lyra,0,288.875,25.5
+MEN,Mensa,0,115.0,-85.0
+MEN,Mensa,0,52.5,-85.0
+MEN,Mensa,0,52.5,-82.5
+MEN,Mensa,0,52.5,-75.0
+MEN,Mensa,0,68.75,-75.0
+MEN,Mensa,0,68.75,-70.0
+MEN,Mensa,0,98.75,-70.0
+MEN,Mensa,0,98.75,-75.0
+MEN,Mensa,0,115.0,-75.0
+MEN,Mensa,0,115.0,-82.5
+MIC,Microscopium,0,305.0,-28.0
+MIC,Microscopium,0,320.0,-28.0
+MIC,Microscopium,0,320.0,-37.0
+MIC,Microscopium,0,320.0,-45.5
+MIC,Microscopium,0,305.0,-45.5
+MON,Monoceros,0,93.625,0.0
+MON,Monoceros,0,93.625,10.0
+MON,Monoceros,0,94.625,10.0
+MON,Monoceros,0,94.625,12.0
+MON,Monoceros,0,104.0,12.0
+MON,Monoceros,0,104.0,10.0
+MON,Monoceros,0,105.0,10.0
+MON,Monoceros,0,105.0,5.5
+MON,Monoceros,0,105.25,5.5
+MON,Monoceros,0,105.25,1.5
+MON,Monoceros,0,108.0,1.5
+MON,Monoceros,0,108.0,0.0
+MON,Monoceros,0,121.25000000000001,0.0
+MON,Monoceros,0,121.25000000000001,-11.0
+MON,Monoceros,0,110.5,-11.0
+MON,Monoceros,0,91.75,-11.0
+MON,Monoceros,0,87.5,-11.0
+MON,Monoceros,0,87.5,-4.0
+MON,Monoceros,0,93.625,-4.0
+MUS,Musca,0,168.75,-64.0
+MUS,Musca,0,168.75,-75.0
+MUS,Musca,0,205.0,-75.0
+MUS,Musca,0,205.0,-70.0
+MUS,Musca,0,205.0,-65.0
+MUS,Musca,0,202.5,-65.0
+MUS,Musca,0,202.5,-64.0
+MUS,Musca,0,192.5,-64.0
+MUS,Musca,0,177.5,-64.0
+NOR,Norma,0,230.0,-60.0
+NOR,Norma,0,246.3125,-60.0
+NOR,Norma,0,246.3125,-45.5
+NOR,Norma,0,246.3125,-42.0
+NOR,Norma,0,240.0,-42.0
+NOR,Norma,0,235.0,-42.0
+NOR,Norma,0,235.0,-48.0
+NOR,Norma,0,230.0,-48.0
+NOR,Norma,0,230.0,-54.0
+NOR,Norma,0,225.75,-54.0
+NOR,Norma,0,225.75,-55.0
+NOR,Norma,0,230.0,-55.0
+OCT,Octans,0,0.0,-75.0
+OCT,Octans,0,0.0,-82.5
+OCT,Octans,0,52.5,-82.5
+OCT,Octans,0,52.5,-85.0
+OCT,Octans,0,115.0,-85.0
+OCT,Octans,0,115.0,-82.5
+OCT,Octans,0,205.0,-82.5
+OCT,Octans,0,270.0,-82.5
+OCT,Octans,0,270.0,-75.0
+OCT,Octans,0,320.0,-75.0
+OCT,Octans,0,350.0,-75.0
+OPH,Ophiuchus,0,244.0,0.0
+OPH,Ophiuchus,0,244.0,4.0
+OPH,Ophiuchus,0,251.25,4.0
+OPH,Ophiuchus,0,251.25,12.833333333333334
+OPH,Ophiuchus,0,258.75,12.833333333333334
+OPH,Ophiuchus,0,258.75,14.333333333333334
+OPH,Ophiuchus,0,273.75,14.333333333333334
+OPH,Ophiuchus,0,273.75,12.0
+OPH,Ophiuchus,0,279.9333333333333,12.0
+OPH,Ophiuchus,0,279.9333333333333,6.25
+OPH,Ophiuchus,0,273.75,6.25
+OPH,Ophiuchus,0,273.75,4.5
+OPH,Ophiuchus,0,276.375,4.5
+OPH,Ophiuchus,0,276.375,3.0
+OPH,Ophiuchus,0,273.75,3.0
+OPH,Ophiuchus,0,273.75,0.0
+OPH,Ophiuchus,0,267.5,0.0
+OPH,Ophiuchus,0,267.5,-4.0
+OPH,Ophiuchus,0,269.5,-4.0
+OPH,Ophiuchus,0,269.5,-10.0
+OPH,Ophiuchus,0,265.0,-10.0
+OPH,Ophiuchus,0,265.0,-11.666666666666666
+OPH,Ophiuchus,0,263.75,-11.666666666666666
+OPH,Ophiuchus,0,263.75,-10.0
+OPH,Ophiuchus,0,257.5,-10.0
+OPH,Ophiuchus,0,257.5,-16.0
+OPH,Ophiuchus,0,264.0,-16.0
+OPH,Ophiuchus,0,264.0,-30.0
+OPH,Ophiuchus,0,251.25,-30.0
+OPH,Ophiuchus,0,251.25,-24.583333333333332
+OPH,Ophiuchus,0,244.0,-24.583333333333332
+OPH,Ophiuchus,0,244.0,-19.25
+OPH,Ophiuchus,0,245.625,-19.25
+OPH,Ophiuchus,0,245.625,-18.25
+OPH,Ophiuchus,0,244.0,-18.25
+OPH,Ophiuchus,0,244.0,-8.0
+OPH,Ophiuchus,0,238.75,-8.0
+OPH,Ophiuchus,0,238.75,-3.25
+OPH,Ophiuchus,0,244.0,-3.25
+ORI,Orion,0,69.25,0.0
+ORI,Orion,0,69.25,15.5
+ORI,Orion,0,74.5,15.5
+ORI,Orion,0,74.5,16.0
+ORI,Orion,0,80.0,16.0
+ORI,Orion,0,80.0,15.5
+ORI,Orion,0,84.0,15.5
+ORI,Orion,0,84.0,12.5
+ORI,Orion,0,86.5,12.5
+ORI,Orion,0,86.5,18.0
+ORI,Orion,0,85.5,18.0
+ORI,Orion,0,85.5,22.833333333333332
+ORI,Orion,0,88.25,22.833333333333332
+ORI,Orion,0,88.25,21.5
+ORI,Orion,0,93.25,21.5
+ORI,Orion,0,93.25,17.5
+ORI,Orion,0,94.625,17.5
+ORI,Orion,0,94.625,12.0
+ORI,Orion,0,94.625,10.0
+ORI,Orion,0,93.625,10.0
+ORI,Orion,0,93.625,0.0
+ORI,Orion,0,93.625,-4.0
+ORI,Orion,0,87.5,-4.0
+ORI,Orion,0,87.5,-11.0
+ORI,Orion,0,76.25,-11.0
+ORI,Orion,0,76.25,-4.0
+ORI,Orion,0,70.0,-4.0
+ORI,Orion,0,70.0,0.0
+PAV,Pavo,0,270.0,-75.0
+PAV,Pavo,0,320.0,-75.0
+PAV,Pavo,0,320.0,-60.0
+PAV,Pavo,0,305.0,-60.0
+PAV,Pavo,0,305.0,-57.0
+PAV,Pavo,0,270.0,-57.0
+PAV,Pavo,0,262.5,-57.0
+PAV,Pavo,0,262.5,-67.5
+PAV,Pavo,0,270.0,-67.5
+PEG,Pegasus,0,320.0,2.0
+PEG,Pegasus,0,320.0,12.5
+PEG,Pegasus,0,316.75,12.5
+PEG,Pegasus,0,316.75,11.833333333333334
+PEG,Pegasus,0,315.75,11.833333333333334
+PEG,Pegasus,0,315.75,19.5
+PEG,Pegasus,0,318.75,19.5
+PEG,Pegasus,0,318.75,23.5
+PEG,Pegasus,0,321.25,23.5
+PEG,Pegasus,0,321.25,28.0
+PEG,Pegasus,0,326.0,28.0
+PEG,Pegasus,0,326.0,36.0
+PEG,Pegasus,0,328.125,36.0
+PEG,Pegasus,0,330.0,36.0
+PEG,Pegasus,0,330.0,35.0
+PEG,Pegasus,0,342.25,35.0
+PEG,Pegasus,0,342.25,34.5
+PEG,Pegasus,0,343.0,34.5
+PEG,Pegasus,0,352.5,34.5
+PEG,Pegasus,0,352.5,32.083333333333336
+PEG,Pegasus,0,356.25,32.083333333333336
+PEG,Pegasus,0,356.25,31.333333333333332
+PEG,Pegasus,0,0.0,31.333333333333332
+PEG,Pegasus,0,0.0,28.0
+PEG,Pegasus,0,1.0,28.0
+PEG,Pegasus,0,1.0,22.0
+PEG,Pegasus,0,2.125,22.0
+PEG,Pegasus,0,2.125,21.0
+PEG,Pegasus,0,2.125,12.5
+PEG,Pegasus,0,0.0,12.5
+PEG,Pegasus,0,0.0,10.0
+PEG,Pegasus,0,357.5,10.0
+PEG,Pegasus,0,357.5,7.5
+PEG,Pegasus,0,341.25,7.5
+PEG,Pegasus,0,341.25,2.0
+PEG,Pegasus,0,330.0,2.0
+PEG,Pegasus,0,330.0,1.75
+PEG,Pegasus,0,325.0,1.75
+PEG,Pegasus,0,325.0,2.75
+PEG,Pegasus,0,322.0,2.75
+PEG,Pegasus,0,322.0,2.0
+PER,Perseus,0,40.75,30.666666666666668
+PER,Perseus,0,40.75,34.0
+PER,Perseus,0,38.5,34.0
+PER,Perseus,0,38.5,36.75
+PER,Perseus,0,37.75,36.75
+PER,Perseus,0,37.75,50.5
+PER,Perseus,0,30.624999999999996,50.5
+PER,Perseus,0,30.624999999999996,47.0
+PER,Perseus,0,24.999999999999996,47.0
+PER,Perseus,0,24.999999999999996,50.0
+PER,Perseus,0,20.5,50.0
+PER,Perseus,0,20.5,54.0
+PER,Perseus,0,25.5,54.0
+PER,Perseus,0,25.5,57.5
+PER,Perseus,0,28.625,57.5
+PER,Perseus,0,28.625,58.5
+PER,Perseus,0,36.5,58.5
+PER,Perseus,0,36.5,57.0
+PER,Perseus,0,46.5,57.0
+PER,Perseus,0,47.5,57.0
+PER,Perseus,0,47.5,55.0
+PER,Perseus,0,50.0,55.0
+PER,Perseus,0,50.0,52.5
+PER,Perseus,0,70.37500000000001,52.5
+PER,Perseus,0,70.37500000000001,36.0
+PER,Perseus,0,67.5,36.0
+PER,Perseus,0,67.5,30.666666666666668
+PER,Perseus,0,50.5,30.666666666666668
+PHE,Phoenix,0,350.0,-40.0
+PHE,Phoenix,0,350.0,-57.0
+PHE,Phoenix,0,350.0,-58.5
+PHE,Phoenix,0,20.0,-58.5
+PHE,Phoenix,0,20.0,-53.5
+PHE,Phoenix,0,23.750000000000004,-53.5
+PHE,Phoenix,0,23.750000000000004,-51.5
+PHE,Phoenix,0,27.500000000000004,-51.5
+PHE,Phoenix,0,27.500000000000004,-48.166666666666664
+PHE,Phoenix,0,35.0,-48.166666666666664
+PHE,Phoenix,0,35.0,-40.0
+PHE,Phoenix,0,24.999999999999996,-40.0
+PIC,Pictor,0,90.0,-43.0
+PIC,Pictor,0,75.0,-43.0
+PIC,Pictor,0,72.5,-43.0
+PIC,Pictor,0,72.5,-46.5
+PIC,Pictor,0,67.5,-46.5
+PIC,Pictor,0,67.5,-49.0
+PIC,Pictor,0,67.5,-54.0
+PIC,Pictor,0,75.0,-54.0
+PIC,Pictor,0,75.0,-57.5
+PIC,Pictor,0,82.5,-57.5
+PIC,Pictor,0,82.5,-61.0
+PIC,Pictor,0,90.0,-61.0
+PIC,Pictor,0,90.0,-64.0
+PIC,Pictor,0,98.75,-64.0
+PIC,Pictor,0,102.5,-64.0
+PIC,Pictor,0,102.5,-58.0
+PIC,Pictor,0,97.5,-58.0
+PIC,Pictor,0,97.5,-55.0
+PIC,Pictor,0,92.5,-55.0
+PIC,Pictor,0,92.5,-52.5
+PIC,Pictor,0,90.0,-52.5
+PIC,Pictor,0,90.0,-50.75
+PSA,Piscis Austrinus,0,345.0,-25.5
+PSA,Piscis Austrinus,0,328.0,-25.5
+PSA,Piscis Austrinus,0,320.0,-25.5
+PSA,Piscis Austrinus,0,320.0,-28.0
+PSA,Piscis Austrinus,0,320.0,-37.0
+PSA,Piscis Austrinus,0,345.0,-37.0
+PSC,Pisces,0,341.25,0.0
+PSC,Pisces,0,341.25,2.0
+PSC,Pisces,0,341.25,7.5
+PSC,Pisces,0,357.5,7.5
+PSC,Pisces,0,357.5,10.0
+PSC,Pisces,0,0.0,10.0
+PSC,Pisces,0,0.0,12.5
+PSC,Pisces,0,2.125,12.5
+PSC,Pisces,0,2.125,21.0
+PSC,Pisces,0,12.75,21.0
+PSC,Pisces,0,12.75,23.75
+PSC,Pisces,0,10.75,23.75
+PSC,Pisces,0,10.75,33.0
+PSC,Pisces,0,21.125,33.0
+PSC,Pisces,0,21.125,28.0
+PSC,Pisces,0,24.999999999999996,28.0
+PSC,Pisces,0,24.999999999999996,25.0
+PSC,Pisces,0,24.999999999999996,9.916666666666666
+PSC,Pisces,0,30.0,9.916666666666666
+PSC,Pisces,0,30.0,2.0
+PSC,Pisces,0,5.0,2.0
+PSC,Pisces,0,5.0,0.0
+PSC,Pisces,0,5.0,-7.0
+PSC,Pisces,0,357.5,-7.0
+PSC,Pisces,0,357.5,-4.0
+PSC,Pisces,0,341.25,-4.0
+PUP,Puppis,0,110.5,-11.0
+PUP,Puppis,0,110.5,-33.0
+PUP,Puppis,0,98.75,-33.0
+PUP,Puppis,0,98.75,-43.0
+PUP,Puppis,0,90.0,-43.0
+PUP,Puppis,0,90.0,-50.75
+PUP,Puppis,0,120.0,-50.75
+PUP,Puppis,0,120.0,-43.0
+PUP,Puppis,0,125.5,-43.0
+PUP,Puppis,0,125.5,-36.75
+PUP,Puppis,0,125.5,-17.0
+PUP,Puppis,0,125.5,-11.0
+PUP,Puppis,0,121.25000000000001,-11.0
+PYX,Pyxis,0,125.5,-17.0
+PYX,Pyxis,0,128.75,-17.0
+PYX,Pyxis,0,128.75,-19.0
+PYX,Pyxis,0,136.25,-19.0
+PYX,Pyxis,0,136.25,-24.0
+PYX,Pyxis,0,140.5,-24.0
+PYX,Pyxis,0,140.5,-36.75
+PYX,Pyxis,0,125.5,-36.75
+RET,Reticulum,0,48.0,-67.5
+RET,Reticulum,0,68.75,-67.5
+RET,Reticulum,0,68.75,-59.0
+RET,Reticulum,0,65.0,-59.0
+RET,Reticulum,0,65.0,-56.5
+RET,Reticulum,0,60.0,-56.5
+RET,Reticulum,0,60.0,-53.166666666666664
+RET,Reticulum,0,57.5,-53.166666666666664
+RET,Reticulum,0,52.5,-53.166666666666664
+RET,Reticulum,0,52.5,-57.5
+RET,Reticulum,0,48.0,-57.5
+SCL,Sculptor,0,345.0,-25.5
+SCL,Sculptor,0,357.5,-25.5
+SCL,Sculptor,0,24.999999999999996,-25.5
+SCL,Sculptor,0,24.999999999999996,-40.0
+SCL,Sculptor,0,350.0,-40.0
+SCL,Sculptor,0,350.0,-37.0
+SCL,Sculptor,0,345.0,-37.0
+SCO,Scorpius,0,238.75,-8.0
+SCO,Scorpius,0,244.0,-8.0
+SCO,Scorpius,0,244.0,-18.25
+SCO,Scorpius,0,245.625,-18.25
+SCO,Scorpius,0,245.625,-19.25
+SCO,Scorpius,0,244.0,-19.25
+SCO,Scorpius,0,244.0,-24.583333333333332
+SCO,Scorpius,0,251.25,-24.583333333333332
+SCO,Scorpius,0,251.25,-30.0
+SCO,Scorpius,0,264.0,-30.0
+SCO,Scorpius,0,267.5,-30.0
+SCO,Scorpius,0,267.5,-37.0
+SCO,Scorpius,0,267.5,-45.5
+SCO,Scorpius,0,246.3125,-45.5
+SCO,Scorpius,0,246.3125,-42.0
+SCO,Scorpius,0,240.0,-42.0
+SCO,Scorpius,0,240.0,-29.5
+SCO,Scorpius,0,235.0,-29.5
+SCO,Scorpius,0,235.0,-20.0
+SCO,Scorpius,0,238.75,-20.0
+SCT,Scutum,0,273.75,-16.0
+SCT,Scutum,0,283.0,-16.0
+SCT,Scutum,0,283.0,-12.033333333333333
+SCT,Scutum,0,283.0,-4.0
+SCT,Scutum,0,278.75,-4.0
+SCT,Scutum,0,273.75,-4.0
+SER,Serpens,0,226.25,0.0
+SER,Serpens,0,226.25,8.0
+SER,Serpens,0,226.25,26.0
+SER,Serpens,0,227.75,26.0
+SER,Serpens,0,240.50000000000003,26.0
+SER,Serpens,0,240.50000000000003,22.0
+SER,Serpens,0,238.75,22.0
+SER,Serpens,0,238.75,16.0
+SER,Serpens,0,241.24999999999997,16.0
+SER,Serpens,0,241.24999999999997,4.0
+SER,Serpens,0,244.0,4.0
+SER,Serpens,0,244.0,0.0
+SER,Serpens,0,244.0,-3.25
+SER,Serpens,0,238.75,-3.25
+SER,Serpens,0,226.25,-3.25
+SER,Serpens,1,273.75,0.0
+SER,Serpens,1,273.75,3.0
+SER,Serpens,1,276.375,3.0
+SER,Serpens,1,276.375,4.5
+SER,Serpens,1,273.75,4.5
+SER,Serpens,1,273.75,6.25
+SER,Serpens,1,279.9333333333333,6.25
+SER,Serpens,1,283.0,6.25
+SER,Serpens,1,283.0,2.0
+SER,Serpens,1,278.75,2.0
+SER,Serpens,1,278.75,0.0
+SER,Serpens,1,278.75,-4.0
+SER,Serpens,1,273.75,-4.0
+SER,Serpens,1,273.75,-16.0
+SER,Serpens,1,264.0,-16.0
+SER,Serpens,1,257.5,-16.0
+SER,Serpens,1,257.5,-10.0
+SER,Serpens,1,263.75,-10.0
+SER,Serpens,1,263.75,-11.666666666666666
+SER,Serpens,1,265.0,-11.666666666666666
+SER,Serpens,1,265.0,-10.0
+SER,Serpens,1,269.5,-10.0
+SER,Serpens,1,269.5,-4.0
+SER,Serpens,1,267.5,-4.0
+SER,Serpens,1,267.5,0.0
+SEX,Sextans,0,143.75,0.0
+SEX,Sextans,0,143.75,7.0
+SEX,Sextans,0,161.25,7.0
+SEX,Sextans,0,161.25,0.0
+SEX,Sextans,0,161.25,-6.0
+SEX,Sextans,0,161.25,-11.0
+SEX,Sextans,0,143.75,-11.0
+SGE,Sagitta,0,283.0,18.5
+SGE,Sagitta,0,283.0,21.083333333333332
+SGE,Sagitta,0,288.75,21.083333333333332
+SGE,Sagitta,0,288.75,19.166666666666668
+SGE,Sagitta,0,297.5,19.166666666666668
+SGE,Sagitta,0,297.5,21.25
+SGE,Sagitta,0,303.75,21.25
+SGE,Sagitta,0,303.75,20.5
+SGE,Sagitta,0,303.75,15.75
+SGE,Sagitta,0,302.125,15.75
+SGE,Sagitta,0,297.5,15.75
+SGE,Sagitta,0,297.5,16.166666666666668
+SGE,Sagitta,0,285.0,16.166666666666668
+SGE,Sagitta,0,285.0,18.5
+SGR,Sagittarius,0,283.0,-12.033333333333333
+SGR,Sagittarius,0,283.0,-16.0
+SGR,Sagittarius,0,273.75,-16.0
+SGR,Sagittarius,0,264.0,-16.0
+SGR,Sagittarius,0,264.0,-30.0
+SGR,Sagittarius,0,267.5,-30.0
+SGR,Sagittarius,0,267.5,-37.0
+SGR,Sagittarius,0,287.5,-37.0
+SGR,Sagittarius,0,287.5,-45.5
+SGR,Sagittarius,0,305.0,-45.5
+SGR,Sagittarius,0,305.0,-28.0
+SGR,Sagittarius,0,300.0,-28.0
+SGR,Sagittarius,0,300.0,-12.033333333333333
+TAU,Taurus,0,49.25,-1.75
+TAU,Taurus,0,49.25,0.0
+TAU,Taurus,0,49.25,9.916666666666666
+TAU,Taurus,0,49.25,19.0
+TAU,Taurus,0,50.5,19.0
+TAU,Taurus,0,50.5,30.666666666666668
+TAU,Taurus,0,67.5,30.666666666666668
+TAU,Taurus,0,67.5,30.0
+TAU,Taurus,0,71.25,30.0
+TAU,Taurus,0,71.25,28.5
+TAU,Taurus,0,88.25,28.5
+TAU,Taurus,0,88.25,28.0
+TAU,Taurus,0,88.25,22.833333333333332
+TAU,Taurus,0,85.5,22.833333333333332
+TAU,Taurus,0,85.5,18.0
+TAU,Taurus,0,86.5,18.0
+TAU,Taurus,0,86.5,12.5
+TAU,Taurus,0,84.0,12.5
+TAU,Taurus,0,84.0,15.5
+TAU,Taurus,0,80.0,15.5
+TAU,Taurus,0,80.0,16.0
+TAU,Taurus,0,74.5,16.0
+TAU,Taurus,0,74.5,15.5
+TAU,Taurus,0,69.25,15.5
+TAU,Taurus,0,69.25,0.0
+TAU,Taurus,0,53.75,0.0
+TAU,Taurus,0,53.75,-1.75
+TEL,Telescopium,0,305.0,-57.0
+TEL,Telescopium,0,305.0,-45.5
+TEL,Telescopium,0,287.5,-45.5
+TEL,Telescopium,0,270.0,-45.5
+TEL,Telescopium,0,270.0,-57.0
+TRA,Triangulum Australe,0,221.25,-70.0
+TRA,Triangulum Australe,0,221.25,-67.5
+TRA,Triangulum Australe,0,223.75,-67.5
+TRA,Triangulum Australe,0,223.75,-63.583333333333336
+TRA,Triangulum Australe,0,227.5,-63.583333333333336
+TRA,Triangulum Australe,0,227.5,-61.0
+TRA,Triangulum Australe,0,230.0,-61.0
+TRA,Triangulum Australe,0,230.0,-60.0
+TRA,Triangulum Australe,0,246.3125,-60.0
+TRA,Triangulum Australe,0,246.3125,-61.0
+TRA,Triangulum Australe,0,248.74999999999997,-61.0
+TRA,Triangulum Australe,0,248.74999999999997,-63.583333333333336
+TRA,Triangulum Australe,0,251.25,-63.583333333333336
+TRA,Triangulum Australe,0,251.25,-65.0
+TRA,Triangulum Australe,0,252.49999999999997,-65.0
+TRA,Triangulum Australe,0,252.49999999999997,-67.5
+TRA,Triangulum Australe,0,255.0,-67.5
+TRA,Triangulum Australe,0,255.0,-70.0
+TRI,Triangulum,0,24.999999999999996,25.0
+TRI,Triangulum,0,24.999999999999996,28.0
+TRI,Triangulum,0,21.125,28.0
+TRI,Triangulum,0,21.125,33.0
+TRI,Triangulum,0,21.125,35.0
+TRI,Triangulum,0,30.0,35.0
+TRI,Triangulum,0,30.0,36.75
+TRI,Triangulum,0,37.75,36.75
+TRI,Triangulum,0,38.5,36.75
+TRI,Triangulum,0,38.5,34.0
+TRI,Triangulum,0,40.75,34.0
+TRI,Triangulum,0,40.75,30.666666666666668
+TRI,Triangulum,0,36.25,30.666666666666668
+TRI,Triangulum,0,36.25,27.25
+TRI,Triangulum,0,28.749999999999996,27.25
+TRI,Triangulum,0,28.749999999999996,25.0
+TUC,Tucana,0,350.0,-75.0
+TUC,Tucana,0,0.0,-75.0
+TUC,Tucana,0,11.25,-75.0
+TUC,Tucana,0,11.25,-76.0
+TUC,Tucana,0,20.0,-76.0
+TUC,Tucana,0,20.0,-58.5
+TUC,Tucana,0,350.0,-58.5
+TUC,Tucana,0,350.0,-57.0
+TUC,Tucana,0,330.0,-57.0
+TUC,Tucana,0,330.0,-67.5
+TUC,Tucana,0,350.0,-67.5
+UMA,Ursa Major,0,143.75,42.0
+UMA,Ursa Major,0,137.5,42.0
+UMA,Ursa Major,0,137.5,47.0
+UMA,Ursa Major,0,126.24999999999999,47.0
+UMA,Ursa Major,0,126.24999999999999,60.0
+UMA,Ursa Major,0,119.5,60.0
+UMA,Ursa Major,0,119.5,73.5
+UMA,Ursa Major,0,137.5,73.5
+UMA,Ursa Major,0,170.0,73.5
+UMA,Ursa Major,0,170.0,66.5
+UMA,Ursa Major,0,180.0,66.5
+UMA,Ursa Major,0,180.0,64.0
+UMA,Ursa Major,0,202.5,64.0
+UMA,Ursa Major,0,202.5,63.0
+UMA,Ursa Major,0,216.25,63.0
+UMA,Ursa Major,0,216.25,55.5
+UMA,Ursa Major,0,210.5,55.5
+UMA,Ursa Major,0,210.5,48.5
+UMA,Ursa Major,0,202.5,48.5
+UMA,Ursa Major,0,202.5,53.0
+UMA,Ursa Major,0,181.25,53.0
+UMA,Ursa Major,0,181.25,45.0
+UMA,Ursa Major,0,180.0,45.0
+UMA,Ursa Major,0,180.0,34.0
+UMA,Ursa Major,0,180.0,29.0
+UMA,Ursa Major,0,178.0,29.0
+UMA,Ursa Major,0,165.0,29.0
+UMA,Ursa Major,0,165.0,34.0
+UMA,Ursa Major,0,161.75,34.0
+UMA,Ursa Major,0,161.75,40.0
+UMA,Ursa Major,0,152.5,40.0
+UMA,Ursa Major,0,152.5,42.0
+UMI,Ursa Minor,0,195.0,77.0
+UMI,Ursa Minor,0,195.0,70.0
+UMI,Ursa Minor,0,210.0,70.0
+UMI,Ursa Minor,0,210.0,66.0
+UMI,Ursa Minor,0,235.0,66.0
+UMI,Ursa Minor,0,235.0,70.0
+UMI,Ursa Minor,0,248.00000000000003,70.0
+UMI,Ursa Minor,0,248.00000000000003,75.0
+UMI,Ursa Minor,0,262.5,75.0
+UMI,Ursa Minor,0,262.5,80.0
+UMI,Ursa Minor,0,270.0,80.0
+UMI,Ursa Minor,0,270.0,86.0
+UMI,Ursa Minor,0,315.0,86.0
+UMI,Ursa Minor,0,315.0,86.16666666666667
+UMI,Ursa Minor,0,345.0,86.16666666666667
+UMI,Ursa Minor,0,345.0,88.0
+UMI,Ursa Minor,0,120.0,88.0
+UMI,Ursa Minor,0,120.0,86.5
+UMI,Ursa Minor,0,217.5,86.5
+UMI,Ursa Minor,0,217.5,80.0
+UMI,Ursa Minor,0,203.75,80.0
+UMI,Ursa Minor,0,203.75,77.0
+VEL,Vela,0,165.0,-56.5
+VEL,Vela,0,165.0,-39.75
+VEL,Vela,0,140.5,-39.75
+VEL,Vela,0,140.5,-36.75
+VEL,Vela,0,125.5,-36.75
+VEL,Vela,0,125.5,-43.0
+VEL,Vela,0,120.0,-43.0
+VEL,Vela,0,120.0,-50.75
+VEL,Vela,0,122.49999999999999,-50.75
+VEL,Vela,0,122.49999999999999,-53.0
+VEL,Vela,0,126.74999999999999,-53.0
+VEL,Vela,0,126.74999999999999,-54.5
+VEL,Vela,0,132.5,-54.5
+VEL,Vela,0,132.5,-56.5
+VIR,Virgo,0,172.75,0.0
+VIR,Virgo,0,172.75,11.0
+VIR,Virgo,0,178.0,11.0
+VIR,Virgo,0,178.0,14.0
+VIR,Virgo,0,192.5,14.0
+VIR,Virgo,0,192.5,15.0
+VIR,Virgo,0,202.5,15.0
+VIR,Virgo,0,202.5,8.0
+VIR,Virgo,0,226.25,8.0
+VIR,Virgo,0,226.25,0.0
+VIR,Virgo,0,220.0,0.0
+VIR,Virgo,0,220.0,-8.0
+VIR,Virgo,0,213.75,-8.0
+VIR,Virgo,0,213.75,-22.0
+VIR,Virgo,0,192.5,-22.0
+VIR,Virgo,0,192.5,-11.0
+VIR,Virgo,0,177.5,-11.0
+VIR,Virgo,0,177.5,-6.0
+VIR,Virgo,0,172.75,-6.0
+VOL,Volans,0,98.75,-64.0
+VOL,Volans,0,98.75,-70.0
+VOL,Volans,0,98.75,-75.0
+VOL,Volans,0,115.0,-75.0
+VOL,Volans,0,135.5,-75.0
+VOL,Volans,0,135.5,-64.0
+VOL,Volans,0,102.5,-64.0
+VUL,Vulpecula,0,283.0,21.083333333333332
+VUL,Vulpecula,0,283.0,25.5
+VUL,Vulpecula,0,288.875,25.5
+VUL,Vulpecula,0,288.875,27.5
+VUL,Vulpecula,0,295.0,27.5
+VUL,Vulpecula,0,295.0,29.0
+VUL,Vulpecula,0,313.75,29.0
+VUL,Vulpecula,0,313.75,28.0
+VUL,Vulpecula,0,321.25,28.0
+VUL,Vulpecula,0,321.25,23.5
+VUL,Vulpecula,0,318.75,23.5
+VUL,Vulpecula,0,318.75,19.5
+VUL,Vulpecula,0,315.75,19.5
+VUL,Vulpecula,0,308.5,19.5
+VUL,Vulpecula,0,308.5,20.5
+VUL,Vulpecula,0,303.75,20.5
+VUL,Vulpecula,0,303.75,21.25
+VUL,Vulpecula,0,297.5,21.25
+VUL,Vulpecula,0,297.5,19.166666666666668
+VUL,Vulpecula,0,288.75,19.166666666666668
+VUL,Vulpecula,0,288.75,21.083333333333332

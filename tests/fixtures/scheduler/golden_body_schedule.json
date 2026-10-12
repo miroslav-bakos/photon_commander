@@ -1,0 +1,250 @@
+{
+  "plan_id": "golden-plan-bodies",
+  "plan_revision": "e3e9fb4e85c3593d5f214e0b3bb87d326d4192ab2321ac1b8ad8fe29ae202731",
+  "compiled_at": "2026-08-28T12:00:00Z",
+  "night": {
+    "date": "2026-08-28",
+    "tz": "Europe/London",
+    "window_start_utc": "2026-08-28T11:00:00Z",
+    "window_end_utc": "2026-08-29T11:00:00Z",
+    "dark_start_utc": "2026-08-28T21:02:59.212703Z",
+    "dark_end_utc": "2026-08-29T02:59:57.825159Z",
+    "solar_events": [
+      {
+        "event": "solar_transit",
+        "when_utc": "2026-08-28T12:01:16.866385Z",
+        "outcome": "occurs",
+        "threshold_deg": 0.0
+      },
+      {
+        "event": "sunset",
+        "when_utc": "2026-08-28T18:56:37.180873Z",
+        "outcome": "occurs",
+        "threshold_deg": -1.0301739820199813
+      },
+      {
+        "event": "civil_dusk",
+        "when_utc": "2026-08-28T19:30:34.890120Z",
+        "outcome": "occurs",
+        "threshold_deg": -6.0
+      },
+      {
+        "event": "nautical_dusk",
+        "when_utc": "2026-08-28T20:14:11.505276Z",
+        "outcome": "occurs",
+        "threshold_deg": -12.0
+      },
+      {
+        "event": "astronomical_dusk",
+        "when_utc": "2026-08-28T21:02:59.212703Z",
+        "outcome": "occurs",
+        "threshold_deg": -18.0
+      },
+      {
+        "event": "astronomical_midnight",
+        "when_utc": "2026-08-29T00:01:28.518931Z",
+        "outcome": "occurs",
+        "threshold_deg": -18.0
+      },
+      {
+        "event": "astronomical_dawn",
+        "when_utc": "2026-08-29T02:59:57.825159Z",
+        "outcome": "occurs",
+        "threshold_deg": -18.0
+      },
+      {
+        "event": "nautical_dawn",
+        "when_utc": "2026-08-29T03:48:47.496353Z",
+        "outcome": "occurs",
+        "threshold_deg": -12.0
+      },
+      {
+        "event": "civil_dawn",
+        "when_utc": "2026-08-29T04:32:26.524683Z",
+        "outcome": "occurs",
+        "threshold_deg": -6.0
+      },
+      {
+        "event": "sunrise",
+        "when_utc": "2026-08-29T05:06:26.671963Z",
+        "outcome": "occurs",
+        "threshold_deg": -1.0301739820199813
+      }
+    ],
+    "lunar_events": [
+      {
+        "event": "moonrise",
+        "when_utc": "2026-08-28T18:56:02.095730Z",
+        "outcome": "occurs",
+        "threshold_deg": -0.5667
+      },
+      {
+        "event": "moon_transit",
+        "when_utc": "2026-08-29T00:36:29.055093Z",
+        "outcome": "occurs",
+        "threshold_deg": 0.0
+      },
+      {
+        "event": "moonset",
+        "when_utc": "2026-08-29T06:32:17.992391Z",
+        "outcome": "occurs",
+        "threshold_deg": -0.5667
+      }
+    ]
+  },
+  "items": [
+    {
+      "item_id": "goto-moon",
+      "kind": "goto_and_stack",
+      "enabled": true,
+      "start_utc": "2026-08-28T22:00:00Z",
+      "end_utc": "2026-08-29T01:00:00Z",
+      "resolution": "Absolute → 23:00",
+      "end_resolution": "180 min → 02:00",
+      "target": {
+        "kind": "body",
+        "name": "Moon",
+        "tracking_rate": "lunar",
+        "moves": true,
+        "ra_j2000_deg": 345.11836345204296,
+        "dec_j2000_deg": -5.84193207954775,
+        "resolved_at_utc": "2026-08-28T22:00:00Z",
+        "motion_arcmin_per_hour": 26.15126672210227,
+        "drift_arcmin": 78.45380016630682,
+        "recentre_interval_min": 30.0
+      },
+      "panels": [
+        {
+          "row": 0,
+          "col": 0,
+          "ra_j2000_deg": null,
+          "dec_j2000_deg": null,
+          "start_utc": "2026-08-28T22:00:00Z",
+          "end_utc": "2026-08-28T22:30:00Z"
+        },
+        {
+          "row": 0,
+          "col": 0,
+          "ra_j2000_deg": null,
+          "dec_j2000_deg": null,
+          "start_utc": "2026-08-28T22:30:00Z",
+          "end_utc": "2026-08-28T23:00:00Z"
+        },
+        {
+          "row": 0,
+          "col": 0,
+          "ra_j2000_deg": null,
+          "dec_j2000_deg": null,
+          "start_utc": "2026-08-28T23:00:00Z",
+          "end_utc": "2026-08-28T23:30:00Z"
+        },
+        {
+          "row": 0,
+          "col": 0,
+          "ra_j2000_deg": null,
+          "dec_j2000_deg": null,
+          "start_utc": "2026-08-28T23:30:00Z",
+          "end_utc": "2026-08-29T00:00:00Z"
+        },
+        {
+          "row": 0,
+          "col": 0,
+          "ra_j2000_deg": null,
+          "dec_j2000_deg": null,
+          "start_utc": "2026-08-29T00:00:00Z",
+          "end_utc": "2026-08-29T00:30:00Z"
+        },
+        {
+          "row": 0,
+          "col": 0,
+          "ra_j2000_deg": null,
+          "dec_j2000_deg": null,
+          "start_utc": "2026-08-29T00:30:00Z",
+          "end_utc": "2026-08-29T01:00:00Z"
+        }
+      ],
+      "diagnostics": [
+        {
+          "severity": "info",
+          "item_id": "goto-moon",
+          "code": "body_recentred",
+          "message": "Moon moves 26.2 arcmin/h; at a 13.5 arcmin tolerance (10% of the frame) this 180 min item is re-centred every 30 min, in 6 segments"
+        }
+      ]
+    },
+    {
+      "item_id": "goto-jupiter",
+      "kind": "goto_and_stack",
+      "enabled": true,
+      "start_utc": "2026-08-29T01:05:00Z",
+      "end_utc": "2026-08-29T04:05:00Z",
+      "resolution": "Previous item +5 → 02:05",
+      "end_resolution": "180 min → 05:05",
+      "target": {
+        "kind": "body",
+        "name": "Jupiter",
+        "tracking_rate": "sidereal",
+        "moves": true,
+        "ra_j2000_deg": 135.32013368138055,
+        "dec_j2000_deg": 17.496784774294664,
+        "resolved_at_utc": "2026-08-29T01:05:00Z",
+        "motion_arcmin_per_hour": 0.5331165938538475,
+        "drift_arcmin": 1.5993497815615423,
+        "recentre_interval_min": 180.0
+      },
+      "panels": [
+        {
+          "row": 0,
+          "col": 0,
+          "ra_j2000_deg": null,
+          "dec_j2000_deg": null,
+          "start_utc": "2026-08-29T01:05:00Z",
+          "end_utc": "2026-08-29T04:05:00Z"
+        }
+      ],
+      "diagnostics": [
+        {
+          "severity": "warning",
+          "item_id": "goto-jupiter",
+          "code": "exceeds_dark_window",
+          "message": "ends at 2026-08-29T04:05:00+00:00, after the dark window ends at 2026-08-29T02:59:57.825159+00:00"
+        }
+      ]
+    },
+    {
+      "item_id": "slew-mars",
+      "kind": "slew",
+      "enabled": true,
+      "start_utc": "2026-08-29T04:06:00Z",
+      "end_utc": "2026-08-29T04:08:00Z",
+      "resolution": "Previous item +1 → 05:06",
+      "end_resolution": "Conservative 2 min planning estimate; actual completion comes from device state",
+      "target": {
+        "kind": "body",
+        "name": "Mars",
+        "tracking_rate": "sidereal",
+        "moves": true,
+        "ra_j2000_deg": 102.24396505800887,
+        "dec_j2000_deg": 23.451598922180434,
+        "resolved_at_utc": "2026-08-29T04:06:00Z",
+        "motion_arcmin_per_hour": 1.5909501155774732,
+        "drift_arcmin": 0.053031670519249105,
+        "recentre_interval_min": null
+      },
+      "panels": [],
+      "diagnostics": []
+    },
+    {
+      "item_id": "shutdown",
+      "kind": "shutdown",
+      "enabled": true,
+      "start_utc": "2026-08-29T04:09:00Z",
+      "end_utc": "2026-08-29T04:11:00Z",
+      "resolution": "Previous item +1 → 05:09",
+      "end_resolution": "Conservative 2 min planning estimate; actual completion comes from device state",
+      "target": null,
+      "panels": [],
+      "diagnostics": []
+    }
+  ]
+}

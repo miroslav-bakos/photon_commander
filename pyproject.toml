@@ -1,0 +1,86 @@
+[project]
+name = "ssc"
+version = "0.0.0"                     # stamped from the git tag at build time
+description = "Photon Commander: control, planning, and automated imaging for smart telescopes"
+requires-python = ">=3.12,<3.13"
+license = "GPL-3.0-only"
+authors = [{ name = "Miroslav Bakoš" }]
+classifiers = ["License :: OSI Approved :: GNU General Public License v3 (GPLv3)"]
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "aiosqlite>=0.20",
+    "httpx>=0.27",
+    "keyring>=25.5",
+    "cryptography>=43",                # local TLS CA + leaf cert generation (ssc.settings.tls)
+    "zeroconf>=0.136",                # mDNS: _ssc._tcp advertisement + device discovery
+    "skyfield>=1.49",
+    "numpy>=2.1",
+    "tomlkit>=0.13",                  # profile read/write preserving comments (calibration write-back)
+    "psutil>=7.2.2",
+    "python-multipart>=0.0.20",       # FastAPI's own requirement for UploadFile (skymap cache import)
+    "tzdata>=2025.2; sys_platform == 'win32'", # Windows has no system IANA time-zone database
+]
+
+[project.scripts]
+ssc-core = "ssc.main:run"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-socket>=0.7",             # CI runs with the network off
+    "hypothesis>=6.112",
+    "respx>=0.21",                    # recorded HTTP fixtures for weather providers
+    "ruff>=0.7",
+    "mypy>=1.13",
+    "import-linter>=2.1",             # enforces CLAUDE.md invariants 1 and 3
+    "pyinstaller>=6.22.2",
+    "types-psutil>=7.2.2.20260827",
+    "nuitka>=4.2.2",
+    "patchelf>=0.19.1.0; sys_platform == 'linux'",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ssc"]
+
+# ----------------------------------------------------------------------------
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "DTZ", "T20", "SIM", "RUF", "ASYNC"]
+# DTZ: bans naive datetimes        -> architecture policy invariant 5 (UTC discipline)
+# ASYNC: bans blocking calls in async paths
+# T20: bans stray print()
+ignore = ["E501"]                     # line length is formatted, not linted
+
+[tool.ruff.lint.per-file-ignores]
+"spikes/*" = ["T20"]                  # the M0 spike is throwaway and prints freely
+"tests/*" = ["T20"]
+"scripts/*" = ["T20"]
+"web/scripts/*" = ["T20"]   # codegen scripts report what they wrote                 # CLI tooling; stdout/stderr is the interface
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+files = ["ssc"]
+
+[[tool.mypy.overrides]]
+module = ["skyfield.*", "zeroconf.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+addopts = "-q --disable-socket --allow-unix-socket"
+testpaths = ["tests"]
+filterwarnings = ["error"]

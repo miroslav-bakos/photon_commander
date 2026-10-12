@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <title>SSC sky map (vector)</title>
+    <!--
+      M11's own SkyMapBackend document — the only one left (WWT removed,
+      THIRD_PARTY_NOTICES.md §9). No third-party engine (imagery does use WebGL,
+      frames/vector/imageryLayer.ts, but it is this frame's own code, not a
+      vendored library) — everything else on this page is drawn on one
+      <canvas> from --ssc-* tokens (frames/vector/main.ts). It stays behind
+      the same iframe + postMessage boundary every backend uses (DESIGN.md
+      §3.1), so swapping the engine was a build change, not a rewrite, when
+      Aladin and then WWT each had to go.
+    -->
+    <style>
+      :root {
+        color-scheme: dark;
+        /* A separate iframe cannot inherit the host's --ssc-bg token. This
+           literal is the dark theme's canonical background and exists only
+           for the first paint, before applyHostTheme reads the real token
+           from the query string. Without it the browser's initial iframe
+           canvas is white on a cold or delayed module load. */
+        --ssc-frame-loading-bg: #0b0d10;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background-color: var(--ssc-bg, var(--ssc-frame-loading-bg));
+      }
+      body {
+        position: relative;
+      }
+      #skymap-root {
+        /* The containing block for both canvases. Load-bearing: the imagery
+           canvas (`imageryLayer.ts`) and, since the stacking fix, this
+           document's own 2D canvas are both `position: absolute; inset: 0`.
+           Without a positioned ancestor they resolve against the page
+           instead of the map, so the 2D canvas is sized and placed to the
+           viewport and every line it draws lands outside the visible area —
+           reported as "ALL LINES DISAPPEARED ... EXCEPT NAMES", the labels
+           surviving because they live in `#skymap-labels`, which is
+           positioned separately. */
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        touch-action: none;
+        background-color: var(--ssc-bg, var(--ssc-frame-loading-bg));
+      }
+      #skymap-canvas {
+        display: block;
+        /*
+          Positioned, and that is load-bearing rather than cosmetic. The
+          imagery layer inserts its own WebGL canvas *before* this one
+          (`imageryLayer.ts`'s `insertBefore`) so DOM order puts imagery
+          underneath the vector drawing. But that canvas is
+          `position: absolute`, and CSS paints positioned elements above
+          non-positioned ones whatever their DOM order — so while this one
+          was static, survey imagery covered every line this canvas draws:
+          the coordinate grids, horizon, constellation boundaries, catalogue
+          outlines and FOV shapes. Labels were unaffected and stayed visible,
+          because they are DOM spans in `#skymap-labels`, which is absolute
+          and later in the document — which is exactly what made the symptom
+          confusing to read ("survey composite now overlays all lines and
+          titles and boundaries").
+
+          With both canvases positioned, DOM order decides again and the
+          insert order means what it says.
+        */
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      /*
+        Labels for catalogue outlines, constellation abbreviations, star
+        names and the frame's own reference lines: DOM text over the canvas,
+        positioned each redraw through this frame's own projection, since a
+        canvas path has no text of its own. Colour is set per label from the
+        shape's role token; the shadow is the host's background token so
+        text stays legible over a crowded field in every theme.
+      */
+      #skymap-labels {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+      }
+      .skymap-label-cardinal {
+        /* Bigger and bold: these four letters orient the whole view, and at
+           11px regular they read as just another faint label. The heavier
+           shadow keeps a dark red legible over a bright imagery layer. */
+        /* Bigger and heavier again on 2026-09-09: at 17px over a bright
+           narrowband composite these were still hard to pick out ("make the
+           font big bold red please it cannot be seen very good"). The dark
+           red that reads well over black sky is the problem over imagery, so
+           the colour token moved brighter too — see `--ssc-cardinal`. */
+        font-size: 90px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        /* Two shadows, not four: at 90px the blur area is large, and each
+           extra shadow is another full-glyph blur to composite. */
+        text-shadow:
+          0 0 4px var(--ssc-bg),
+          0 1px 3px var(--ssc-bg);
+      }
+      .skymap-label-cardinal-minor {
+        /* NE/SE/SW/NW: present for orientation, but not competing with the
+           four cardinals — smaller and lighter, same colour. */
+        font-size: 60px;
+        font-weight: 900;
+        opacity: 0.85;
+      }
+      .skymap-label {
+        position: absolute;
+        left: 0;
+        top: 0;
+        padding: 0 3px;
+        font: 11px/1.2 system-ui, sans-serif;
+        white-space: nowrap;
+        text-shadow:
+          0 0 3px var(--ssc-bg),
+          0 0 3px var(--ssc-bg);
+        /* No `will-change: transform` here. It promotes every label to its
+           own GPU compositing layer, which is fine for a handful and
+           pathological for the dozens this map now shows — grid degrees,
+           catalogue designations, star names, cardinals — after the FOV
+           gates were widened to 120 degrees. Reported as the UI going "very
+           glitchy". Transforms still animate perfectly well without it; the
+           hint only buys anything for a small number of elements that are
+           genuinely animating every frame. */
+      }
+    </style>
+  </head>
+  <body>
+    <div id="skymap-root">
+      <canvas id="skymap-canvas"></canvas>
+    </div>
+    <div id="skymap-labels"></div>
+    <script type="module" src="/src/skymap/frames/vector/main.ts"></script>
+  </body>
+</html>

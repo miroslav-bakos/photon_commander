@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <title>Photon Commander</title>
+    <meta name="description" content="Photon Commander controls, plans, and automates imaging with ZWO Seestar and compatible smart telescopes." />
+
+    <!--
+      PWA installability. `theme_color`/`background_color` live in the
+      manifest itself (see its own $comment) — both are the dark theme's
+      --ssc-bg, the one static colour choice that cannot fight either theme.
+      This <meta name="theme-color"> duplicate is for browsers that read the
+      tag rather than the manifest for the address-bar/status-bar colour.
+    -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#0b0d10" />
+    <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg?v=4" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png?v=4" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png?v=4" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/icons/favicon-48.png?v=4" />
+
+    <!-- Keep the system status bar. Do not opt into black-translucent:
+      physical iPhone 17 Pro Max / iOS 27.0.1 standalone A/B testing showed
+      that it shifts the web layer upward and leaves a bottom gap even when
+      CSSOM reports the correct viewport dimensions. Default fills the bottom. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Photon Commander" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=3" />
+  </head>
+  <body>
+    <!-- Remains usable if the application bundle cannot be downloaded. React
+         replaces this content when it mounts; no script or stylesheet is needed. -->
+    <style>
+      body { margin: 0; }
+      .startup { background: #0b0d10; color: #e6e9ef; min-height: 100dvh; display: grid; place-content: center; padding: 24px; box-sizing: border-box; font: 16px/1.6 system-ui, sans-serif; text-align: center; }
+      .startup h1 { font-size: 22px; }
+      .startup p { max-width: 32em; margin: 12px auto; }
+      .startup a { color: #9ecbff; display: inline-block; padding: 12px; }
+      .startup-help { animation: startup-help 5s step-end forwards; }
+      @keyframes startup-help { from { visibility: hidden; } to { visibility: visible; } }
+    </style>
+    <div id="root">
+      <main class="startup" aria-live="polite">
+        <h1>Photon Commander</h1>
+        <p>Loading / Načítavanie / Načítání…</p>
+        <div class="startup-help">
+          <p>Unable to load? Check your connection to the Photon server. Outside your home network, use its VPN address.</p>
+          <p>Nenačítava sa? Overte pripojenie k serveru Photon. Mimo domácej siete použite jeho VPN adresu.</p>
+          <p>Nenačítá se? Ověřte připojení k serveru Photon. Mimo domácí síť použijte jeho VPN adresu.</p>
+          <a href="">Reload / Načítať znova / Načíst znovu</a>
+        </div>
+      </main>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

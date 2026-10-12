@@ -1,0 +1,1008 @@
+# SSC bundled offline target catalogue — the Messier core (public domain)
+#
+# Purpose (DESIGN.md 3.1/3.4): resolve a typed target name to J2000 RA/Dec plus
+# enough metadata to frame it, with **no network call** — a dark site often has
+# no signal (DESIGN.md 6 makes the same point about weather). ssc.astro.catalog
+# reads this file once at load time, first in precedence, and merges it with
+# the two derived files beside it (THIRD_PARTY_NOTICES.md, "Bundled star catalogue"):
+#   - openngc.csv    NGC 1-7840 + IC 1-5386, derived from OpenNGC (CC BY-SA 4.0;
+#                    kept separate so that licence attaches to that file alone)
+#   - sharpless.csv  Sh2-1-313, derived from NASA HEASARC's hiiregion table
+# This file deliberately contains ONLY the 110 Messier objects, so its
+# provenance statement below stays true of every row in it.
+#
+# --- Provenance and licensing -----------------------------------------------
+#
+# Every field below is a measured/catalogued astrometric or photometric fact —
+# a right ascension, a declination, an angular size, an apparent magnitude, a
+# catalogue cross-designation, a constellation, or a common name in ordinary
+# use. Under US copyright law such facts are not protected expression (Feist
+# Publications v. Rural Telephone Service, 499 U.S. 340 (1991)): they are the
+# same numbers regardless of which almanac or planetarium prints them, and no
+# creative selection or arrangement of them is reproduced here beyond a plain
+# table. No descriptive prose, imagery, or other copyrightable expression from
+# any source is included in this file.
+#
+# Values were compiled and cross-checked against the NASA HEASARC Messier
+# catalog table, https://heasarc.gsfc.nasa.gov/w3browse/all/messier.html
+# (NASA-hosted, US-government public domain; positions, types, magnitudes and
+# sizes agree with the standard published Messier data reproduced across SEDS,
+# RASC and other public catalogues). The 21 curated NGC/IC entries this file
+# once carried, which had been checked against a share-alike-licensed
+# compilation, were removed on 2026-09-07 (IMPLEMENTATION.md M11, "The data
+# rule"); those objects now resolve from openngc.csv.
+#
+# A field is omitted (never guessed) wherever a source did not give it a
+# confident value — ssc.astro.catalog surfaces that as None, per CLAUDE.md:
+# "None means unknown; it never means zero."
+#
+# `source` is the credit line ssc.astro.catalog attaches to every object read
+# from this file; the UI shows it verbatim.
+source = "Messier catalogue, public-domain data cross-checked against NASA HEASARC"
+
+# Schema: [[objects]]
+#   designations         list of strings, at least one ("M31", "NGC 224", ...)
+#   common_name          string, optional
+#   object_type          one of ssc.astro.catalog.ObjectType, optional
+#   ra_j2000_h           float, hours [0, 24)
+#   dec_j2000_deg        float, degrees [-90, 90]
+#   magnitude            float, optional (apparent visual magnitude, V band)
+#   size_major_arcmin    float, optional
+#   size_minor_arcmin    float, optional (omitted when the source gives only
+#                        one dimension; never assumed equal to the major axis)
+#   position_angle_deg   float, optional (major-axis PA, north through east)
+#   constellation        string, optional (IAU 3-letter or full name as given)
+
+[[objects]]
+designations = ["M1", "NGC 1952"]
+common_name = "Crab Nebula"
+object_type = "supernova_remnant"
+ra_j2000_h = 5.575
+dec_j2000_deg = 22.016667
+magnitude = 8.7
+size_major_arcmin = 7.0
+size_minor_arcmin = 4.0
+
+[[objects]]
+designations = ["M2", "NGC 7089"]
+object_type = "globular_cluster"
+ra_j2000_h = 21.558333
+dec_j2000_deg = -0.816667
+magnitude = 7.0
+size_major_arcmin = 8.0
+
+[[objects]]
+designations = ["M3", "NGC 5272"]
+object_type = "globular_cluster"
+ra_j2000_h = 13.703333
+dec_j2000_deg = 28.383333
+magnitude = 6.4
+size_major_arcmin = 8.0
+
+[[objects]]
+designations = ["M4", "NGC 6121"]
+object_type = "globular_cluster"
+ra_j2000_h = 16.393333
+dec_j2000_deg = -26.533333
+magnitude = 6.9
+size_major_arcmin = 14.0
+
+[[objects]]
+designations = ["M5", "NGC 5904"]
+object_type = "globular_cluster"
+ra_j2000_h = 15.31
+dec_j2000_deg = 2.083333
+magnitude = 6.2
+size_major_arcmin = 10.0
+
+[[objects]]
+designations = ["M6", "NGC 6405"]
+object_type = "open_cluster"
+ra_j2000_h = 17.668333
+dec_j2000_deg = -32.216667
+magnitude = 5.3
+size_major_arcmin = 30.0
+size_minor_arcmin = 24.0
+
+[[objects]]
+designations = ["M7", "NGC 6475"]
+object_type = "open_cluster"
+ra_j2000_h = 17.898333
+dec_j2000_deg = -34.816667
+magnitude = 5.0
+size_major_arcmin = 32.0
+size_minor_arcmin = 26.0
+
+[[objects]]
+designations = ["M8", "NGC 6523"]
+common_name = "Lagoon Nebula"
+object_type = "diffuse_nebula"
+ra_j2000_h = 18.063333
+dec_j2000_deg = -24.383333
+magnitude = 6.3
+size_major_arcmin = 25.0
+size_minor_arcmin = 20.0
+
+[[objects]]
+designations = ["M9", "NGC 6333"]
+object_type = "globular_cluster"
+ra_j2000_h = 17.32
+dec_j2000_deg = -18.516667
+magnitude = 7.3
+size_major_arcmin = 4.0
+
+[[objects]]
+designations = ["M10", "NGC 6254"]
+object_type = "globular_cluster"
+ra_j2000_h = 16.951667
+dec_j2000_deg = -4.1
+magnitude = 6.7
+size_major_arcmin = 9.0
+
+[[objects]]
+designations = ["M11", "NGC 6705"]
+object_type = "open_cluster"
+ra_j2000_h = 18.851667
+dec_j2000_deg = -6.266667
+magnitude = 6.0
+size_major_arcmin = 8.0
+
+[[objects]]
+designations = ["M12", "NGC 6218"]
+object_type = "globular_cluster"
+ra_j2000_h = 16.786667
+dec_j2000_deg = -1.95
+magnitude = 6.8
+size_major_arcmin = 8.0
+
+[[objects]]
+designations = ["M13", "NGC 6205"]
+common_name = "Great Hercules Cluster"
+object_type = "globular_cluster"
+ra_j2000_h = 16.695
+dec_j2000_deg = 36.466667
+magnitude = 6.2
+size_major_arcmin = 13.0
+
+[[objects]]
+designations = ["M14", "NGC 6402"]
+object_type = "globular_cluster"
+ra_j2000_h = 17.626667
+dec_j2000_deg = -3.25
+magnitude = 7.7
+size_major_arcmin = 8.0
+
+[[objects]]
+designations = ["M15", "NGC 7078"]
+object_type = "globular_cluster"
+ra_j2000_h = 21.5
+dec_j2000_deg = 12.166667
+magnitude = 7.4
+size_major_arcmin = 7.0
+
+[[objects]]
+designations = ["M16", "NGC 6611"]
+common_name = "Eagle Nebula"
+object_type = "open_cluster"
+ra_j2000_h = 18.313333
+dec_j2000_deg = -13.783333
+magnitude = 7.1
+size_major_arcmin = 25.0
+size_minor_arcmin = 25.0
+
+[[objects]]
+designations = ["M17", "NGC 6618"]
+common_name = "Omega Nebula"
+object_type = "diffuse_nebula"
+ra_j2000_h = 18.346667
+dec_j2000_deg = -16.183333
+magnitude = 6.6
+size_major_arcmin = 15.0
+size_minor_arcmin = 8.0
+
+[[objects]]
+designations = ["M18", "NGC 6613"]
+object_type = "open_cluster"
+ra_j2000_h = 18.331667
+dec_j2000_deg = -17.133333
+magnitude = 7.1
+size_major_arcmin = 8.0
+size_minor_arcmin = 6.0
+
+[[objects]]
+designations = ["M19", "NGC 6273"]
+object_type = "globular_cluster"
+ra_j2000_h = 17.043333
+dec_j2000_deg = -26.266667
+magnitude = 7.9
+size_major_arcmin = 6.0
+
+[[objects]]
+designations = ["M20", "NGC 6514"]
+common_name = "Trifid Nebula"
+object_type = "diffuse_nebula"
+ra_j2000_h = 18.043333
+dec_j2000_deg = -23.033333
+magnitude = 6.8
+size_major_arcmin = 16.0
+size_minor_arcmin = 10.0
+
+[[objects]]
+designations = ["M21", "NGC 6531"]
+object_type = "open_cluster"
+ra_j2000_h = 18.076667
+dec_j2000_deg = -22.5
+magnitude = 7.5
+size_major_arcmin = 7.0
+size_minor_arcmin = 4.0
+
+[[objects]]
+designations = ["M22", "NGC 6656"]
+object_type = "globular_cluster"
+ra_j2000_h = 18.606667
+dec_j2000_deg = -23.9
+magnitude = 5.4
+size_major_arcmin = 17.0
+
+[[objects]]
+designations = ["M23", "NGC 6494"]
+object_type = "open_cluster"
+ra_j2000_h = 17.946667
+dec_j2000_deg = -19.016667
+magnitude = 6.2
+size_major_arcmin = 20.0
+size_minor_arcmin = 15.0
+
+[[objects]]
+designations = ["M24", "NGC 6603"]
+common_name = "Sagittarius Star Cloud"
+object_type = "star_cloud"
+ra_j2000_h = 18.281667
+dec_j2000_deg = -18.483333
+magnitude = 4.5
+size_major_arcmin = 80.0
+size_minor_arcmin = 35.0
+
+[[objects]]
+designations = ["M25", "IC 4725"]
+object_type = "open_cluster"
+ra_j2000_h = 18.526667
+dec_j2000_deg = -19.25
+magnitude = 5.9
+size_major_arcmin = 35.0
+size_minor_arcmin = 30.0
+
+[[objects]]
+designations = ["M26", "NGC 6694"]
+object_type = "open_cluster"
+ra_j2000_h = 18.753333
+dec_j2000_deg = -9.4
+magnitude = 7.8
+size_major_arcmin = 7.0
+
+[[objects]]
+designations = ["M27", "NGC 6853"]
+common_name = "Dumbbell Nebula"
+object_type = "planetary_nebula"
+ra_j2000_h = 19.993333
+dec_j2000_deg = 22.716667
+magnitude = 8.8
+size_major_arcmin = 7.0
+
+[[objects]]
+designations = ["M28", "NGC 6626"]
+object_type = "globular_cluster"
+ra_j2000_h = 18.408333
+dec_j2000_deg = -24.866667
+magnitude = 8.4
+size_major_arcmin = 5.0
+
+[[objects]]
+designations = ["M29", "NGC 6913"]
+object_type = "open_cluster"
+ra_j2000_h = 20.398333
+dec_j2000_deg = 38.533333
+magnitude = 7.4
+size_major_arcmin = 7.0
+
+[[objects]]
+designations = ["M30", "NGC 7099"]
+object_type = "globular_cluster"
+ra_j2000_h = 21.673333
+dec_j2000_deg = -23.183333
+magnitude = 8.4
+size_major_arcmin = 4.0
+
+[[objects]]
+designations = ["M31", "NGC 224"]
+common_name = "Andromeda Galaxy"
+object_type = "galaxy_spiral"
+ra_j2000_h = 0.711667
+dec_j2000_deg = 41.266667
+magnitude = 4.5
+size_major_arcmin = 145.0
+size_minor_arcmin = 20.0
+
+[[objects]]
+designations = ["M32", "NGC 221"]
+object_type = "galaxy_elliptical"
+ra_j2000_h = 0.711667
+dec_j2000_deg = 40.866667
+magnitude = 8.6
+size_major_arcmin = 2.0
+
+[[objects]]
+designations = ["M33", "NGC 598"]
+common_name = "Triangulum Galaxy"
+object_type = "galaxy_spiral"
+ra_j2000_h = 1.565
+dec_j2000_deg = 30.65
+magnitude = 6.2
+size_major_arcmin = 22.0
+size_minor_arcmin = 18.0
+
+[[objects]]
+designations = ["M34", "NGC 1039"]
+object_type = "open_cluster"
+ra_j2000_h = 2.7
+dec_j2000_deg = 42.783333
+magnitude = 6.3
+size_major_arcmin = 25.0
+size_minor_arcmin = 15.0
+
+[[objects]]
+designations = ["M35", "NGC 2168"]
+object_type = "open_cluster"
+ra_j2000_h = 6.148333
+dec_j2000_deg = 24.333333
+magnitude = 4.8
+size_major_arcmin = 25.0
+size_minor_arcmin = 18.0
+
+[[objects]]
+designations = ["M36", "NGC 1960"]
+object_type = "open_cluster"
+ra_j2000_h = 5.601667
+dec_j2000_deg = 34.133333
+magnitude = 5.8
+size_major_arcmin = 13.0
+
+[[objects]]
+designations = ["M37", "NGC 2099"]
+object_type = "open_cluster"
+ra_j2000_h = 5.873333
+dec_j2000_deg = 32.55
+magnitude = 6.2
+size_major_arcmin = 18.0
+
+[[objects]]
+designations = ["M38", "NGC 1922"]
+object_type = "open_cluster"
+ra_j2000_h = 5.473333
+dec_j2000_deg = 35.833333
+magnitude = 6.0
+size_major_arcmin = 11.0
+
+[[objects]]
+designations = ["M39", "NGC 7092"]
+object_type = "open_cluster"
+ra_j2000_h = 21.536667
+dec_j2000_deg = 48.433333
+magnitude = 5.4
+size_major_arcmin = 30.0
+size_minor_arcmin = 20.0
+
+[[objects]]
+designations = ["M40"]
+common_name = "Winnecke 4"
+object_type = "double_star"
+ra_j2000_h = 12.373333
+dec_j2000_deg = 58.083333
+magnitude = 8.7
+size_major_arcmin = 1.0
+
+[[objects]]
+designations = ["M41", "NGC 2287"]
+object_type = "open_cluster"
+ra_j2000_h = 6.766667
+dec_j2000_deg = -20.733333
+magnitude = 5.8
+size_major_arcmin = 25.0
+
+[[objects]]
+designations = ["M42", "NGC 1976"]
+common_name = "Orion Nebula"
+object_type = "diffuse_nebula"
+ra_j2000_h = 5.59
+dec_j2000_deg = -5.45
+magnitude = 4.3
+size_major_arcmin = 40.0
+size_minor_arcmin = 30.0
+
+[[objects]]
+designations = ["M43", "NGC 1982"]
+common_name = "De Mairan's Nebula"
+object_type = "diffuse_nebula"
+ra_j2000_h = 5.593333
+dec_j2000_deg = -5.266667
+magnitude = 8.3
+size_major_arcmin = 5.0
+
+[[objects]]
+designations = ["M44", "NGC 2632"]
+common_name = "Praesepe (Beehive Cluster)"
+object_type = "open_cluster"
+ra_j2000_h = 8.668333
+dec_j2000_deg = 19.983333
+magnitude = 3.3
+size_major_arcmin = 60.0
+size_minor_arcmin = 50.0
+
+[[objects]]
+designations = ["M45"]
+common_name = "Pleiades"
+object_type = "open_cluster"
+ra_j2000_h = 3.783333
+dec_j2000_deg = 24.116667
+magnitude = 2.0
+size_major_arcmin = 70.0
+size_minor_arcmin = 40.0
+
+[[objects]]
+designations = ["M46", "NGC 2437"]
+object_type = "open_cluster"
+ra_j2000_h = 7.696667
+dec_j2000_deg = -14.816667
+magnitude = 6.7
+size_major_arcmin = 18.0
+size_minor_arcmin = 15.0
+
+[[objects]]
+designations = ["M47", "NGC 2422"]
+object_type = "open_cluster"
+ra_j2000_h = 7.61
+dec_j2000_deg = -14.5
+magnitude = 5.6
+size_major_arcmin = 17.0
+size_minor_arcmin = 12.0
+
+[[objects]]
+designations = ["M48", "NGC 2548"]
+object_type = "open_cluster"
+ra_j2000_h = 8.23
+dec_j2000_deg = -5.8
+magnitude = 6.2
+size_major_arcmin = 40.0
+size_minor_arcmin = 35.0
+
+[[objects]]
+designations = ["M49", "NGC 4472"]
+object_type = "galaxy_elliptical"
+ra_j2000_h = 12.496667
+dec_j2000_deg = 8.0
+magnitude = 8.6
+size_major_arcmin = 4.0
+
+[[objects]]
+designations = ["M50", "NGC 2323"]
+object_type = "open_cluster"
+ra_j2000_h = 7.053333
+dec_j2000_deg = -8.333333
+magnitude = 7.1
+size_major_arcmin = 8.0
+size_minor_arcmin = 6.0
+
+[[objects]]
+designations = ["M51", "NGC 5194"]
+common_name = "Whirlpool Galaxy"
+object_type = "galaxy_spiral"
+ra_j2000_h = 13.498333
+dec_j2000_deg = 47.2
+magnitude = 7.9
+size_major_arcmin = 14.0
+size_minor_arcmin = 11.0
+
+[[objects]]
+designations = ["M52", "NGC 7654"]
+object_type = "open_cluster"
+ra_j2000_h = 23.403333
+dec_j2000_deg = 61.583333
+magnitude = 7.6
+size_major_arcmin = 9.0
+size_minor_arcmin = 7.0
+
+[[objects]]
+designations = ["M53", "NGC 5024"]
+object_type = "globular_cluster"
+ra_j2000_h = 13.215
+dec_j2000_deg = 18.166667
+magnitude = 7.4
+size_major_arcmin = 3.0
+
+[[objects]]
+designations = ["M54", "NGC 6715"]
+object_type = "globular_cluster"
+ra_j2000_h = 18.918333
+dec_j2000_deg = -30.483333
+magnitude = 8.2
+size_major_arcmin = 2.0
+
+[[objects]]
+designations = ["M55", "NGC 6809"]
+object_type = "globular_cluster"
+ra_j2000_h = 19.666667
+dec_j2000_deg = -30.966667
+magnitude = 6.1
+size_major_arcmin = 12.0
+
+[[objects]]
+designations = ["M56", "NGC 6779"]
+object_type = "globular_cluster"
+ra_j2000_h = 19.276667
+dec_j2000_deg = 30.183333
+magnitude = 9.1
+size_major_arcmin = 5.0
+
+[[objects]]
+designations = ["M57", "NGC 6720"]
+common_name = "Ring Nebula"
+object_type = "planetary_nebula"
+ra_j2000_h = 18.893333
+dec_j2000_deg = 33.033333
+magnitude = 8.8
+size_major_arcmin = 2.0
+
+[[objects]]
+designations = ["M58", "NGC 4579"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 12.628333
+dec_j2000_deg = 11.816667
+magnitude = 9.2
+size_major_arcmin = 4.0
+
+[[objects]]
+designations = ["M59", "NGC 4621"]
+object_type = "galaxy_elliptical"
+ra_j2000_h = 12.7
+dec_j2000_deg = 11.65
+magnitude = 9.4
+size_major_arcmin = 3.0
+size_minor_arcmin = 2.0
+
+[[objects]]
+designations = ["M60", "NGC 4649"]
+object_type = "galaxy_elliptical"
+ra_j2000_h = 12.728333
+dec_j2000_deg = 11.55
+magnitude = 9.2
+size_major_arcmin = 4.0
+size_minor_arcmin = 3.0
+
+[[objects]]
+designations = ["M61", "NGC 4303"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 12.365
+dec_j2000_deg = 4.466667
+magnitude = 9.0
+size_major_arcmin = 5.0
+
+[[objects]]
+designations = ["M62", "NGC 6266"]
+object_type = "globular_cluster"
+ra_j2000_h = 17.02
+dec_j2000_deg = -30.116667
+magnitude = 8.1
+size_major_arcmin = 5.0
+
+[[objects]]
+designations = ["M63", "NGC 5055"]
+common_name = "Sunflower Galaxy"
+object_type = "galaxy_spiral"
+ra_j2000_h = 13.263333
+dec_j2000_deg = 42.033333
+magnitude = 8.7
+size_major_arcmin = 8.0
+size_minor_arcmin = 4.0
+
+[[objects]]
+designations = ["M64", "NGC 4826"]
+common_name = "Black Eye Galaxy"
+object_type = "galaxy_spiral"
+ra_j2000_h = 12.945
+dec_j2000_deg = 21.683333
+magnitude = 8.7
+size_major_arcmin = 8.0
+size_minor_arcmin = 4.0
+
+[[objects]]
+designations = ["M65", "NGC 3623"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 11.315
+dec_j2000_deg = 13.083333
+magnitude = 8.9
+size_major_arcmin = 11.0
+size_minor_arcmin = 4.0
+
+[[objects]]
+designations = ["M66", "NGC 3627"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 11.336667
+dec_j2000_deg = 12.983333
+magnitude = 8.6
+size_major_arcmin = 9.0
+size_minor_arcmin = 5.0
+
+[[objects]]
+designations = ["M67", "NGC 2682"]
+object_type = "open_cluster"
+ra_j2000_h = 8.84
+dec_j2000_deg = 11.816667
+magnitude = 7.6
+size_major_arcmin = 12.0
+size_minor_arcmin = 10.0
+
+[[objects]]
+designations = ["M68", "NGC 4590"]
+object_type = "globular_cluster"
+ra_j2000_h = 12.658333
+dec_j2000_deg = -26.75
+magnitude = 8.4
+size_major_arcmin = 5.0
+
+[[objects]]
+designations = ["M69", "NGC 6637"]
+object_type = "globular_cluster"
+ra_j2000_h = 18.523333
+dec_j2000_deg = -32.35
+magnitude = 7.9
+size_major_arcmin = 3.0
+
+[[objects]]
+designations = ["M70", "NGC 6681"]
+object_type = "globular_cluster"
+ra_j2000_h = 18.72
+dec_j2000_deg = -32.3
+magnitude = 8.4
+size_major_arcmin = 2.0
+
+[[objects]]
+designations = ["M71", "NGC 6838"]
+object_type = "globular_cluster"
+ra_j2000_h = 19.896667
+dec_j2000_deg = 18.783333
+magnitude = 8.8
+size_major_arcmin = 7.0
+
+[[objects]]
+designations = ["M72", "NGC 6981"]
+object_type = "globular_cluster"
+ra_j2000_h = 20.891667
+dec_j2000_deg = -12.533333
+magnitude = 9.0
+size_major_arcmin = 4.0
+
+[[objects]]
+designations = ["M73", "NGC 6994"]
+object_type = "asterism"
+ra_j2000_h = 20.981667
+dec_j2000_deg = -12.633333
+magnitude = 9.5
+size_major_arcmin = 2.0
+
+[[objects]]
+designations = ["M74", "NGC 628"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 1.611667
+dec_j2000_deg = 15.783333
+magnitude = 9.5
+size_major_arcmin = 9.0
+
+[[objects]]
+designations = ["M75", "NGC 6864"]
+object_type = "globular_cluster"
+ra_j2000_h = 20.101667
+dec_j2000_deg = -21.916667
+magnitude = 8.7
+size_major_arcmin = 2.0
+
+[[objects]]
+designations = ["M76", "NGC 650"]
+common_name = "Little Dumbbell Nebula"
+object_type = "planetary_nebula"
+ra_j2000_h = 1.706667
+dec_j2000_deg = 51.566667
+magnitude = 9.6
+size_major_arcmin = 3.0
+size_minor_arcmin = 2.0
+
+[[objects]]
+designations = ["M77", "NGC 1068"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 2.711667
+dec_j2000_deg = -0.016667
+magnitude = 8.9
+size_major_arcmin = 2.0
+
+[[objects]]
+designations = ["M78", "NGC 2068"]
+object_type = "diffuse_nebula"
+ra_j2000_h = 5.778333
+dec_j2000_deg = 0.05
+magnitude = 8.4
+size_major_arcmin = 8.0
+
+[[objects]]
+designations = ["M79", "NGC 1904"]
+object_type = "globular_cluster"
+ra_j2000_h = 5.408333
+dec_j2000_deg = -24.55
+magnitude = 8.1
+size_major_arcmin = 3.0
+
+[[objects]]
+designations = ["M80", "NGC 6093"]
+object_type = "globular_cluster"
+ra_j2000_h = 16.283333
+dec_j2000_deg = -22.983333
+magnitude = 8.1
+size_major_arcmin = 3.0
+
+[[objects]]
+designations = ["M81", "NGC 3031"]
+common_name = "Bode's Galaxy"
+object_type = "galaxy_spiral"
+ra_j2000_h = 9.926667
+dec_j2000_deg = 69.066667
+magnitude = 8.2
+size_major_arcmin = 9.0
+size_minor_arcmin = 3.0
+
+[[objects]]
+designations = ["M82", "NGC 3034"]
+common_name = "Cigar Galaxy"
+object_type = "galaxy_irregular"
+ra_j2000_h = 9.93
+dec_j2000_deg = 69.683333
+magnitude = 8.3
+size_major_arcmin = 9.0
+size_minor_arcmin = 2.0
+
+[[objects]]
+designations = ["M83", "NGC 5236"]
+common_name = "Southern Pinwheel Galaxy"
+object_type = "galaxy_spiral"
+ra_j2000_h = 13.616667
+dec_j2000_deg = -29.866667
+magnitude = 7.9
+size_major_arcmin = 10.0
+size_minor_arcmin = 7.0
+
+[[objects]]
+designations = ["M84", "NGC 4374"]
+object_type = "galaxy_lenticular"
+ra_j2000_h = 12.418333
+dec_j2000_deg = 12.883333
+magnitude = 8.8
+size_major_arcmin = 5.0
+
+[[objects]]
+designations = ["M85", "NGC 4382"]
+object_type = "galaxy_lenticular"
+ra_j2000_h = 12.423333
+dec_j2000_deg = 18.183333
+magnitude = 8.9
+size_major_arcmin = 4.0
+
+[[objects]]
+designations = ["M86", "NGC 4406"]
+object_type = "galaxy_lenticular"
+ra_j2000_h = 12.436667
+dec_j2000_deg = 12.95
+magnitude = 8.8
+size_major_arcmin = 5.0
+
+[[objects]]
+designations = ["M87", "NGC 4486"]
+common_name = "Virgo A"
+object_type = "galaxy_elliptical"
+ra_j2000_h = 12.513333
+dec_j2000_deg = 12.4
+magnitude = 8.7
+size_major_arcmin = 5.0
+
+[[objects]]
+designations = ["M88", "NGC 4501"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 12.533333
+dec_j2000_deg = 14.416667
+magnitude = 9.4
+size_major_arcmin = 8.0
+size_minor_arcmin = 3.0
+
+[[objects]]
+designations = ["M89", "NGC 4552"]
+object_type = "galaxy_elliptical"
+ra_j2000_h = 12.595
+dec_j2000_deg = 12.55
+magnitude = 9.1
+size_major_arcmin = 3.0
+
+[[objects]]
+designations = ["M90", "NGC 4569"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 12.613333
+dec_j2000_deg = 13.166667
+magnitude = 9.3
+size_major_arcmin = 6.0
+size_minor_arcmin = 2.0
+
+[[objects]]
+designations = ["M91", "NGC 4548"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 12.59
+dec_j2000_deg = 14.5
+magnitude = 9.9
+size_major_arcmin = 3.0
+
+[[objects]]
+designations = ["M92", "NGC 6341"]
+object_type = "globular_cluster"
+ra_j2000_h = 17.285
+dec_j2000_deg = 43.133333
+magnitude = 6.9
+size_major_arcmin = 8.0
+
+[[objects]]
+designations = ["M93", "NGC 2447"]
+object_type = "open_cluster"
+ra_j2000_h = 7.743333
+dec_j2000_deg = -23.866667
+magnitude = 5.8
+size_major_arcmin = 12.0
+size_minor_arcmin = 8.0
+
+[[objects]]
+designations = ["M94", "NGC 4736"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 12.848333
+dec_j2000_deg = 41.116667
+magnitude = 8.4
+size_major_arcmin = 4.0
+
+[[objects]]
+designations = ["M95", "NGC 3351"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 10.733333
+dec_j2000_deg = 11.7
+magnitude = 9.5
+size_major_arcmin = 7.0
+
+[[objects]]
+designations = ["M96", "NGC 3368"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 10.78
+dec_j2000_deg = 11.816667
+magnitude = 9.1
+size_major_arcmin = 8.0
+size_minor_arcmin = 4.0
+
+[[objects]]
+designations = ["M97", "NGC 3587"]
+common_name = "Owl Nebula"
+object_type = "planetary_nebula"
+ra_j2000_h = 11.246667
+dec_j2000_deg = 55.016667
+magnitude = 9.7
+size_major_arcmin = 6.0
+
+[[objects]]
+designations = ["M98", "NGC 4192"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 12.23
+dec_j2000_deg = 14.9
+magnitude = 9.8
+size_major_arcmin = 8.0
+size_minor_arcmin = 3.0
+
+[[objects]]
+designations = ["M99", "NGC 4254"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 12.313333
+dec_j2000_deg = 14.416667
+magnitude = 9.4
+size_major_arcmin = 6.0
+
+[[objects]]
+designations = ["M100", "NGC 4321"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 12.381667
+dec_j2000_deg = 15.816667
+magnitude = 9.6
+size_major_arcmin = 7.0
+
+[[objects]]
+designations = ["M101", "NGC 5457"]
+common_name = "Pinwheel Galaxy"
+object_type = "galaxy_spiral"
+ra_j2000_h = 14.053333
+dec_j2000_deg = 54.35
+magnitude = 8.8
+size_major_arcmin = 14.0
+
+[[objects]]
+designations = ["M102", "NGC 5866"]
+object_type = "galaxy_lenticular"
+ra_j2000_h = 15.108333
+dec_j2000_deg = 55.766667
+magnitude = 9.6
+size_major_arcmin = 4.0
+size_minor_arcmin = 2.0
+
+[[objects]]
+designations = ["M103", "NGC 581"]
+object_type = "open_cluster"
+ra_j2000_h = 1.553333
+dec_j2000_deg = 60.7
+magnitude = 7.0
+size_major_arcmin = 8.0
+
+[[objects]]
+designations = ["M104", "NGC 4594"]
+common_name = "Sombrero Galaxy"
+object_type = "galaxy_spiral"
+ra_j2000_h = 12.666667
+dec_j2000_deg = -11.616667
+magnitude = 8.8
+size_major_arcmin = 7.0
+size_minor_arcmin = 4.0
+
+[[objects]]
+designations = ["M105", "NGC 3379"]
+object_type = "galaxy_elliptical"
+ra_j2000_h = 10.796667
+dec_j2000_deg = 12.583333
+magnitude = 9.1
+size_major_arcmin = 4.0
+
+[[objects]]
+designations = ["M106", "NGC 4258"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 12.316667
+dec_j2000_deg = 47.3
+magnitude = 8.8
+size_major_arcmin = 11.0
+size_minor_arcmin = 5.0
+
+[[objects]]
+designations = ["M107", "NGC 6171"]
+object_type = "globular_cluster"
+ra_j2000_h = 16.541667
+dec_j2000_deg = -13.05
+magnitude = 9.0
+size_major_arcmin = 5.0
+
+[[objects]]
+designations = ["M108", "NGC 3556"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 11.191667
+dec_j2000_deg = 55.666667
+magnitude = 9.4
+size_major_arcmin = 7.0
+size_minor_arcmin = 2.0
+
+[[objects]]
+designations = ["M109", "NGC 3992"]
+object_type = "galaxy_spiral"
+ra_j2000_h = 11.96
+dec_j2000_deg = 53.383333
+magnitude = 9.6
+size_major_arcmin = 4.0
+
+[[objects]]
+designations = ["M110", "NGC 205"]
+object_type = "galaxy_elliptical"
+ra_j2000_h = 0.673333
+dec_j2000_deg = 41.683333
+magnitude = 8.7
+size_major_arcmin = 10.0
+size_minor_arcmin = 8.0

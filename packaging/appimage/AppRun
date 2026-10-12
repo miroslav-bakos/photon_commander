@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+APPDIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+export SSC_STATIC_DIR="$APPDIR/web"
+export SSC_DATA_DIR="${SSC_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/photon-commander}"
+export SSC_HOST=127.0.0.1
+export SSC_PORT="${SSC_PORT:-7777}"
+exec "$APPDIR/app/ssc-core" --desktop "$@"

@@ -1,0 +1,610 @@
+{
+  "absent_on_8_46": {},
+  "firmware": "8.46",
+  "firmware_int": 2846,
+  "host": "192.0.2.42",
+  "identity": {
+    "can_roi_scale": true,
+    "can_star_mode_sel_cam": true,
+    "can_wide_cam_af": true,
+    "can_wide_cam_roi": true,
+    "cpuId": "0000000000000001",
+    "firmware_platform": 1,
+    "firmware_ver_int": 2846,
+    "firmware_ver_string": "8.46",
+    "fnumber": 5.0,
+    "focal_len": 160.0,
+    "ios_ver": "Seestar_v1.05_rv1126bp 20260110",
+    "is_verified": true,
+    "name": "Synthetic Seestar",
+    "product_model": "Seestar S30 Pro",
+    "sn": "SYNTHETIC000001",
+    "user_product_model": "Seestar S30 Pro"
+  },
+  "methods": {
+    "get_albums": {
+      "code": 0,
+      "present": true,
+      "shape": {
+        "list": [
+          {
+            "files": [
+              {
+                "count": "int",
+                "name": "str",
+                "thn": "str",
+                "type": "int"
+              }
+            ],
+            "group_name": "str"
+          }
+        ],
+        "path": "str"
+      }
+    },
+    "get_app_state": {
+      "code": 0,
+      "present": true,
+      "shape": {
+        "annotate": {
+          "is_working": "bool",
+          "lapse_ms": "int"
+        },
+        "auto_exp": {
+          "is_working": "bool"
+        },
+        "auto_focus": {
+          "focuser_opened": "bool",
+          "is_working": "bool",
+          "reason": {
+            "code": "int",
+            "comment": "str"
+          },
+          "result": {}
+        },
+        "auto_goto": {
+          "is_working": "bool",
+          "target_ra_dec": [
+            "float"
+          ]
+        },
+        "avi_record": {
+          "fps": "float",
+          "is_working": "bool",
+          "lapse_sec": "int",
+          "write_file_fps": "float"
+        },
+        "capture": {
+          "exposure_mode": "str",
+          "is_working": "bool",
+          "lapse_ms": "int",
+          "state": "str"
+        },
+        "export_image": {
+          "dst_storage": "str",
+          "is_working": "bool",
+          "keep": "bool",
+          "success_frame": "int",
+          "total_frame": "int"
+        },
+        "find_star": {
+          "is_working": "bool",
+          "lapse_ms": "int"
+        },
+        "merid_flip": {
+          "is_working": "bool"
+        },
+        "pa": {
+          "is_working": "bool"
+        },
+        "pa_3p": {
+          "is_working": "bool"
+        },
+        "page": "str",
+        "restart_guide": {
+          "is_working": "bool"
+        },
+        "rtmp": {
+          "is_working": "bool"
+        },
+        "solve": {
+          "filename": "str",
+          "is_working": "bool",
+          "lapse_ms": "int"
+        },
+        "stack": {
+          "dropped_frame": "int",
+          "frame_type": "str",
+          "is_working": "bool",
+          "stacked_frame": "int",
+          "total_frame": "int"
+        }
+      }
+    },
+    "get_camera_exp_and_bin": {
+      "code": 0,
+      "present": true,
+      "shape": {
+        "bin": "int",
+        "exposure": "int"
+      }
+    },
+    "get_camera_info": {
+      "code": 0,
+      "present": true,
+      "shape": {
+        "bins": [
+          "int"
+        ],
+        "chip_size": [
+          "int"
+        ],
+        "debayer_pattern": "str",
+        "has_cooler": "bool",
+        "has_hpc": "bool",
+        "is_color": "bool",
+        "is_usb3_host": "bool",
+        "pixel_size_um": "float",
+        "unity_gain": "int"
+      }
+    },
+    "get_camera_state": {
+      "code": 0,
+      "present": true,
+      "shape": {
+        "name": "str",
+        "path": "str",
+        "state": "str"
+      }
+    },
+    "get_controls": {
+      "code": 0,
+      "present": true,
+      "shape": [
+        {
+          "max": "int",
+          "min": "int",
+          "name": "str",
+          "read_only": "bool"
+        }
+      ]
+    },
+    "get_disk_volume": {
+      "code": 0,
+      "present": true,
+      "shape": {
+        "freeMB": "int",
+        "totalMB": "int"
+      }
+    },
+    "get_focuser_position": {
+      "code": 0,
+      "present": true,
+      "shape": "int"
+    },
+    "get_focuser_state": {
+      "code": 0,
+      "present": true,
+      "shape": {
+        "id": "int",
+        "max_step_range": "int",
+        "name": "str",
+        "state": "str"
+      }
+    },
+    "get_last_solve_result": {
+      "code": 215,
+      "present": true,
+      "shape": null
+    },
+    "get_solve_result": {
+      "code": 215,
+      "present": true,
+      "shape": null
+    },
+    "get_stack_info": {
+      "code": 0,
+      "present": true,
+      "shape": {
+        "height": "int",
+        "width": "int"
+      }
+    },
+    "get_view_state": {
+      "code": 0,
+      "present": true,
+      "shape": {
+        "View": {
+          "ContinuousExposure": {
+            "fps": "float",
+            "lapse_ms": "int",
+            "state": "str"
+          },
+          "cam_id": "int",
+          "gain": "int",
+          "lapse_ms": "int",
+          "lp_filter": "bool",
+          "mode": "str",
+          "stage": "str",
+          "state": "str"
+        }
+      }
+    },
+    "get_wheel_position": {
+      "code": 0,
+      "present": true,
+      "shape": "int"
+    },
+    "get_wheel_setting": {
+      "code": 0,
+      "present": true,
+      "shape": {
+        "exp_sec": [
+          "float"
+        ],
+        "names": [
+          "str"
+        ]
+      }
+    },
+    "get_wheel_state": {
+      "code": 0,
+      "present": true,
+      "shape": {
+        "id": "int",
+        "state": "str",
+        "unidirection": "bool"
+      }
+    },
+    "pi_get_time": {
+      "code": 0,
+      "present": true,
+      "shape": {
+        "day": "int",
+        "hour": "int",
+        "min": "int",
+        "mon": "int",
+        "sec": "int",
+        "time_zone": "str",
+        "year": "int"
+      }
+    },
+    "pi_is_verified": {
+      "code": 0,
+      "present": true,
+      "shape": "bool"
+    },
+    "pi_station_state": {
+      "code": 0,
+      "present": true,
+      "shape": {
+        "freq": "int",
+        "gateway": "str",
+        "ip": "str",
+        "key_mgmt": "str",
+        "netmask": "str",
+        "server": "bool",
+        "sig_lev": "int",
+        "ssid": "str"
+      }
+    },
+    "test_connection": {
+      "code": 0,
+      "present": true,
+      "shape": "str"
+    }
+  },
+  "port": 4701,
+  "state_keys": {
+    "ap": {
+      "present": true,
+      "shape": {
+        "is_5g": "bool",
+        "passwd": "str",
+        "ssid": "str"
+      }
+    },
+    "balance_sensor": {
+      "present": true,
+      "shape": {
+        "code": "int",
+        "data": {
+          "angle": "float",
+          "x": "float",
+          "y": "float",
+          "z": "float"
+        }
+      }
+    },
+    "camera": {
+      "present": true,
+      "shape": {
+        "chip_size": [
+          "int"
+        ],
+        "debayer_pattern": "str",
+        "hpc_num": "int",
+        "pixel_size_um": "float"
+      }
+    },
+    "device": {
+      "present": true,
+      "shape": {
+        "can_roi_scale": "bool",
+        "can_star_mode_sel_cam": "bool",
+        "can_wide_cam_af": "bool",
+        "can_wide_cam_roi": "bool",
+        "cpuId": "str",
+        "firmware_platform": "int",
+        "firmware_ver_int": "int",
+        "firmware_ver_string": "str",
+        "fnumber": "float",
+        "focal_len": "float",
+        "ios_ver": "str",
+        "is_verified": "bool",
+        "name": "str",
+        "product_model": "str",
+        "sn": "str",
+        "user_product_model": "str"
+      }
+    },
+    "focuser": {
+      "present": true,
+      "shape": {
+        "max_step": "int",
+        "state": "str",
+        "step": "int"
+      }
+    },
+    "mount": {
+      "present": true,
+      "shape": {
+        "close": "bool",
+        "equ_mode": "bool",
+        "move_type": "str",
+        "tracking": "bool"
+      }
+    },
+    "pi_status": {
+      "present": true,
+      "shape": {
+        "battery_capacity": "int",
+        "battery_overtemp": "bool",
+        "battery_temp": "int",
+        "battery_temp_type": "str",
+        "charge_online": "bool",
+        "charger_status": "str",
+        "is_overtemp": "bool",
+        "is_typec_connected": "bool",
+        "temp": "float"
+      }
+    },
+    "setting": {
+      "present": true,
+      "shape": {
+        "ae_bri_percent": "float",
+        "ap_changed": "bool",
+        "auto_3ppa_calib": "bool",
+        "auto_af": "bool",
+        "auto_master_dark": "bool",
+        "auto_power_off": "bool",
+        "beep_volume": "str",
+        "calib_location": "int",
+        "center_xy": [
+          "int"
+        ],
+        "connect_lock": "bool",
+        "dark_mode": "bool",
+        "exp_ms": {
+          "continuous": "int",
+          "stack_l": "int"
+        },
+        "expert_mode": "bool",
+        "expt_heater_enable": "bool",
+        "factory_focal_pos": "int",
+        "focal_pos": "int",
+        "frame_calib": "bool",
+        "guest_mode": "bool",
+        "hdr": "bool",
+        "heater_enable": "bool",
+        "isp_exp_ms": "float",
+        "isp_gain": "float",
+        "isp_range_exp_us": [
+          "int"
+        ],
+        "isp_range_exp_us_scenery": [
+          "int"
+        ],
+        "isp_range_gain": [
+          "int"
+        ],
+        "lang": "str",
+        "main_8k": "bool",
+        "manual_exp": "bool",
+        "mosaic": {
+          "angle": "float",
+          "estimated_hours": "float",
+          "scale": "float",
+          "star_map_angle": "float",
+          "star_map_ratio": "float"
+        },
+        "password": "str",
+        "plan_target_af": "bool",
+        "preview": {
+          "image_transfer_mode": "str",
+          "rtsp_height": "int",
+          "rtsp_quality": "str",
+          "rtsp_width": "int"
+        },
+        "remote_joined": "bool",
+        "rtsp_roi_scale": "float",
+        "second_camera": {
+          "ae_bri_percent": "float",
+          "exp_ms": {
+            "continuous": "int",
+            "stack_l": "int",
+            "stack_l_auto": "bool"
+          },
+          "factory_focal_pos": "int",
+          "focal_pos": "int",
+          "hdr": "bool",
+          "isp_exp_ms": "float",
+          "isp_gain": "float",
+          "isp_range_exp_us": [
+            "int"
+          ],
+          "isp_range_exp_us_scenery": [
+            "int"
+          ],
+          "isp_range_gain": [
+            "int"
+          ],
+          "manual_exp": "bool",
+          "mosaic": {
+            "angle": "float",
+            "estimated_hours": "float",
+            "scale": "float",
+            "star_map_angle": "float",
+            "star_map_ratio": "float"
+          },
+          "preview": {
+            "image_transfer_mode": "str",
+            "rtsp_height": "int",
+            "rtsp_quality": "str",
+            "rtsp_width": "int"
+          },
+          "rtsp_roi_scale": "float",
+          "stack": {
+            "airplane_line_removal": "bool",
+            "auto_lenhance": "bool",
+            "brightness": "float",
+            "capt_num": "int",
+            "capt_type": "str",
+            "cont_capt": "bool",
+            "contrast": "float",
+            "dbe": "bool",
+            "dbe_enable": "bool",
+            "drizzle2x": "bool",
+            "goto": "bool",
+            "light_duration_min": "int",
+            "move_sleep_sec": "int",
+            "saturation": "float",
+            "save_discrete_frame": "bool",
+            "save_discrete_ok_frame": "bool",
+            "save_video": "bool",
+            "scene_separate": "bool",
+            "scene_shooting_duration_min": "int",
+            "star_correction": "bool",
+            "wide_denoise": "bool",
+            "wide_size_index": "int"
+          },
+          "stack_dither": {
+            "enable": "bool",
+            "interval": "int",
+            "pix": "int"
+          },
+          "timelapse": {
+            "scenery": {
+              "delay_sec": "float",
+              "src_dura_min": "int"
+            },
+            "solar_sys": {
+              "delay_sec": "float",
+              "src_dura_min": "int"
+            },
+            "starry_sky": {
+              "src_dura_min": "int"
+            }
+          },
+          "wide_cross_offset": [
+            "int"
+          ],
+          "wide_cross_offset_show": [
+            "int"
+          ]
+        },
+        "stack": {
+          "airplane_line_removal": "bool",
+          "auto_lenhance": "bool",
+          "brightness": "float",
+          "capt_num": "int",
+          "capt_type": "str",
+          "cont_capt": "bool",
+          "contrast": "float",
+          "dbe": "bool",
+          "dbe_enable": "bool",
+          "drizzle2x": "bool",
+          "goto": "bool",
+          "light_duration_min": "int",
+          "move_sleep_sec": "int",
+          "saturation": "float",
+          "save_discrete_frame": "bool",
+          "save_discrete_ok_frame": "bool",
+          "star_correction": "bool",
+          "wide_denoise": "bool"
+        },
+        "stack_after_goto": "bool",
+        "stack_dither": {
+          "enable": "bool",
+          "interval": "int",
+          "pix": "int"
+        },
+        "stack_lenhance": "bool",
+        "temp_unit": "str",
+        "timelapse": {
+          "scenery": {
+            "delay_sec": "float",
+            "src_dura_min": "int"
+          },
+          "solar_sys": {
+            "delay_sec": "float",
+            "src_dura_min": "int"
+          }
+        },
+        "typec_mode": "str",
+        "usb_en_eth": "bool",
+        "user_stack_sim": "bool",
+        "viewplan_gohome": "bool",
+        "wide_4k": "bool",
+        "wide_cam": "bool",
+        "wifi_country": "str"
+      }
+    },
+    "station": {
+      "present": true,
+      "shape": {
+        "freq": "int",
+        "gateway": "str",
+        "ip": "str",
+        "key_mgmt": "str",
+        "netmask": "str",
+        "server": "bool",
+        "sig_lev": "int",
+        "ssid": "str"
+      }
+    },
+    "storage": {
+      "present": true,
+      "shape": {
+        "connected_storage": [
+          "str"
+        ],
+        "cur_storage": "str",
+        "is_typec_connected": "bool",
+        "storage_volume": [
+          {
+            "diskSizeMB": "int",
+            "disk_mb": "int",
+            "freeMB": "int",
+            "free_mb": "int",
+            "name": "str",
+            "state": "str",
+            "totalMB": "int",
+            "total_mb": "int",
+            "used_percent": "int"
+          }
+        ]
+      }
+    }
+  }
+}

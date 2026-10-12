@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Photon Commander
+Comment=Control, plan, and automate smart-telescope observing
+Exec=xdg-open http://127.0.0.1:7777
+Icon=photon-commander
+Terminal=false
+Categories=Science;Astronomy;
+StartupNotify=true

@@ -1,0 +1,1426 @@
+{
+  "README": [
+    "Independent-almanac validation table for ssc.astro.events \u2014 milestone M3's acceptance",
+    "gate (docs/IMPLEMENTATION.md M3). Every value below was downloaded from an official",
+    "almanac service on 2026-08-28 and is reproduced verbatim; nothing here was computed",
+    "by SSC. Regenerate by re-running the two url_templates under 'sources'."
+  ],
+  "generated_utc": "2026-08-28",
+  "sources": {
+    "usno": {
+      "name": "U.S. Naval Observatory, Astronomical Applications Dept \u2014 Sun and Moon Data for One Day (API 4.0.1)",
+      "url_template": "https://aa.usno.navy.mil/api/rstt/oneday?date={date}&coords={lat},{lon}&tz=0",
+      "resolution": "1 minute, rounded to nearest",
+      "convention": "Rise/set is the upper limb at the apparent horizon: geometric centre at -50 arcmin (34 arcmin refraction + 16 arcmin semidiameter). Sea level; the API takes no elevation, so every fixture site uses 0 m.",
+      "provides": [
+        "sunrise",
+        "sunset",
+        "moonrise",
+        "moonset",
+        "moon_transit"
+      ]
+    },
+    "imcce": {
+      "name": "IMCCE / SE-OP (Observatoire de Paris) \u2014 Miriade rise/transit/set service",
+      "url_template": "https://ssp.imcce.fr/webservices/miriade/api/rts.php?-body=11&-observer={lon}%20{lat}%20{elevation_m}&-ep={date}&-nbd=1&-tz=0&-twilight=1&-fmt=time:second&-mime=json",
+      "resolution": "1 second, truncated (SSC's values run ~0.9 s late against it, consistently, which is the truncation and not an error)",
+      "convention": "Twilights are the geometric centre of the Sun at -6, -12 and -18 deg with no refraction and no semidiameter. transit-sup is the upper meridian transit. Body id 11 is the Sun.",
+      "provides": [
+        "astronomical_dawn",
+        "nautical_dawn",
+        "civil_dawn",
+        "civil_dusk",
+        "nautical_dusk",
+        "astronomical_dusk",
+        "solar_transit"
+      ]
+    }
+  },
+  "tolerances_seconds": {
+    "twilight": 60,
+    "rise_set": 30,
+    "transit": 60,
+    "moon": 30
+  },
+  "outcome_rules": [
+    "occurs: the almanac printed a time.",
+    "always_above / always_below: the almanac said so explicitly ('Object continuously above/below the Horizon' / 'the Twilight Limit'), or \u2014 for a twilight \u2014 the Sun rose and set that day yet the deeper twilight is absent, which can only mean it never reached that depression.",
+    "not_in_window: USNO printed neither a time nor a continuously-above/below note, so the phenomenon simply fell outside that UTC day (the Moon's 24h50m cycle)."
+  ],
+  "sites": [
+    {
+      "id": "greenwich",
+      "name": "Royal Observatory, Greenwich, UK",
+      "latitude_deg": 51.4779,
+      "longitude_deg": -0.0015,
+      "elevation_m": 0.0,
+      "tz": "Europe/London"
+    },
+    {
+      "id": "bucharest",
+      "name": "Bucharest, Romania",
+      "latitude_deg": 44.4268,
+      "longitude_deg": 26.1025,
+      "elevation_m": 0.0,
+      "tz": "Europe/Bucharest"
+    },
+    {
+      "id": "tromso",
+      "name": "Tromso, Norway (69.6 N \u2014 above the Arctic Circle)",
+      "latitude_deg": 69.6492,
+      "longitude_deg": 18.9553,
+      "elevation_m": 0.0,
+      "tz": "Europe/Oslo"
+    },
+    {
+      "id": "sydney",
+      "name": "Sydney, Australia (southern hemisphere)",
+      "latitude_deg": -33.8688,
+      "longitude_deg": 151.2093,
+      "elevation_m": 0.0,
+      "tz": "Australia/Sydney"
+    }
+  ],
+  "rows": [
+    {
+      "site": "greenwich",
+      "date_utc": "2026-03-29",
+      "note": "EU DST spring-forward (01:00 UTC); Sydney is mid-DST",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": "03:45:39",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dawn": {
+          "utc": "04:28:26",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "05:08:44",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "19:01:54",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "19:42:25",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": "20:25:31",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "solar_transit": {
+          "utc": "12:04:44",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "05:42",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "18:28",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "14:22",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "04:34",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "21:45",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "greenwich",
+      "date_utc": "2026-06-21",
+      "note": "June solstice",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": null,
+          "source": "imcce",
+          "outcome": "always_above"
+        },
+        "nautical_dawn": {
+          "utc": "01:40:36",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "02:55:03",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "21:08:35",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "22:23:01",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": null,
+          "source": "imcce",
+          "outcome": "always_above"
+        },
+        "solar_transit": {
+          "utc": "12:01:49",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "03:43",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "20:21",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "11:40",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "23:45",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "17:51",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "greenwich",
+      "date_utc": "2026-09-23",
+      "note": "September equinox",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": "03:53:53",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dawn": {
+          "utc": "04:34:53",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "05:14:16",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "18:29:23",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "19:08:37",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": "19:49:23",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "solar_transit": {
+          "utc": "11:52:22",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "05:48",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "17:56",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "16:50",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "01:39",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "21:46",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "greenwich",
+      "date_utc": "2026-10-25",
+      "note": "EU DST fall-back (01:00 UTC) \u2014 the ambiguous local hour",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": "04:49:00",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dawn": {
+          "utc": "05:27:36",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "06:06:37",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "17:20:43",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "17:59:39",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": "18:38:10",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "solar_transit": {
+          "utc": "11:44:05",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "06:41",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "16:46",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "16:01",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "05:48",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "23:27",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "greenwich",
+      "date_utc": "2026-12-21",
+      "note": "December solstice",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": "05:58:49",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dawn": {
+          "utc": "06:39:37",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "07:22:47",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "16:33:20",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "17:16:30",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": "17:57:18",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "solar_transit": {
+          "utc": "11:58:04",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "08:03",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "15:53",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "13:09",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "05:06",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "21:43",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "bucharest",
+      "date_utc": "2026-03-29",
+      "note": "EU DST spring-forward (01:00 UTC); Sydney is mid-DST",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": "02:22:56",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dawn": {
+          "utc": "02:58:45",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "03:33:20",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "17:08:14",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "17:42:56",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": "18:18:56",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "solar_transit": {
+          "utc": "10:20:20",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "04:03",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "16:39",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "12:48",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "02:29",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "19:57",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "bucharest",
+      "date_utc": "2026-06-21",
+      "note": "June solstice",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": "00:02:29",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dawn": {
+          "utc": "01:05:38",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "01:54:16",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "18:40:30",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "19:29:08",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": "20:32:16",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "solar_transit": {
+          "utc": "10:17:23",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "02:31",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "18:04",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "09:51",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "22:03",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "16:03",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "bucharest",
+      "date_utc": "2026-09-23",
+      "note": "September equinox",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": "02:25:43",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dawn": {
+          "utc": "03:00:35",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "03:34:39",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "16:40:28",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "17:14:26",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": "17:49:10",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "solar_transit": {
+          "utc": "10:07:59",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "04:04",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "16:12",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "14:48",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "00:11",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "19:59",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "bucharest",
+      "date_utc": "2026-10-25",
+      "note": "EU DST fall-back (01:00 UTC) \u2014 the ambiguous local hour",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": "03:05:51",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dawn": {
+          "utc": "03:39:32",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "04:13:31",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "15:45:10",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "16:19:07",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": "16:52:44",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "solar_transit": {
+          "utc": "09:59:40",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "04:43",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "15:15",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "14:31",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "03:45",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "21:39",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "bucharest",
+      "date_utc": "2026-12-21",
+      "note": "December solstice",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": "04:02:47",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dawn": {
+          "utc": "04:38:13",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "05:15:05",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "15:12:08",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "15:49:00",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": "16:24:26",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "solar_transit": {
+          "utc": "10:13:37",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "05:49",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "14:39",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "11:54",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "02:45",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "19:54",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "tromso",
+      "date_utc": "2026-03-29",
+      "note": "EU DST spring-forward (01:00 UTC); Sydney is mid-DST",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": null,
+          "source": "imcce",
+          "outcome": "always_above"
+        },
+        "nautical_dawn": {
+          "utc": "01:32:51",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "02:59:51",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "18:41:08",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "20:10:06",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": null,
+          "source": "imcce",
+          "outcome": "always_above"
+        },
+        "solar_transit": {
+          "utc": "10:48:55",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "04:03",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "17:37",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "11:20",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "05:10",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "20:26",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "tromso",
+      "date_utc": "2026-06-21",
+      "note": "June solstice",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": null,
+          "source": "imcce",
+          "outcome": "always_above"
+        },
+        "nautical_dawn": {
+          "utc": null,
+          "source": "imcce",
+          "outcome": "always_above"
+        },
+        "civil_dawn": {
+          "utc": null,
+          "source": "imcce",
+          "outcome": "always_above"
+        },
+        "civil_dusk": {
+          "utc": null,
+          "source": "imcce",
+          "outcome": "always_above"
+        },
+        "nautical_dusk": {
+          "utc": null,
+          "source": "imcce",
+          "outcome": "always_above"
+        },
+        "astronomical_dusk": {
+          "utc": null,
+          "source": "imcce",
+          "outcome": "always_above"
+        },
+        "solar_transit": {
+          "utc": "10:45:59",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": null,
+          "source": "usno",
+          "outcome": "always_above"
+        },
+        "sunset": {
+          "utc": null,
+          "source": "usno",
+          "outcome": "always_above"
+        },
+        "moonrise": {
+          "utc": "10:18",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "22:14",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "16:33",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "tromso",
+      "date_utc": "2026-09-23",
+      "note": "September equinox",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": "00:26:07",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dawn": {
+          "utc": "02:10:19",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "03:27:21",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "17:43:10",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "18:59:11",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": "20:39:33",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "solar_transit": {
+          "utc": "10:36:34",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "04:28",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "16:43",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "17:09",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": null,
+          "source": "usno",
+          "outcome": "not_in_window"
+        },
+        "moon_transit": {
+          "utc": "20:28",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "tromso",
+      "date_utc": "2026-10-25",
+      "note": "EU DST fall-back (01:00 UTC) \u2014 the ambiguous local hour",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": "03:10:45",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dawn": {
+          "utc": "04:20:31",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "05:31:10",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "15:23:43",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "16:34:06",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": "17:43:27",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "solar_transit": {
+          "utc": "10:28:15",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "06:38",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "14:17",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "13:16",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "05:43",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "22:09",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "tromso",
+      "date_utc": "2026-12-21",
+      "note": "December solstice",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": "05:28:19",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dawn": {
+          "utc": "06:46:42",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "08:31:15",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "12:53:09",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "14:37:42",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": "15:56:05",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "solar_transit": {
+          "utc": "10:42:12",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": null,
+          "source": "usno",
+          "outcome": "always_below"
+        },
+        "sunset": {
+          "utc": null,
+          "source": "usno",
+          "outcome": "always_below"
+        },
+        "moonrise": {
+          "utc": null,
+          "source": "usno",
+          "outcome": "always_above"
+        },
+        "moonset": {
+          "utc": null,
+          "source": "usno",
+          "outcome": "always_above"
+        },
+        "moon_transit": {
+          "utc": "20:24",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "sydney",
+      "date_utc": "2026-03-29",
+      "note": "EU DST spring-forward (01:00 UTC); Sydney is mid-DST",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": "18:42:35",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dawn": {
+          "utc": "19:11:39",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "19:40:36",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "08:19:38",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "08:48:32",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": "09:17:34",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "solar_transit": {
+          "utc": "02:00:01",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "20:06",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "07:55",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "05:53",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "16:55",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "11:20",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "sydney",
+      "date_utc": "2026-06-21",
+      "note": "June solstice",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": "19:30:43",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dawn": {
+          "utc": "20:01:12",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "20:32:26",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "07:21:32",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "07:52:47",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": "08:23:16",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "solar_transit": {
+          "utc": "01:56:53",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "21:00",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "06:54",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "01:25",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "13:39",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "07:28",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "sydney",
+      "date_utc": "2026-09-23",
+      "note": "September equinox",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": "18:19:11",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dawn": {
+          "utc": "18:48:35",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "19:17:40",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "08:16:51",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "08:45:57",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": "09:15:23",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "solar_transit": {
+          "utc": "01:47:41",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "19:43",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "07:52",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "04:25",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "18:12",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "11:23",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "sydney",
+      "date_utc": "2026-10-25",
+      "note": "EU DST fall-back (01:00 UTC) \u2014 the ambiguous local hour",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": "17:32:01",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dawn": {
+          "utc": "18:04:18",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "18:35:20",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "08:42:41",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "09:13:44",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": "09:46:01",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "solar_transit": {
+          "utc": "01:39:17",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "19:01",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "08:17",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "07:22",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "18:32",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "13:01",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    },
+    {
+      "site": "sydney",
+      "date_utc": "2026-12-21",
+      "note": "December solstice",
+      "expected": {
+        "astronomical_dawn": {
+          "utc": "16:56:43",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dawn": {
+          "utc": "17:36:03",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dawn": {
+          "utc": "18:11:57",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "civil_dusk": {
+          "utc": "09:34:34",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "nautical_dusk": {
+          "utc": "10:10:28",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "astronomical_dusk": {
+          "utc": "10:49:48",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "solar_transit": {
+          "utc": "01:53:01",
+          "source": "imcce",
+          "outcome": "occurs"
+        },
+        "sunrise": {
+          "utc": "18:41",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "sunset": {
+          "utc": "09:05",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonrise": {
+          "utc": "06:06",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moonset": {
+          "utc": "16:13",
+          "source": "usno",
+          "outcome": "occurs"
+        },
+        "moon_transit": {
+          "utc": "11:12",
+          "source": "usno",
+          "outcome": "occurs"
+        }
+      }
+    }
+  ]
+}

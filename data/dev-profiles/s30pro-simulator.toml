@@ -1,0 +1,65 @@
+# Development-only identity for deterministic automated tests. This directory
+# is not bundled by packaging/ssc-core.spec and is loaded only when
+# SSC_ENABLE_DEV_PROFILES=1 is explicitly set.
+id = "dev-s30pro-simulator"
+name = "DEV — Simulated Seestar S30 Pro"
+vendor = "SSC Development"
+mount = "altaz"
+eq_mode_available = true
+aliases = ["SSC S30 Pro Simulator"]
+source_urls = []
+
+[capabilities]
+tele_camera = true
+wide_camera = true
+wide_camera_autofocus = true
+focuser = true
+filter_wheel = true
+dew_heater = true
+
+[defaults]
+gain = 200
+exposure_stack_ms = 10000
+exposure_preview_ms = 500
+dither_enabled = true
+dither_pixels = 50
+dither_every_n_frames = 10
+lp_filter = false
+dew_heater_percent = 0
+
+[limits]
+min_altitude_deg = 20.0
+battery_low_percent = 15
+
+[[optics]]
+id = "tele"
+label = "Simulated telephoto"
+focal_length_mm = 160.0
+aperture_mm = 30.0
+focal_ratio = 5.3
+design = "deterministic test double"
+distortion = "rectilinear"
+
+[optics.sensor]
+name = "Simulated IMX585"
+w_px = 2160
+h_px = 3840
+pixel_um = 2.9
+
+[[optics]]
+id = "wide"
+label = "Simulated wide-angle"
+focal_length_mm = 6.0
+aperture_mm = 3.4
+focal_ratio = 1.75
+design = "deterministic test double"
+distortion = "approximate"
+
+[optics.sensor]
+name = "Simulated IMX586"
+w_px = 2160
+h_px = 3840
+pixel_um = 1.6
+
+[calibration]
+measured = false

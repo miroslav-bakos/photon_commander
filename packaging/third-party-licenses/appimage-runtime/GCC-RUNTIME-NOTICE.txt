@@ -1,0 +1,8 @@
+GCC 14.2.0 compiler runtime support: libgcc.a, libgcc_eh.a, crtbeginS.o, crtendS.o.
+Provided by the captured Alpine3.21 GCC14.2.0-r4 APK toolchain (exact installed version in compiler-packages.txt).
+Copyright notices and eligibility language are retained in GCC-14.2.0-libgcc2.c
+and GCC-14.2.0-crtstuff.c from the GCC upstream releases/gcc-14.2.0 tag.
+License: GPL-3.0-or-later WITH GCC-exception-3.1; complete license documents included.
+Upstream source: https://github.com/gcc-mirror/gcc/tree/releases/gcc-14.2.0/libgcc
+Documentation: https://gcc.gnu.org/onlinedocs/libstdc++/manual/license.html
+This runtime was generated from ordinary source with GCC and GPL-compatible compilation tools.
