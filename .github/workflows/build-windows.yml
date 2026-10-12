@@ -1,0 +1,155 @@
+name: Private Windows v0.0.1 installer candidate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-installer:
+    # Artifacts contain locally generated WHAM data. This workflow grants no
+    # public redistribution permission and never publishes a release.
+    if: ${{ github.event.repository.private }}
+    runs-on: windows-2025
+    timeout-minutes: 180
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      UV_PYTHON: '3.12'
+      UV_PYTHON_PREFERENCE: only-managed
+      UV_FROZEN: '1'
+      SSC_BUILD_JOBS: '2'
+      SSC_EXPECTED_RELEASE_SHA: f1ac372006b9b183e9d45e57a6abc1c623b86c08
+    steps:
+      - name: Check out the frozen release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: refs/tags/v0.0.1
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install official uv and managed Python 3.12
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          python-version: '3.12'
+          enable-cache: false
+      - name: Install Node.js 22
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Verify source, fetch pinned assets and build the installer
+        run: |
+          $ErrorActionPreference = 'Stop'
+          function Invoke-Checked([string]$Command, [string[]]$Arguments) {
+            & $Command @Arguments
+            if ($LASTEXITCODE -ne 0) { throw "Command failed: $Command (exit $LASTEXITCODE)" }
+          }
+          $commit = (git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $commit -ne $env:SSC_EXPECTED_RELEASE_SHA) { throw 'Checkout does not match frozen v0.0.1 source.' }
+          $tagCommit = (git rev-parse 'refs/tags/v0.0.1^{commit}').Trim()
+          if ($LASTEXITCODE -ne 0 -or $tagCommit -ne $commit) { throw 'Release tag has changed.' }
+          $dirty = git status --porcelain=v1 --untracked-files=all
+          if ($LASTEXITCODE -ne 0 -or $dirty) { throw 'Release checkout must be clean.' }
+          $env:SSC_BUILD_COMMIT = $commit
+          $env:SOURCE_DATE_EPOCH = (git show -s --format=%ct $commit).Trim()
+          if ($LASTEXITCODE -ne 0) { throw 'Unable to resolve release epoch.' }
+          $env:SSC_BUILD_RELEASED_AT = $env:SOURCE_DATE_EPOCH
+
+          # The official windows-2025 inventory includes Inno Setup. Discover
+          # the actual compiler, including its standard machine-wide locations.
+          $isccCommand = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+          $iscc = if ($isccCommand) { $isccCommand.Source } else {
+            @(
+              (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'),
+              (Join-Path $env:ProgramFiles 'Inno Setup 6\ISCC.exe')
+            ) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+          }
+          if (-not $iscc -or -not (Test-Path -LiteralPath $iscc -PathType Leaf)) { throw 'Preinstalled Inno Setup compiler not found.' }
+          foreach ($required in @('scripts/build_windows_package.py', 'scripts/build_nuitka.py', 'scripts/build_release_identity.py', 'scripts/release_manual.py', 'packaging/windows/photon-commander.iss')) {
+            if (-not (Test-Path -LiteralPath $required -PathType Leaf)) { throw "Missing tagged build prerequisite: $required" }
+          }
+          Invoke-Checked uv @('python', 'install', '3.12')
+          Invoke-Checked uv @('sync', '--dev', '--frozen')
+          Invoke-Checked uv @('run', 'python', '-c', 'import sys,numpy,nuitka,skyfield; assert sys.version_info[:2] == (3,12)')
+          Invoke-Checked node @('-e', 'if(Number(process.versions.node.split(".")[0])<22)process.exit(1)')
+
+          # Inline helper exists in this workflow, so the frozen tag does not
+          # need any subsequently added CI script. Read pinned asset metadata
+          # as literals; never import/start the application or access a device.
+          @'
+          import ast
+          import hashlib
+          import os
+          from pathlib import Path
+          import urllib.request
+
+          def constants(filename, names):
+              tree = ast.parse(Path(filename).read_text(encoding='utf-8'))
+              return {node.target.id: ast.literal_eval(node.value) for node in tree.body
+                      if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name)
+                      and node.target.id in names}
+
+          def acquire(url, target, expected_sha, expected_size=None):
+              assert url.startswith('https://')
+              target.parent.mkdir(parents=True, exist_ok=True)
+              pending = target.with_name(target.name + '.download')
+              digest = hashlib.sha256()
+              size = 0
+              request = urllib.request.Request(url, headers={'User-Agent': 'Photon Commander private CI asset build'})
+              try:
+                  with urllib.request.urlopen(request, timeout=60) as source, pending.open('wb') as output:
+                      while chunk := source.read(1024 * 1024):
+                          size += len(chunk)
+                          if expected_size is not None and size > expected_size:
+                              raise RuntimeError('Asset exceeds pinned size')
+                          digest.update(chunk)
+                          output.write(chunk)
+                  if digest.hexdigest() != expected_sha or (expected_size is not None and size != expected_size):
+                      raise RuntimeError('Asset checksum/size does not match pinned source')
+                  os.replace(pending, target)
+              finally:
+                  pending.unlink(missing_ok=True)
+
+          kernel = constants('ssc/astro/events.py', {'KERNEL_FILENAME','KERNEL_URL','KERNEL_SIZE_BYTES','KERNEL_SHA256'})
+          assert kernel['KERNEL_FILENAME'] == 'de440s.bsp'
+          acquire(kernel['KERNEL_URL'], Path('data/ephemeris') / kernel['KERNEL_FILENAME'], kernel['KERNEL_SHA256'], kernel['KERNEL_SIZE_BYTES'])
+          wham = constants('scripts/build-wham-hips.py', {'SOURCE_URL','SOURCE_SHA256'})
+          acquire(wham['SOURCE_URL'], Path('data/cache/wham-ss-dr1-161116-integrated.fits'), wham['SOURCE_SHA256'])
+          '@ | uv run python -
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned asset acquisition failed.' }
+          Invoke-Checked uv @('run', 'python', 'scripts/build-wham-hips.py', '--source', 'data/cache/wham-ss-dr1-161116-integrated.fits')
+          Invoke-Checked uv @('run', 'python', 'scripts/check-licenses.py', '--commercial')
+          Invoke-Checked uv @('run', 'python', 'scripts/build_windows_package.py', $commit, '--iscc', $iscc, '--output-dir', 'dist/windows')
+
+          $payloadCommit = (Get-Content -LiteralPath 'dist/ssc-core/COMMIT' -Raw).Trim()
+          $payloadVersion = (Get-Content -LiteralPath 'dist/ssc-core/VERSION' -Raw).Trim()
+          if ($payloadCommit -ne $commit -or $payloadVersion -ne '0.0.1') { throw 'Payload release identity mismatch.' }
+          $installer = Get-Item -LiteralPath 'dist/windows/Photon-Commander-0.0.1-win64.exe'
+          $digest = (Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          $expectedChecksumLine = "$digest  $($installer.Name)"
+          if ((Get-Content -LiteralPath ($installer.FullName + '.sha256') -Raw).Trim() -ne $expectedChecksumLine) { throw 'Installer checksum mismatch.' }
+          Copy-Item -LiteralPath 'dist/ssc-core/COMMIT' -Destination 'dist/windows/COMMIT'
+          Copy-Item -LiteralPath 'dist/ssc-core/VERSION' -Destination 'dist/windows/VERSION'
+          [ordered]@{
+            tag = 'v0.0.1'; commit = $commit; version = $payloadVersion
+            architecture = 'win64'; installer = $installer.Name; installer_sha256 = $digest
+            runner_image = $env:ImageVersion; python = '3.12'; node_major = 22
+            hardware_validation_performed = $false; publication_performed = $false
+          } | ConvertTo-Json | Set-Content -LiteralPath 'dist/windows/ci-build-evidence.json' -Encoding utf8
+      - name: Upload private installer candidate only
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Photon-Commander-0.0.1-win64-f1ac372006b9-unsigned
+          path: |
+            dist/windows/Photon-Commander-0.0.1-win64.exe
+            dist/windows/Photon-Commander-0.0.1-win64.exe.sha256
+            dist/windows/INSTALLATION*.txt
+            dist/windows/build-manifest.json
+            dist/windows/ci-build-evidence.json
+            dist/windows/COMMIT
+            dist/windows/VERSION
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
