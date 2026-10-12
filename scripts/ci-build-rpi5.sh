@@ -24,7 +24,7 @@ export UV_PYTHON=3.12
 export UV_PYTHON_PREFERENCE=only-managed
 uv python install 3.12
 uv sync --dev --frozen
-uv run python -c 'import sys, numpy, nuitka, skyfield, piplicenses; assert sys.version_info[:2] == (3, 12)'
+uv run python -c 'import sys, numpy, nuitka, skyfield; assert sys.version_info[:2] == (3, 12)'
 
 # Read pinned public asset metadata without importing the application or loading
 # ephemerides. Both downloads are checksum-verified before the build can start.
