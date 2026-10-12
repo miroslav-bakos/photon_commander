@@ -15,6 +15,10 @@ esac
 export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$SSC_BUILD_COMMIT")"
 export UV_FROZEN=1 UV_PYTHON=3.12 UV_PYTHON_PREFERENCE=only-managed
 uv sync --dev --frozen
+# Managed Python on macOS may not discover the runner's system CA bundle.
+# Use the already pinned certifi roots while retaining certificate validation.
+SSL_CERT_FILE="$(uv run python -c 'import certifi; print(certifi.where())')"
+export SSL_CERT_FILE
 uv run python - <<'PY'
 import ast, hashlib, os, urllib.request
 from pathlib import Path

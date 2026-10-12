@@ -7,6 +7,16 @@ on:
         required: true
         default: main
         type: string
+      target:
+        description: Build all desktop candidates or retry one platform
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - linux-x86_64
+          - macos-x86_64
+          - macos-arm64
       appimagetool_url:
         description: Official tool URL; bytes must match the existing SHA256 pin
         default: https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
@@ -19,6 +29,7 @@ jobs:
     runs-on: ubuntu-22.04
     outputs:
       commit: ${{ steps.identity.outputs.commit }}
+      matrix: ${{ steps.identity.outputs.matrix }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -26,23 +37,32 @@ jobs:
           persist-credentials: false
       - id: identity
         shell: bash
+        env:
+          SELECTED_TARGET: ${{ inputs.target }}
         run: |
           commit=$(git rev-parse HEAD)
           [[ $commit =~ ^[a-f0-9]{40}$ ]]
           echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          targets = [
+              {'target': 'linux-x86_64', 'runner': 'ubuntu-22.04'},
+              {'target': 'macos-x86_64', 'runner': 'macos-15-intel'},
+              {'target': 'macos-arm64', 'runner': 'macos-14'},
+          ]
+          selected = os.environ['SELECTED_TARGET']
+          if selected != 'all':
+              targets = [item for item in targets if item['target'] == selected]
+          if not targets:
+              raise SystemExit('Unknown desktop target')
+          print('matrix=' + json.dumps({'include': targets}))
+          PY
   desktop:
     needs: resolve
     if: ${{ github.event.repository.private }}
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - target: linux-x86_64
-            runner: ubuntu-22.04
-          - target: macos-x86_64
-            runner: macos-15-intel
-          - target: macos-arm64
-            runner: macos-14
+      matrix: ${{ fromJSON(needs.resolve.outputs.matrix) }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 180
     defaults:
