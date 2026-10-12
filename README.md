@@ -50,6 +50,22 @@ GPL licence and from the application installers.
 
 </details>
 
+## Live stacking and mobile access
+
+Live stacking on desktop, with calibration controls and an accumulating preview:
+
+![Photon Commander desktop live stacking](docs/images/en/live-stack.jpg)
+
+The same application on a phone — observing status and live stacking:
+
+<p>
+  <img src=".github/images/mobile-observe.jpg" alt="Photon Commander observing dashboard on mobile" width="300">
+  <img src=".github/images/mobile-live-stack.jpg" alt="Photon Commander live stacking on mobile" width="300">
+</p>
+
+These interface examples use fictional settings and an illustrative star field;
+they are not captured observations or hardware-validation results.
+
 ## Platforms
 
 Photon is designed for **Raspberry Pi, Windows, Linux and macOS**, with desktop
