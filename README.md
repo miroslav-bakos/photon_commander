@@ -5,6 +5,39 @@ The application source is licensed under **GPL-3.0-only**. There are no paid
 feature tiers or application expiry gates. Third-party code and data retain
 their own licences and attribution; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
+## Make the most of your observing night
+
+- **Reach your telescope from anywhere with Tailscale.** Use your phone or
+  computer over a private connection, without opening router ports. Tailscale's
+  [free Personal plan](https://tailscale.com/pricing) covers personal,
+  non-commercial use; both devices need internet access and Tailscale setup.
+- **Share your live stack on YouTube.** Stream the developing image as frames
+  accumulate, using FFmpeg and your YouTube Live account.
+- **Spend clear skies collecting lights, not repeating darks.** Prepare reusable
+  calibration masters and schedule dark acquisition outside your valuable light
+  window. Photon checks matching capture settings and calibration suitability
+  before reuse; a stored dark is not automatically suitable for every session.
+- **Choose how many darks go into your master.** Configure the frame count
+  instead of being limited to five darks in Seestar workflows that use that
+  fixed count. Capture larger sets when useful and keep them in your calibration
+  library. The manufacturer's workflow can differ by model and firmware.
+- **See what each polar-alignment measurement means for exposure.** Each new
+  measurement updates the estimated subexposure limit for polar-alignment drift
+  with the supported camera profile. It helps you judge when alignment is good
+  enough; tracking, wind, seeing, focus and field rotation still affect stars.
+- **Switch between desktop and mobile while Photon keeps observing.** The
+  server owns the session and observing state; paired browsers show the same
+  application with a layout adapted to their screen. Each device needs access
+  to the same server and the appropriate viewing or control permission.
+
+## Platforms
+
+Photon is designed for **Raspberry Pi, Windows, Linux and macOS**, with desktop
+and mobile browsers as clients. The current 0.0.1 package targets are Windows
+x64 and Raspberry Pi 5 ARM64; their release validation is in progress. Linux
+desktop and macOS users can work from source using the instructions below.
+Native macOS packages and macOS runtime validation are not yet available.
+
 ## Support development
 
 [![Donate via PayPal](https://img.shields.io/badge/Donate_via_PayPal-003087?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/donate/?business=7TG8WFWH5K79Y&no_recurring=0&item_name=for+Photon+Commander+development+and+support+for+new+devices&currency_code=EUR)
