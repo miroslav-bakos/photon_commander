@@ -24,6 +24,23 @@ new devices. Support is voluntary; Photon Commander remains free.
 Capability and telemetry availability depend on the connected equipment. Unknown
 or unavailable measurements are reported rather than invented.
 
+## Install, start and configure
+
+Choose your language for installation, the eight-step setup wizard, first
+observations, updates and troubleshooting:
+
+| Language | Illustrated guide | Windows | Raspberry Pi 5 |
+| --- | --- | --- | --- |
+| English | [Getting started](docs/getting-started.en.md) | [Installation](docs/installation/windows.en.txt) | [Installation](docs/installation/pi.en.txt) |
+| Slovenčina | [Začíname](docs/getting-started.sk.md) | [Inštalácia](docs/installation/windows.sk.txt) | [Inštalácia](docs/installation/pi.sk.txt) |
+| Čeština | [Začínáme](docs/getting-started.cs.md) | [Instalace](docs/installation/windows.cs.txt) | [Instalace](docs/installation/pi.cs.txt) |
+
+The illustrated guides show setup, equipment, polar alignment, capture,
+planning, live stacking and the image library. Screenshots use fictional
+settings and illustrative data; they do not represent hardware test results.
+
+[![Photon Commander planning timeline](docs/images/en/planning.jpg)](docs/getting-started.en.md#interface-examples)
+
 ## Build and develop
 
 Use Python **3.12**, `uv`, and Node.js **22 or later** with npm.

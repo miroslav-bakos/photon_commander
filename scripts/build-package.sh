@@ -57,7 +57,7 @@ fi
 
 if [[ -n ${SSC_BUILD_COMMIT:-} ]]; then
     [[ $SSC_BUILD_COMMIT =~ ^[0-9a-f]{40}$ ]] || { echo "build-package: invalid immutable commit identity" >&2; exit 1; }
-    VERSION="0.0.0+g${SSC_BUILD_COMMIT:0:12}"
+    VERSION="$(uv run python -c 'import os; from pathlib import Path; from scripts.build_release_identity import release_version; print(release_version(Path.cwd(), os.environ["SSC_BUILD_COMMIT"]))')"
 else
     VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo 0.0.0+unknown)"
 fi

@@ -13,6 +13,7 @@ import subprocess
 from pathlib import Path
 
 from build_nuitka import assert_compiled_boundary
+from build_release_identity import release_version
 from release_manual import write_installation_manual
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -70,7 +71,7 @@ def build(commit: str, iscc: str, output: Path) -> Path:
         shutil.rmtree(stage)
     assemble(stage, commit, epoch)
     output.mkdir(parents=True, exist_ok=True)
-    version = f'0.0.0+g{commit[:12]}'
+    version = release_version(ROOT, commit)
     run(iscc, f'/DReleaseVersion={version}', f'/DPayloadDir={stage}', f'/DOutputDir={output}', str(ROOT / 'packaging/windows/photon-commander.iss'))
     installer = output / f'Photon-Commander-{version}-win64.exe'
     if not installer.is_file():

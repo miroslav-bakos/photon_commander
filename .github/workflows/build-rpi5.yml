@@ -1,0 +1,60 @@
+name: Private Raspberry Pi 5 package candidate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  debian-arm64:
+    # Uploaded artifacts also redistribute bundled data. Keep this candidate
+    # private until the applicable survey distribution rights are established.
+    if: ${{ github.event.repository.private }}
+    runs-on: ubuntu-24.04-arm
+    container: debian:bookworm-slim
+    timeout-minutes: 180
+    defaults:
+      run:
+        shell: bash
+    env:
+      UV_PYTHON: '3.12'
+      UV_PYTHON_PREFERENCE: only-managed
+      UV_FROZEN: '1'
+      SSC_BUILD_JOBS: '2'
+      SSC_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+    steps:
+      - name: Install native Debian 12 build prerequisites
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates curl git build-essential binutils dpkg-dev libssl-dev libffi-dev pkg-config zlib1g-dev liblzma-dev
+      - name: Check out the exact release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: refs/tags/v0.0.1
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install official uv and managed Python 3.12
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          python-version: '3.12'
+          enable-cache: false
+      - name: Install Node.js 22
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Build unsigned exact-SHA package and compatibility evidence
+        run: bash scripts/ci-build-rpi5.sh
+      - name: Upload private candidate only
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: photon-commander-v0.0.1-bookworm-arm64-unsigned
+          path: |
+            dist/debian/*.deb
+            dist/debian/*.deb.sha256
+            dist/debian/*.INSTALLATION*.txt
+            dist/debian/ci-build-evidence.json
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0

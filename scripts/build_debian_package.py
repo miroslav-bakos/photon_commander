@@ -140,7 +140,7 @@ def assemble_root(
 
     doc_target = package_root / DOC_ROOT
     doc_target.mkdir(parents=True, exist_ok=True)
-    write_installation_manual(doc_target, "pi-appliance", commit, epoch)
+    write_installation_manual(doc_target, "pi", commit, epoch)
     for source in (ROOT / "LICENSE", ROOT / "THIRD_PARTY_NOTICES.md"):
         shutil.copy2(source, doc_target / source.name)
     copy_tree(ROOT / "packaging/third-party-licenses", doc_target / "third-party-licenses")

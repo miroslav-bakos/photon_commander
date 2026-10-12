@@ -11,6 +11,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+try:
+    from scripts.build_release_identity import release_version
+except ModuleNotFoundError:
+    from build_release_identity import release_version
+
 ROOT = Path(__file__).resolve().parents[1]
 ENTRYPOINT = ROOT / "packaging" / "entrypoint.py"
 BUILD_ROOT = ROOT / "build" / "nuitka"
@@ -38,7 +43,7 @@ def version() -> str:
     if commit:
         if not re.fullmatch(r"[a-f0-9]{40}", commit):
             raise SystemExit("build-nuitka: invalid immutable build commit")
-        return f"0.0.0+g{commit[:12]}"
+        return release_version(ROOT, commit)
     result = subprocess.run(
         ["git", "rev-parse", "HEAD"],
         cwd=ROOT,
@@ -48,7 +53,7 @@ def version() -> str:
     )
     if result.returncode or not re.fullmatch(r"[a-f0-9]{40}", result.stdout.strip()):
         raise SystemExit("build-nuitka: immutable build identity unavailable")
-    return f"0.0.0+g{result.stdout.strip()[:12]}"
+    return release_version(ROOT, result.stdout.strip())
 
 
 def validate_inputs() -> None:

@@ -1699,6 +1699,28 @@
         }
       }
     },
+    "/api/settings/ephemeris": {
+      "get": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Read Ephemeris Setup",
+        "description": "Report the backend's loaded kernel and destination, without rescanning.\n\nHost paths are private configuration: require a session and prevent HTTP\ncaching. A copied file becomes available only after the normal restart.",
+        "operationId": "read_ephemeris_setup_api_settings_ephemeris_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EphemerisSetupResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/settings/restart": {
       "post": {
         "tags": [
@@ -14265,6 +14287,62 @@
         ],
         "title": "DurationEndSpec",
         "description": "End ``minutes`` after the item's resolved start \u2014 the historical\n``duration_min`` behaviour, now spelled as one kind of :data:`EndSpec`."
+      },
+      "EphemerisSetupResponse": {
+        "properties": {
+          "loaded": {
+            "type": "boolean",
+            "title": "Loaded"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "folder_path": {
+            "type": "string",
+            "title": "Folder Path"
+          },
+          "kernel_path": {
+            "type": "string",
+            "title": "Kernel Path"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "download_url": {
+            "type": "string",
+            "title": "Download Url"
+          },
+          "expected_size_bytes": {
+            "type": "integer",
+            "title": "Expected Size Bytes"
+          },
+          "expected_sha256": {
+            "type": "string",
+            "title": "Expected Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "loaded",
+          "error",
+          "folder_path",
+          "kernel_path",
+          "filename",
+          "download_url",
+          "expected_size_bytes",
+          "expected_sha256"
+        ],
+        "title": "EphemerisSetupResponse"
       },
       "EthernetAddressRequest": {
         "properties": {

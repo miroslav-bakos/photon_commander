@@ -11,6 +11,7 @@ vi.mock("../SettingsTab/LocationPanel", () => ({ LocationPanel: () => <p>Site</p
 vi.mock("../SettingsTab/HorizonPanel", () => ({ HorizonPanel: () => <p>Horizon</p> }));
 vi.mock("../SettingsTab/CaptureFolderPanel", () => ({ CaptureFolderPanel: () => <p>Capture folders</p> }));
 vi.mock("../SettingsTab/ExternalToolsPanel", () => ({ ExternalToolsPanel: () => <p>Solver status</p> }));
+vi.mock("./SetupEphemeris", () => ({ SetupEphemeris: () => <p>Ephemeris setup</p> }));
 beforeEach(() => {
  const values = new Map<string, string>();
  vi.stubGlobal("localStorage", { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); }, removeItem: (key: string) => { values.delete(key); } });
@@ -18,6 +19,14 @@ beforeEach(() => {
 afterEach(() => { cleanup(); localStorage.removeItem(SETUP_STORAGE_KEY); });
 function show() { return render(<MemoryRouter><SetupTab /></MemoryRouter>); }
 describe("Guided setup review", () => {
+ it("keeps the eighth progress step and adds ephemeris setup beside the tools", () => {
+  localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ step: 7, reviewed: [0, 3] }));
+  show();
+  expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("8/8");
+  expect(screen.getByText("Ephemeris setup")).toBeInTheDocument();
+  expect(screen.getByText("Solver status")).toBeInTheDocument();
+  expect(JSON.parse(localStorage.getItem(SETUP_STORAGE_KEY) ?? "null")).toEqual({ step: 7, reviewed: [0, 3] });
+ });
  it("offers both Windows installers immediately after language selection", () => {
   show();
   fireEvent.change(screen.getByRole("combobox", { name: "Computer running Photon" }), { target: { value: "windows" } });

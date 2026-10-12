@@ -53,6 +53,7 @@ from ssc.api.schemas import (
     CaptureRejectedFramesSettings,
     ConfigurationBundle,
     ConfigurationImportResponse,
+    EphemerisSetupResponse,
     ExternalToolModel,
     ExternalToolsResponse,
     HorizonPointModel,
@@ -82,6 +83,13 @@ from ssc.api.schemas import (
 )
 from ssc.api.security import SESSION_COOKIE
 from ssc.api.weather_service import resolve_metno_contact
+from ssc.astro.events import (
+    KERNEL_FILENAME,
+    KERNEL_SHA256,
+    KERNEL_SIZE_BYTES,
+    KERNEL_URL,
+    default_kernel_path,
+)
 from ssc.capture.pathtemplate import PathTemplateError, path_tags
 from ssc.platesolve import astap_availability
 from ssc.platesolve.astap import resolve_astap_cli
@@ -111,6 +119,31 @@ from ssc.weather.providers.visualcrossing import DEFAULT_SECRET_NAME as VC_SECRE
 from ssc.weather.providers.weatherapi import DEFAULT_SECRET_NAME as WEATHERAPI_SECRET_NAME
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
+
+
+@router.get("/ephemeris", response_model=EphemerisSetupResponse)
+async def read_ephemeris_setup(
+    services: ServicesDep, session: SessionDep, response: Response
+) -> EphemerisSetupResponse:
+    """Report the backend's loaded kernel and destination, without rescanning.
+
+    Host paths are private configuration: require a session and prevent HTTP
+    caching. A copied file becomes available only after the normal restart.
+    """
+    del session
+    response.headers["Cache-Control"] = "no-store"
+    path = default_kernel_path()
+    loaded = services.astro.ephemeris is not None
+    return EphemerisSetupResponse(
+        loaded=loaded,
+        error=None if loaded else services.astro.ephemeris_error,
+        folder_path=str(path.parent),
+        kernel_path=str(path),
+        filename=KERNEL_FILENAME,
+        download_url=KERNEL_URL,
+        expected_size_bytes=KERNEL_SIZE_BYTES,
+        expected_sha256=KERNEL_SHA256,
+    )
 
 
 def _terminate_for_supervisor_restart() -> None:

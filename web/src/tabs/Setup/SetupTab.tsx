@@ -12,6 +12,7 @@ import { HorizonPanel } from "../SettingsTab/HorizonPanel";
 import { CaptureFolderPanel } from "../SettingsTab/CaptureFolderPanel";
 import { ExternalToolsPanel } from "../SettingsTab/ExternalToolsPanel";
 import { SetupDownloads } from "./SetupDownloads";
+import { SetupEphemeris } from "./SetupEphemeris";
 import { SetupScreenshot } from "./SetupScreenshot";
 import { setupScreenshots } from "./setupAssets";
 import { useSetupCopy } from "./setupCopy";
@@ -63,7 +64,7 @@ export function SetupTab() {
         {step === 4 && <PlanningEquipmentPanel />}
         {step === 5 && <><LocationPanel /><HorizonPanel /></>}
         {step === 6 && <CaptureFolderPanel />}
-        {step === 7 && <><SetupDownloads /><ExternalToolsPanel /></>}
+        {step === 7 && <><SetupDownloads /><SetupEphemeris /><ExternalToolsPanel /></>}
       </div>
       {step < 8 && <><p className="my-4 text-sm text-fg-muted">{text.save}</p><label className="flex min-h-11 items-center gap-3"><input type="checkbox" checked={reviewed} onChange={(event) => { const checked = event.target.checked; setProgress((current) => ({ ...current, reviewed: checked ? [...current.reviewed.filter((item) => item !== step), step] : current.reviewed.filter((item) => item !== step) })); }} />{text.ack}</label></>}
       {step === 8 && <ul className="my-4 space-y-2">{text.steps.map((title, index) => <li key={title}><button type="button" className="min-h-11 text-link underline" onClick={() => { move(index); }}>{progress.reviewed.includes(index) ? "✓ " : "○ "}{title}</button></li>)}</ul>}

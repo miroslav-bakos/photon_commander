@@ -612,6 +612,17 @@ class HorizonResponse(Response):
     points: list[HorizonPointModel] | None
 
 
+class EphemerisSetupResponse(Response):
+    loaded: bool
+    error: str | None
+    folder_path: str
+    kernel_path: str
+    filename: str
+    download_url: str
+    expected_size_bytes: int
+    expected_sha256: str
+
+
 class SettingsResponse(Response):
     location: LocationResponse
     horizon: HorizonResponse
@@ -3091,6 +3102,7 @@ __all__ = [
     "DeviceMountModeCheck",
     "DiscoverRequest",
     "DiscoverResponse",
+    "EphemerisSetupResponse",
     "EthernetAddressRequest",
     "EventTimeModel",
     "ExternalToolModel",

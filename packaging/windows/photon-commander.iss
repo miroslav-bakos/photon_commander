@@ -30,6 +30,7 @@ Source: "{#PayloadDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 [Icons]
 Name: "{group}\Photon Commander"; Filename: "{app}\app\ssc-core.exe"; Parameters: "--desktop"; WorkingDir: "{app}"
 Name: "{group}\Installation and first-run guide"; Filename: "{app}\INSTALLATION.txt"
+Name: "{group}\Illustrated guides (EN, SK, CZ)"; Filename: "{app}\docs\index.html"
 Name: "{group}\Uninstall Photon Commander"; Filename: "{uninstallexe}"
 [Run]
 Filename: "{app}\app\ssc-core.exe"; Parameters: "--desktop"; Description: "Open Photon Commander"; Flags: nowait postinstall skipifsilent

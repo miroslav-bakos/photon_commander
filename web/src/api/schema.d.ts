@@ -960,6 +960,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/settings/ephemeris": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Ephemeris Setup
+         * @description Report the backend's loaded kernel and destination, without rescanning.
+         *
+         *     Host paths are private configuration: require a session and prevent HTTP
+         *     caching. A copied file becomes available only after the normal restart.
+         */
+        get: operations["read_ephemeris_setup_api_settings_ephemeris_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings/restart": {
         parameters: {
             query?: never;
@@ -6525,6 +6548,25 @@ export interface components {
             kind: "duration";
             /** Minutes */
             minutes: number;
+        };
+        /** EphemerisSetupResponse */
+        EphemerisSetupResponse: {
+            /** Loaded */
+            loaded: boolean;
+            /** Error */
+            error: string | null;
+            /** Folder Path */
+            folder_path: string;
+            /** Kernel Path */
+            kernel_path: string;
+            /** Filename */
+            filename: string;
+            /** Download Url */
+            download_url: string;
+            /** Expected Size Bytes */
+            expected_size_bytes: number;
+            /** Expected Sha256 */
+            expected_sha256: string;
         };
         /**
          * EthernetAddressRequest
@@ -13488,6 +13530,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_ephemeris_setup_api_settings_ephemeris_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EphemerisSetupResponse"];
                 };
             };
         };
