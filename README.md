@@ -64,6 +64,13 @@ languages are planned.** These screenshots show the Czech interface from an
 earlier development version; its PRO logo is historical. Photon Commander now
 has one complete free version.
 
+## Release status
+
+The source is available for review and development. Release 0.0.1 packages are
+still being validated and are not published here. Plan compilation and
+connection-recovery checks remain open; this is not a validated observing release.
+Survey data permissions are separate from the source-code licence.
+
 ## Platforms
 
 Photon is designed for **Raspberry Pi, Windows, Linux and macOS**, with desktop
