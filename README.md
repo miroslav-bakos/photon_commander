@@ -30,10 +30,11 @@ their own licences and attribution; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOT
   application with a layout adapted to their screen. Each device needs access
   to the same server and the appropriate viewing or control permission.
 
-![NGC 7000 two-panel mosaic in the DSS2 sky-map planner](.github/images/ngc7000-dss2-mosaic.png)
+![NGC 7000 two-panel mosaic in the DSS2 sky-map planner](.github/images/ngc7000-dss2-mosaic.jpg)
 
-*Plan a two-panel mosaic across NGC 7000 and the neighbouring Pelican Nebula
-with DSS2 enabled. This is a framing preview, not a captured observation.*
+*The complete Photon Commander window, planning a two-panel mosaic across
+NGC 7000 with DSS2 enabled. Settings and status are illustrative; this is a
+framing preview, not a captured observation.*
 
 <details>
 <summary>DSS2 image credits and usage terms</summary>
