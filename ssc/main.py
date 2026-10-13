@@ -136,6 +136,8 @@ from ssc.state.models import (
     PolarAlignmentState,
     SecretsCapability,
     StateSnapshot,
+    devices_stale,
+    mount_stale,
 )
 from ssc.state.ports import (
     DeviceGateway,
@@ -631,6 +633,8 @@ class AlpacaDeviceGateway:
         self._poll_task: asyncio.Task[None] | None = None
         self._last_link: LinkState | None = None
         self._last_device: DeviceDescriptor | None = None
+        self._last_mount: MountState | None = None
+        self._last_devices: AlpacaDevicesState | None = None
         #: Read once per connection, not on every tick — these do not change
         #: while connected. ``None`` invalidates it, which happens whenever the
         #: link leaves a pollable state (see ``_publish``), so a reconnect (to
@@ -1072,11 +1076,40 @@ class AlpacaDeviceGateway:
             task.cancel()
 
     async def _poll_loop(self) -> None:
-        with contextlib.suppress(asyncio.CancelledError):
-            while True:
-                await asyncio.sleep(self._POLL_INTERVAL_S)
-                if not await self._poll_once():
-                    return
+        # Freshness must advance even while an Alpaca request is blocked or
+        # failing and the browser's state WebSocket is still healthy.
+        freshness = asyncio.create_task(self._watch_staleness(), name="alpaca-freshness")
+        try:
+            with contextlib.suppress(asyncio.CancelledError):
+                while True:
+                    await asyncio.sleep(self._POLL_INTERVAL_S)
+                    if not await self._poll_once():
+                        return
+        except Exception:
+            # The socket may remain healthy after the poll task fails. Do not
+            # leave retained values marked fresh when their watchdog exits too.
+            if self._last_mount is not None and not self._last_mount.stale:
+                self._publish_mount(self._last_mount.model_copy(update={"stale": True}))
+            if self._last_devices is not None and not self._last_devices.stale:
+                self._publish_devices(self._last_devices.model_copy(update={"stale": True}))
+            raise
+        finally:
+            freshness.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await freshness
+
+    async def _watch_staleness(self) -> None:
+        while True:
+            await asyncio.sleep(self._POLL_INTERVAL_S)
+            self._publish_elapsed_staleness(datetime.now(tz=UTC))
+
+    def _publish_elapsed_staleness(self, now: datetime) -> None:
+        mount = self._last_mount
+        if mount is not None and not mount.stale and mount_stale(mount.polled_at, now=now):
+            self._publish_mount(mount.model_copy(update={"stale": True}))
+        devices = self._last_devices
+        if devices is not None and not devices.stale and devices_stale(devices.polled_at, now=now):
+            self._publish_devices(devices.model_copy(update={"stale": True}))
 
     async def _poll_once(self) -> bool:
         """Run one status tick; ``False`` means the device is disconnected.
@@ -1090,6 +1123,8 @@ class AlpacaDeviceGateway:
         try:
             payload = await self._telescope.status()
             link, device = _link_and_device_from_status(payload)
+            if device is not None and isinstance(payload.get("battery"), dict):
+                device = device.model_copy(update={"battery": BatteryTelemetry.model_validate(payload["battery"])})
         except AlpacaRemoteError as exc:
             if exc.is_not_connected:
                 reason = f"device disconnected: {exc.message}"
@@ -1119,8 +1154,6 @@ class AlpacaDeviceGateway:
             # and the link state it would have described — to die silently.
             _log.exception("ssc.status returned a payload this gateway could not decode")
             return True
-        if device is not None and isinstance(payload.get("battery"), dict):
-            device = device.model_copy(update={"battery": BatteryTelemetry.model_validate(payload["battery"])})
         self._publish(link, device)
         await self._poll_mount()
         await self._poll_devices()
@@ -1239,6 +1272,9 @@ class AlpacaDeviceGateway:
         return value
 
     def _publish_mount(self, mount: MountState | None) -> None:
+        if mount is not None and not mount.stale and mount_stale(mount.polled_at, now=datetime.now(tz=UTC)):
+            mount = mount.model_copy(update={"stale": True})
+        self._last_mount = mount
         for sink in self._sinks:
             sink.on_mount(mount)
 
@@ -1447,6 +1483,9 @@ class AlpacaDeviceGateway:
         return min(doubled, self._RECONNECT_MAX_DELAY_S)
 
     def _publish_devices(self, devices: AlpacaDevicesState | None) -> None:
+        if devices is not None and not devices.stale and devices_stale(devices.polled_at, now=datetime.now(tz=UTC)):
+            devices = devices.model_copy(update={"stale": True})
+        self._last_devices = devices
         for sink in self._sinks:
             sink.on_devices(devices)
 

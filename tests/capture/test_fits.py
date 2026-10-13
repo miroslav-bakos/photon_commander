@@ -367,3 +367,23 @@ def test_debayer_rejects_an_unknown_pattern() -> None:
 def test_debayer_rejects_a_non_2d_mosaic() -> None:
     with pytest.raises(FitsWriteError, match="2-D"):
         debayer(np.zeros((2, 4, 4)), "GRBG")
+
+
+@pytest.mark.parametrize("pattern", ["RGGB", "GRBG", "GBRG", "BGGR"])
+@pytest.mark.parametrize("shape", [(1, 1), (1, 7), (8, 1), (7, 9), (16, 18)])
+def test_debayer_green_matches_rgb_including_edges(pattern, shape) -> None:
+    from ssc.capture.fits import debayer_green
+
+    mosaic = np.random.default_rng(57).uniform(0, 65535, size=shape)
+    np.testing.assert_array_equal(debayer_green(mosaic, pattern), debayer(mosaic, pattern)[..., 1])
+
+
+@pytest.mark.parametrize(
+    "mosaic,pattern,match",
+    [(np.zeros((4, 4)), "XYZW", "pattern"), (np.zeros((2, 4, 4)), "GRBG", "2-D")],
+)
+def test_debayer_green_rejects_invalid_input(mosaic, pattern, match) -> None:
+    from ssc.capture.fits import debayer_green
+
+    with pytest.raises(FitsWriteError, match=match):
+        debayer_green(mosaic, pattern)

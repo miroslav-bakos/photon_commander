@@ -31,7 +31,13 @@
  * bucket costs nothing extra — the previous tick's shapes come back with an
  * identical signature.
  */
-import type { FovShape } from "../../types";
+import type { DisplayOptions, FovShape } from "../../types";
+import messages from "../../../i18n/messages.json";
+
+function referenceLabel(label: "Celestial equator" | "Meridian" | "Zenith", language: DisplayOptions["language"]): string {
+  if (language !== "sk" && language !== "cs") return label;
+  return messages[label][language === "sk" ? 0 : 1] ?? label;
+}
 import { type SiteInstant, altAzToRaDec, circularDistanceDeg, localMeanSiderealTimeHours, raDecToAltAz } from "./sidereal";
 
 export const CELESTIAL_EQUATOR_ID = "skyline:celestial-equator";
@@ -39,7 +45,7 @@ export const MERIDIAN_ID = "skyline:meridian";
 export const ZENITH_ID = "skyline:zenith";
 
 /** Dec = 0 all the way round, one vertex per degree of RA. */
-export function celestialEquatorShape(): FovShape {
+export function celestialEquatorShape(language: DisplayOptions["language"] = "en"): FovShape {
   const vertices: [number, number][] = [];
   for (let ra = 0; ra <= 360; ra += 1) vertices.push([ra % 360, 0]);
   return {
@@ -47,7 +53,7 @@ export function celestialEquatorShape(): FovShape {
     id: CELESTIAL_EQUATOR_ID,
     verticesRaDec: vertices,
     style: { role: "skyline", dashed: true },
-    label: "Celestial equator",
+    label: referenceLabel("Celestial equator", language),
     labelAt: [0, 0],
   };
 }
@@ -62,7 +68,7 @@ export interface MeridianInputs {
  * zenith — and the zenith itself at (LST, latitude). The half through the
  * nadir is not drawn: an EQ user watches for a *transit*, which happens on
  * this half. */
-export function meridianShapes(inputs: MeridianInputs): FovShape[] {
+export function meridianShapes(inputs: MeridianInputs, language: DisplayOptions["language"] = "en"): FovShape[] {
   const lstDeg = localMeanSiderealTimeHours(inputs.instant, inputs.longitudeDeg) * 15;
   const vertices: [number, number][] = [];
   for (let dec = -90; dec <= 90; dec += 2) vertices.push([lstDeg, dec]);
@@ -72,7 +78,7 @@ export function meridianShapes(inputs: MeridianInputs): FovShape[] {
       id: MERIDIAN_ID,
       verticesRaDec: vertices,
       style: { role: "skyline" },
-      label: "Meridian",
+      label: referenceLabel("Meridian", language),
       labelAt: [lstDeg, Math.max(-88, Math.min(88, inputs.latitudeDeg - 20))],
     },
     {
@@ -82,7 +88,7 @@ export function meridianShapes(inputs: MeridianInputs): FovShape[] {
       centerDec: inputs.latitudeDeg,
       radiusDeg: 0.4,
       style: { role: "skyline" },
-      label: "Zenith",
+      label: referenceLabel("Zenith", language),
       labelAt: [lstDeg, inputs.latitudeDeg + 0.4],
     },
   ];

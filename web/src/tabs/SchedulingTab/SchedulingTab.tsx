@@ -21,6 +21,7 @@
  */
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+import { Lock, LockOpen } from "lucide-react";
 import { ApiError } from "../../api/client";
 import { samePlanContent } from "./saveRecovery";
 import { observingDate } from "../../widgets/weather/nightConditions";
@@ -53,7 +54,7 @@ import { ITEM_KIND_LABELS, defaultStartFor, newId, newItem, newPlanDocument } fr
 import { PlanPicker } from "./PlanPicker";
 import type { ResolvedTimeState } from "./ResolvedTimeLabel";
 import { RunControls } from "./RunControls";
-import { useSchedulingUiStore } from "./schedulingUiStore";
+import { isPlanEditLocked, planEditRunId, useSchedulingUiStore } from "./schedulingUiStore";
 import { TimelinePane, type ItemPatch } from "./TimelinePane";
 import { orderAfterTimelineMove } from "./timelineOrder";
 import { snapTargets, utcIsoToSiteWallClock } from "./timelineGeometry";
@@ -145,9 +146,16 @@ export function SchedulingTab() {
   const applyNight = useApplyPlanNight();
   const busy = create.isPending || update.isPending || remove.isPending || applyNight.isPending || pendingSave !== null;
   const activePlanRun = run?.plan_id === planId && (run.status === "running" || run.status === "paused");
-  const cannotChangeNight = busy || record === undefined || hasUnsavedDraft;
+  const editLocks = useSchedulingUiStore((s) => s.editLocks);
+  const planLocked = isPlanEditLocked(planId, run, editLocks);
+  // Re-read at mutation time too: a run can start or Lock can be pressed
+  // between pointer-down and release, or while a save-recovery request awaits.
+  const editsLockedNow = (id: string | null = planId) => isPlanEditLocked(
+    id, useConnectionStore.getState().snapshot?.run ?? null, useSchedulingUiStore.getState().editLocks,
+  );
+  const cannotChangeNight = planLocked || busy || record === undefined || hasUnsavedDraft;
   const applySelectedNight = (next: string) => {
-    if (record === undefined || cannotChangeNight) return;
+    if (record === undefined || cannotChangeNight || editsLockedNow()) return;
     applyNight.mutate(
       { planId: record.document.id, nightDate: next, revision: record.revision },
       { onSuccess: () => { selectNightDate(next); } },
@@ -156,7 +164,7 @@ export function SchedulingTab() {
   const conflict = isRevisionConflict(update.error);
 
   const put = (next: Plan, onSaved?: () => void) => {
-    if (record === undefined || busy) return;
+    if (record === undefined || busy || editsLockedNow(next.id)) return;
     // A fresh browser can display the first plan as a fallback before its
     // selection is persisted. Establish that identity without clearing its
     // item selection, so completion guards refer to the plan actually shown.
@@ -200,7 +208,8 @@ export function SchedulingTab() {
     } finally { setCheckingSave(false); }
   };
   const retryPendingSave = () => {
-    if (checkedRevision !== pendingSave?.revision || update.isPending) return;
+    if (pendingSave === null) return;
+    if (checkedRevision !== pendingSave.revision || update.isPending || editsLockedNow(pendingSave.document.id)) return;
     // Exactly the original revision; never silently overwrite another client.
     update.mutate(pendingSave, { onSuccess: () => {
       if (useSchedulingUiStore.getState().selectedPlanId === pendingSave.document.id) pendingSave.onSaved?.();
@@ -276,7 +285,23 @@ export function SchedulingTab() {
   const onSave = () => {
     if (documentWithDraft === null || !isDirty) return;
     const submitted = draft;
-    put(documentWithDraft, () => {
+    let next = documentWithDraft;
+    if (pendingItem !== null && storedPendingItem !== null && compile.data !== undefined
+        && JSON.stringify(pendingItem.start) !== JSON.stringify(storedPendingItem.start)) {
+      const start = pendingItem.start;
+      const event = start.kind === "event"
+        ? snapTargets(compile.data.schedule.night).find((entry) => entry.event === start.event)
+        : undefined;
+      const movedStartUtc = event !== undefined && start.kind === "event"
+        ? new Date(event.atMs + start.offset_min * 60_000).toISOString()
+        : undefined;
+      if (start.kind === "absolute" || movedStartUtc !== undefined) {
+        next = { ...next, items: orderAfterTimelineMove(
+          next.items, pendingItem.id, compiledById, compile.data.schedule.night.tz, movedStartUtc,
+        ) };
+      }
+    }
+    put(next, () => {
       setDraft((current) => current === submitted ? null : current);
     });
   };
@@ -336,6 +361,20 @@ export function SchedulingTab() {
             </p>
           )}
           <PlanPicker
+            readOnly={planLocked}
+            editingControl={planId !== null && (
+              <Button aria-label={planLocked ? "Unlock plan" : "Lock plan"} aria-pressed={planLocked}
+                disabled={update.isPending || applyNight.isPending || remove.isPending}
+                onClick={() => {
+                  const currentRun = useConnectionStore.getState().snapshot?.run ?? null;
+                  useSchedulingUiStore.getState().setPlanEditLock(
+                    planId, planEditRunId(planId, currentRun), !editsLockedNow(),
+                  );
+                }}>
+                {planLocked ? <Lock size={18} aria-hidden="true" /> : <LockOpen size={18} aria-hidden="true" />}
+                {planLocked ? "Unlock" : "Lock"}
+              </Button>
+            )}
             plans={plans}
             selectedId={planId}
             onSelect={selectPlan}
@@ -351,7 +390,7 @@ export function SchedulingTab() {
               if (document !== undefined) put({ ...document, name });
             }}
             onDelete={() => {
-              if (planId !== null) {
+              if (planId !== null && !editsLockedNow()) {
                 remove.mutate(planId, {
                   onSuccess: () => {
                     selectPlan(null);
@@ -362,6 +401,9 @@ export function SchedulingTab() {
             busy={busy}
             error={planError}
           />
+          {planLocked && <p role="status" className="text-sm text-fg-muted">
+            Plan locked. Unlock to edit values or move timeline items.
+          </p>}
           <Card className="space-y-2">
             <CardTitle>Night</CardTitle>
             {compile.data?.schedule.night.solar_events.some(
@@ -414,6 +456,11 @@ export function SchedulingTab() {
             timeZone={compile.data?.schedule.night.tz ?? siteTimeZone}
             startBlockedReason={startBlockedReason}
             itemLabel={itemLabel}
+            onExecutionStart={(id) => {
+              useSchedulingUiStore.getState().setPlanEditLock(
+                id, planEditRunId(id, useConnectionStore.getState().snapshot?.run ?? null), true,
+              );
+            }}
           />
           {planId !== null && document === undefined && planQuery.isPending && (
             <Card className="text-sm text-fg-muted">Loading plan…</Card>
@@ -425,7 +472,7 @@ export function SchedulingTab() {
                 <Button disabled={checkingSave || update.isPending} onClick={() => { void checkPendingSave(); }}>
                   {checkingSave ? "Checking saved plan…" : "Check saved plan"}
                 </Button>
-                <Button disabled={checkingSave || update.isPending || checkedRevision !== pendingSave.revision} onClick={retryPendingSave}>Retry pending change</Button>
+                <Button disabled={isPlanEditLocked(pendingSave.document.id, run, editLocks) || checkingSave || update.isPending || checkedRevision !== pendingSave.revision} onClick={retryPendingSave}>Retry pending change</Button>
                 <Button disabled={checkingSave || update.isPending || checkedRevision === null} onClick={() => { setPendingSave(null); update.reset(); }}>Discard pending change</Button>
               </div>
             </Card>
@@ -482,6 +529,7 @@ export function SchedulingTab() {
               <ItemEditor
                 key={`${planId}/${shownItem.id}`}
                 item={shownItem}
+                readOnly={planLocked}
                 isDirty={isDirty}
                 saving={update.isPending}
                 saveBlocked={pendingSave !== null}
@@ -494,6 +542,7 @@ export function SchedulingTab() {
                 night={compile.data?.schedule.night}
                 integrationEstimate={selectedEstimate}
                 onChange={(item) => {
+                  if (editsLockedNow()) return;
                   setDraft({ planId, itemId: item.id, item });
                 }}
                 onSave={onSave}
@@ -507,10 +556,10 @@ export function SchedulingTab() {
               />
             ) : undefined
           }
-          onEditItem={document === undefined ? undefined : onEditItem}
-          onReorderItem={document === undefined ? undefined : onReorderItem}
-          onToggleItem={document === undefined ? undefined : onToggleItem}
-          onAddItem={document === undefined ? undefined : onAdd}
+          onEditItem={document === undefined || planLocked ? undefined : onEditItem}
+          onReorderItem={document === undefined || planLocked ? undefined : onReorderItem}
+          onToggleItem={document === undefined || planLocked ? undefined : onToggleItem}
+          onAddItem={document === undefined || planLocked ? undefined : onAdd}
         />
       }
     />

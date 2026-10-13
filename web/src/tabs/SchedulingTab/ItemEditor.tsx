@@ -39,6 +39,7 @@ export function ItemEditor({
   isDirty,
   saving,
   saveBlocked = false,
+  readOnly = false,
   conflict,
   saveError,
   diagnostics,
@@ -56,6 +57,7 @@ export function ItemEditor({
   isDirty: boolean;
   saving: boolean;
   saveBlocked?: boolean;
+  readOnly?: boolean;
   /** The last save was refused because the plan changed elsewhere; the
    * stored copy has been reloaded and the draft is still here. */
   conflict: boolean;
@@ -101,6 +103,7 @@ export function ItemEditor({
   const estimatesDeviceCompletion = !["wait", "goto_and_stack", "mosaic", "take_exposures"].includes(item.kind);
   return (
     <Card className="space-y-4">
+      <fieldset disabled={readOnly} className="min-w-0 space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-2" data-testid="item-details-header">
         <CardTitle>{ITEM_KIND_LABELS[item.kind]}</CardTitle>
         <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
@@ -249,6 +252,7 @@ export function ItemEditor({
           Cancel
         </Button>
       </div>
+      </fieldset>
     </Card>
   );
 }

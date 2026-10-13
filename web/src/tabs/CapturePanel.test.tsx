@@ -238,10 +238,12 @@ describe("CapturePanel", () => {
     let sentBody: unknown = null;
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockImplementation((input: string, init?: RequestInit) => {
-        const pathname = new URL(input, "http://localhost").pathname;
-        if (pathname === "/api/capture/exposure" && init?.body !== undefined) {
-          sentBody = JSON.parse(init.body as string) as unknown;
+      vi.fn().mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = input instanceof Request ? input : new Request(new URL(input.toString(), "http://localhost"), init);
+        const pathname = new URL(request.url).pathname;
+        const requestBody = await request.clone().text();
+        if (pathname === "/api/capture/exposure" && requestBody !== "") {
+          sentBody = JSON.parse(requestBody) as unknown;
           return Promise.resolve(json(null, 202));
         }
         if (pathname === "/api/capture/frames") return Promise.resolve(json({ frames: [] }, 200));
@@ -265,11 +267,13 @@ describe("CapturePanel", () => {
     const paths: string[] = [];
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockImplementation((input: string, init?: RequestInit) => {
-        const pathname = new URL(input, "http://localhost").pathname;
+      vi.fn().mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = input instanceof Request ? input : new Request(new URL(input.toString(), "http://localhost"), init);
+        const pathname = new URL(request.url).pathname;
+        const requestBody = await request.clone().text();
         paths.push(pathname);
         if (pathname === "/api/capture/exposure") {
-          exposureBodies.push(init?.body == null ? null : JSON.parse(init.body as string) as unknown);
+          exposureBodies.push(requestBody === "" ? null : JSON.parse(requestBody) as unknown);
           return Promise.resolve(json(null, 202));
         }
         if (pathname === "/api/capture/loop/stop") return Promise.resolve(json(null, 200));
@@ -441,11 +445,13 @@ describe("CapturePanel", () => {
     vi.stubGlobal("confirm", confirm);
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockImplementation((input: string, init?: RequestInit) => {
-        const pathname = new URL(input, "http://localhost").pathname;
+      vi.fn().mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = input instanceof Request ? input : new Request(new URL(input.toString(), "http://localhost"), init);
+        const pathname = new URL(request.url).pathname;
+        const requestBody = await request.clone().text();
         if (pathname === "/api/mount/slew-zenith") {
           calls.push(pathname);
-          slewBody = init?.body === undefined ? undefined : JSON.parse(init.body as string) as unknown;
+          slewBody = requestBody === "" ? undefined : JSON.parse(requestBody) as unknown;
           return Promise.resolve(new Response(null, { status: 202 }));
         }
         if (pathname === "/api/capture/frames") return Promise.resolve(json({ frames: [] }, 200));
@@ -476,10 +482,12 @@ describe("CapturePanel", () => {
     let sentBody: unknown = null;
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockImplementation((input: string, init?: RequestInit) => {
-        const pathname = new URL(input, "http://localhost").pathname;
-        if (pathname === "/api/capture/exposure" && init?.body !== undefined) {
-          sentBody = JSON.parse(init.body as string) as unknown;
+      vi.fn().mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = input instanceof Request ? input : new Request(new URL(input.toString(), "http://localhost"), init);
+        const pathname = new URL(request.url).pathname;
+        const requestBody = await request.clone().text();
+        if (pathname === "/api/capture/exposure" && requestBody !== "") {
+          sentBody = JSON.parse(requestBody) as unknown;
           return Promise.resolve(json(null, 202));
         }
         if (pathname === "/api/capture/frames") return Promise.resolve(json({ frames: [] }, 200));
@@ -504,10 +512,12 @@ describe("CapturePanel", () => {
     let sentBody: unknown = null;
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockImplementation((input: string, init?: RequestInit) => {
-        const pathname = new URL(input, "http://localhost").pathname;
-        if (pathname === "/api/capture/exposure" && init?.body !== undefined) {
-          sentBody = JSON.parse(init.body as string) as unknown;
+      vi.fn().mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = input instanceof Request ? input : new Request(new URL(input.toString(), "http://localhost"), init);
+        const pathname = new URL(request.url).pathname;
+        const requestBody = await request.clone().text();
+        if (pathname === "/api/capture/exposure" && requestBody !== "") {
+          sentBody = JSON.parse(requestBody) as unknown;
           return Promise.resolve(json(null, 202));
         }
         if (pathname === "/api/capture/frames") return Promise.resolve(json({ frames: [] }, 200));
@@ -529,10 +539,12 @@ describe("CapturePanel", () => {
     let sentBody: unknown = null;
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockImplementation((input: string, init?: RequestInit) => {
-        const pathname = new URL(input, "http://localhost").pathname;
-        if (pathname === "/api/capture/exposure" && init?.body !== undefined) {
-          sentBody = JSON.parse(init.body as string) as unknown;
+      vi.fn().mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = input instanceof Request ? input : new Request(new URL(input.toString(), "http://localhost"), init);
+        const pathname = new URL(request.url).pathname;
+        const requestBody = await request.clone().text();
+        if (pathname === "/api/capture/exposure" && requestBody !== "") {
+          sentBody = JSON.parse(requestBody) as unknown;
           return Promise.resolve(json(null, 202));
         }
         if (pathname === "/api/capture/frames") return Promise.resolve(json({ frames: [] }, 200));
@@ -575,13 +587,14 @@ describe("CapturePanel", () => {
 describe("Capture camera selection", () => {
   function prepare(wide: boolean, dither = false) {
     const bodies: unknown[] = [];
-    vi.stubGlobal("fetch", vi.fn().mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const path = new URL(input instanceof Request ? input.url : input.toString(), "http://localhost").pathname;
       if (path === "/api/astro/profiles") return Promise.resolve(json({ profiles: [{ id: "test-scope", capabilities: { wide_camera: wide } }] }, 200));
       if (path === "/api/settings/capture-dither") return Promise.resolve(json({ enabled: dither }, 200));
       if (path === "/api/capture/exposure") {
-        if (typeof init?.body !== "string") throw new Error("Expected a JSON request body");
-        bodies.push(JSON.parse(init.body) as unknown);
+        const body = input instanceof Request ? await input.clone().text() : init?.body;
+        if (typeof body !== "string") throw new Error("Expected a JSON request body");
+        bodies.push(JSON.parse(body) as unknown);
         return Promise.resolve(json(captureState({ in_progress: true }), 202));
       }
       if (path === "/api/capture/frames") return Promise.resolve(json({ frames: [] }, 200));

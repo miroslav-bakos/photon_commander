@@ -110,6 +110,15 @@ beforeEach(() => {
 });
 
 describe("DashboardTab", () => {
+  it("shows a never-started integration as idle with zero totals", () => {
+    vi.mocked(useLiveStackQuery).mockReturnValue({ data: null } as ReturnType<typeof useLiveStackQuery>);
+    renderWithQueryClient(<MemoryRouter><DashboardTab /></MemoryRouter>);
+    const card = screen.getByRole("link", { name: "Open Live stacking controls" });
+    expect(within(card).getByText("Idle")).toBeInTheDocument();
+    expect(within(card).getAllByText("0")).toHaveLength(2);
+    expect(within(card).getByText("0.0 min")).toBeInTheDocument();
+    expect(within(card).queryByText("Fetch failed")).not.toBeInTheDocument();
+  });
   function editableDashboard() {
     return <MemoryRouter initialEntries={["/dashboard"]}><LayoutRouteProvider><DashboardTab /></LayoutRouteProvider></MemoryRouter>;
   }
@@ -123,8 +132,10 @@ describe("DashboardTab", () => {
     const focuser = screen.getByRole("link", { name: "Open Focuser controls" });
     const camera = screen.getByRole("link", { name: "Open Camera controls" });
     const stack = screen.getByRole("link", { name: "Open Live stacking controls" });
-    const original = useConnectionStore.getState().snapshot!;
-    act(() => { useConnectionStore.setState({ snapshot: { ...original, devices: { ...original.devices!, stale: true } } }); });
+    const original = useConnectionStore.getState().snapshot;
+    if (original?.devices == null) throw new Error("Dashboard fixture must provide a device snapshot");
+    const devices = original.devices;
+    act(() => { useConnectionStore.setState({ snapshot: { ...original, devices: { ...devices, stale: true } } }); });
     expect(within(focuser).getByText("1204", { selector: "p" })).toBeInTheDocument();
     expect(within(camera).getByText("30.00 s")).toBeInTheDocument();
     expect(within(stack).getByText("15")).toBeInTheDocument();

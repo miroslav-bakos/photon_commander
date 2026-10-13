@@ -264,11 +264,11 @@ export function DashboardTab() {
   const calibration = capture?.calibration;
   const cameraCount = capture == null ? "Unknown" : calibration?.status === "running"
     ? `${String(calibration.completed_frames)} / ${String(calibration.total_frames)}`
-    : capture?.loop_active === true
+    : capture.loop_active === true
       ? `${String(capture.loop_completed_frames ?? 0)} / continuous`
       : runActive && currentItem?.end_utc != null
         ? `${String(liveStack.data?.frame_count ?? 0)} / until ${new Date(currentItem.end_utc).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-        : capture?.in_progress === true ? "1 / 1" : "Idle";
+        : capture.in_progress ? "1 / 1" : "Idle";
   const hasReadings = mount != null || capture != null || focuser.data != null || filterWheel.data != null || heater.data != null || liveStack.data != null;
   const unavailableMessage = unavailable === "Disconnected"
     ? hasReadings ? "Disconnected. Showing last readings." : "Disconnected. Waiting for readings."
@@ -353,12 +353,12 @@ export function DashboardTab() {
         </StatusCard>
 
         <StatusCard layoutId="live-stacking" title="Live stacking" to="/live-stacking" icon={<Layers3 className="size-5" />} active={liveStackStatus === null && liveStack.data?.active === true} readingStatus={liveStackStatus}>
-          <Value>{liveStackStatus?.split(" · ")[0] ?? (liveStack.data == null ? "Unknown" : liveStack.data.active ? "Active" : "Stopped")}</Value>
+          <Value>{liveStackStatus?.split(" · ")[0] ?? (liveStack.data === null ? "Idle" : liveStack.data === undefined ? "Unknown" : liveStack.data.active ? "Active" : "Stopped")}</Value>
           <p className="mt-1 text-xs text-fg-muted">{liveStack.data?.object_name ?? "No stack target"}</p>
           <DetailList>
-            <Detail label="Accepted">{liveStack.data?.frame_count ?? "Unknown"}</Detail>
-            <Detail label="Rejected">{liveStack.data?.rejected_count ?? "Unknown"}</Detail>
-            <Detail label="Integration">{liveStack.data?.total_integration_s == null ? "Unknown" : `${(liveStack.data.total_integration_s / 60).toFixed(1)} min`}</Detail>
+            <Detail label="Accepted">{liveStack.data === null ? 0 : liveStack.data?.frame_count ?? "Unknown"}</Detail>
+            <Detail label="Rejected">{liveStack.data === null ? 0 : liveStack.data?.rejected_count ?? "Unknown"}</Detail>
+            <Detail label="Integration">{liveStack.data === null ? `${(0).toFixed(1)} min` : liveStack.data?.total_integration_s == null ? "Unknown" : `${(liveStack.data.total_integration_s / 60).toFixed(1)} min`}</Detail>
           </DetailList>
         </StatusCard>
 

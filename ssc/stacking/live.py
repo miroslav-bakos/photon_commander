@@ -334,6 +334,25 @@ class LiveStackEngine:
         if frame_path in self._run.frame_paths:
             return self._run
         candidate, header = self._calibrated(frame_path)
+        value = header.get("BAYERPAT")
+        pattern = value.upper() if isinstance(value, str) else None
+        cfa_state = header.get("CFASTATE")
+        if cfa_state == "unknown" or (cfa_state == "bayer" and pattern is None):
+            raise LiveStackError(
+                "live-stack frame Bayer provenance is missing; raw frame retained, "
+                "waiting for a frame with measured sensor metadata"
+            )
+        if cfa_state == "unsupported":
+            raise LiveStackError("live-stack frame sensor family is unsupported; raw frame retained")
+        if pattern is not None and pattern not in _BAYER_TILES:
+            raise LiveStackError("live-stack frame has unsupported Bayer provenance")
+        if self._registration_reference is not None and pattern != self._source_bayer_pattern:
+            if pattern is None:
+                raise LiveStackError(
+                    "live-stack frame Bayer provenance is missing; raw frame retained, "
+                    "existing stack unchanged"
+                )
+            raise LiveStackError("live-stack frames must use the same Bayer pattern")
         group_id = self._header_string(header, "DITHGRP")
         if group_id is not None:
             if self._run.integration_grouping == "per_frame":
@@ -348,8 +367,6 @@ class LiveStackEngine:
             self.begin_dither_group(group_id)
         elif self._dither_header_groups:
             raise LiveStackError("dither-grouped frames require DITHGRP provenance")
-        value = header.get("BAYERPAT")
-        pattern = value.upper() if isinstance(value, str) else None
         quality = self._measure_candidate_quality(candidate, header) if measure_quality else None
         if quality is not None:
             self.latest_frame_quality = (frame_path, quality)
@@ -384,8 +401,6 @@ class LiveStackEngine:
         else:
             if candidate.shape != self._registration_reference.shape:
                 raise LiveStackError("live-stack frames must have identical dimensions")
-            if pattern != self._source_bayer_pattern:
-                raise LiveStackError("live-stack frames must use the same Bayer pattern")
             try:
                 assert self._registration_reference is not None
                 reference_plane = self._registration_plane(self._registration_reference)

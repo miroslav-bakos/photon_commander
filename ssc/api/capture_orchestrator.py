@@ -3855,7 +3855,10 @@ class CaptureService:
                 # client. Never abort unknown acquisition to repair this plan.
                 raise CaptureAlreadyRunningError("Camera idle unconfirmed; unknown acquisition not aborted")
             self._check_dither_run_stop(run_id)
-            if level >= 2 and operation in {"expose_frame", "center_target", "dither", "autofocus"}:
+            # Centering owns slew -> stopped telemetry -> tracking -> solve.
+            # After reconnect the mount can be pointing below the horizon;
+            # enabling tracking here would prevent that ordered repair forever.
+            if level >= 2 and operation in {"expose_frame", "dither", "autofocus"}:
                 stage = "tracking"
                 mount = self._state.snapshot.mount
                 polled_at = None if mount is None else mount.polled_at

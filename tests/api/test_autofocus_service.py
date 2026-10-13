@@ -165,7 +165,7 @@ async def test_uncertain_fine_scan_remeasures_monotonically_without_duplicate_fi
 
 @pytest.mark.asyncio
 async def test_autofocus_retries_a_transient_exposure_timeout(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture,
 ) -> None:
     focuser = FakeFocuser()
     camera = SimpleNamespace(connect_calls=0)
@@ -175,9 +175,11 @@ async def test_autofocus_retries_a_transient_exposure_timeout(
 
     camera.connect = connect
     attempts = 0
+    caplog.set_level("INFO", logger="ssc.api.autofocus_service")
 
     async def expose(**_kwargs: object) -> tuple[object, object]:
         nonlocal attempts
+        assert _kwargs["metadata_mode"] == "autofocus"
         attempts += 1
         if attempts == 1:
             raise ExposureTimeoutError("temporary ImageReady timeout")
@@ -197,6 +199,9 @@ async def test_autofocus_retries_a_transient_exposure_timeout(
     assert attempts == 2
     assert camera.connect_calls == 1
     assert sleeps == [2.0]
+    assert "autofocus sample timing acquisition=" in caplog.text
+    assert "analysis_queue=" in caplog.text
+    assert "analysis_compute=" in caplog.text
 
 
 @pytest.mark.asyncio
@@ -577,3 +582,20 @@ async def test_cancelled_autofocus_aborts_camera_halts_and_restores_focus() -> N
     assert calls == ["abortexposure", "halt"]
     assert focuser.position == 1200
     assert service.state.status == "failed"
+
+
+@pytest.mark.parametrize("offsets", [(0, 0), (1, 0), (0, 1), (1, 1), (None, None), (None, 1)])
+def test_focus_measurement_retains_identical_metric_with_green_only(offsets) -> None:
+    from ssc.capture import measure_frame_quality
+    from ssc.capture.fits import bayer_pattern, debayer
+
+    rng = np.random.default_rng(25)
+    pixels = rng.normal(100, 2, size=(96, 96))
+    yy, xx = np.indices(pixels.shape)
+    for y, x in [(20, 20), (50, 30), (65, 70), (25, 70)]:
+        pixels += 700 * np.exp(-((yy - y) ** 2 + (xx - x) ** 2) / 8)
+    pattern = bayer_pattern(*offsets)
+    plane = pixels if pattern is None else debayer(pixels, pattern)[..., 1]
+    expected = measure_frame_quality(plane, pixel_size_um=None, focal_length_mm=None)
+    assert expected.star_count >= 3
+    assert AutofocusService._measure(pixels, *offsets) == (expected.hfr_px, expected.star_count)

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (C) 2026 Miroslav Bakoš
 
+import { translate } from "../../i18n/locale";
 import { timedApiFetch } from "../../performance/diagnostics";
 import logo from "../../assets/brand/logo.svg";
 import { useState } from "react";
@@ -88,7 +89,7 @@ export function AboutPanel() {
           variant="danger"
           disabled={restart.isPending || restarting || hostAction !== null}
           onClick={() => {
-            if (!window.confirm("Restart Photon Commander now? Active capture, stacking, and broadcasts will stop.")) return;
+            if (!window.confirm(translate("Restart Photon Commander now? Active capture, stacking, and broadcasts will stop."))) return;
             restart.mutate(undefined, {
               onSuccess: () => {
                 setRestarting(true);
@@ -105,12 +106,12 @@ export function AboutPanel() {
           <div className="mt-3 flex flex-wrap gap-2">
             <Button variant="danger" disabled={!rebootStatus.data?.available || restarting || hostAction !== null || reboot.isPending || shutdown.isPending}
               onClick={() => {
-                if (!window.confirm("Reboot the whole Raspberry Pi now? Photon Commander will disconnect while it boots.")) return;
+                if (!window.confirm(translate("Reboot the whole Raspberry Pi now? Photon Commander will disconnect while it boots."))) return;
                 reboot.mutate(undefined, { onSuccess: (response) => { setHostAction("reboot"); void reconnectAfterHostReboot(response.previous_epoch); } });
               }}>Reboot Raspberry Pi</Button>
             <Button variant="danger" disabled={!shutdownStatus.data?.available || restarting || hostAction !== null || reboot.isPending || shutdown.isPending}
               onClick={() => {
-                if (!window.confirm("Shut down the whole Raspberry Pi now? You will need to power it on physically.")) return;
+                if (!window.confirm(translate("Shut down the whole Raspberry Pi now? You will need to power it on physically."))) return;
                 shutdown.mutate(undefined, { onSuccess: () => { setHostAction("shutdown"); } });
               }}>Shut down Raspberry Pi</Button>
           </div>

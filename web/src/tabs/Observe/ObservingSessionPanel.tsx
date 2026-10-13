@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (C) 2026 Miroslav Bakoš
 
+import { translate } from "../../i18n/locale";
 import { useTelemetryAvailability } from "./useTelemetryAvailability";
 import { ImagePreview } from "../../components/ImagePreview";
 import { Pause, Play, Square } from "lucide-react";
@@ -67,7 +68,7 @@ export function ObservingSessionPanel() {
         <div className="flex flex-wrap gap-2 border-t border-border pt-3">
           {actions.has("pause") && <Button disabled={busy} onClick={() => { pause.mutate(run.run_id); }}><Pause className="size-4" />Pause</Button>}
           {actions.has("resume") && <Button variant="primary" disabled={busy} onClick={() => { resume.mutate(run.run_id); }}><Play className="size-4" />Resume</Button>}
-          {actions.has("stop") && <Button variant="danger" disabled={busy} onClick={() => { if (window.confirm(`Stop ${run.plan_name}? The active item will be aborted and the mount will be parked.`)) stop.mutate(run.run_id); }}><Square className="size-4" />Stop</Button>}
+          {actions.has("stop") && <Button variant="danger" disabled={busy} onClick={() => { if (window.confirm(translate(`Stop ${run.plan_name}? The active item will be aborted and the mount will be parked.`))) stop.mutate(run.run_id); }}><Square className="size-4" />Stop</Button>}
         </div>
       )}
     </Card>

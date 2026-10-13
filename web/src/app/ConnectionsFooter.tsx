@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (C) 2026 Miroslav Bakoš
 
+import { translate, useLanguage } from "../i18n/locale";
 import { useEffect, useState } from "react";
 import { Battery, PictureInPicture2 } from "lucide-react";
 import { useConnectionStore } from "../store/connectionStore";
@@ -56,6 +57,7 @@ import { FullscreenToggle } from "./FullscreenToggle";
  * client-side timer.
  */
 export function ConnectionsFooter({ docked = false }: { docked?: boolean }) {
+  const language = useLanguage();
   const now = useNow(1000);
   const status = useConnectionStore((s) => s.status);
   const lastResync = useConnectionStore((s) => s.lastResync);
@@ -118,8 +120,8 @@ export function ConnectionsFooter({ docked = false }: { docked?: boolean }) {
             : "Discharging";
           const iconColour = !powerKnown ? "text-fg-muted" : powered ? "text-success" : "text-danger";
           return <span className={`inline-flex shrink-0 items-center gap-1 ${stale ? "text-fg-muted" : "text-fg"}`}
-            title={`Battery: ${String(battery.percent ?? "unknown")}% · ${powerLabel} · measured ${battery.measured_at ?? "never"}${stale ? " · stale" : ""}${battery.note ? ` · ${battery.note}` : ""}`}
-            aria-label={`Battery ${String(battery.percent ?? "unknown")} percent, ${powerLabel}${stale ? ", stale" : ""}`}>
+            title={`Battery: ${String(battery.percent ?? translate("unknown", language))}% · ${powerLabel} · measured ${battery.measured_at ?? translate("never", language)}${stale ? " · stale" : ""}${battery.note ? ` · ${battery.note}` : ""}`}
+            aria-label={`Battery ${String(battery.percent ?? translate("unknown", language))} percent, ${powerLabel}${stale ? ", stale" : ""}`}>
             <Battery className={`size-4 ${iconColour}`} aria-hidden="true" />{battery.percent == null ? "—" : `${String(battery.percent)}%`}{stale && "?"}
           </span>;
         })()}
@@ -219,7 +221,7 @@ function FooterActivityEntry({
     polarAlignment,
     autofocus,
     centering,
-    liveStack,
+    liveStack: liveStack ?? undefined,
     mount,
     filterWheel,
     focuser,

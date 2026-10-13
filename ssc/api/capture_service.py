@@ -516,7 +516,7 @@ async def drive_exposure(
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     started_at: datetime | None = None,
     on_stage: Callable[[CaptureStage], None] | None = None,
-    metadata_mode: Literal["full", "solver"] = "full",
+    metadata_mode: Literal["full", "solver", "autofocus"] = "full",
     ready_transport_retries: int = DEFAULT_READY_TRANSPORT_RETRIES,
     unsupported_members: set[str] | None = None,
 ) -> tuple[RawFrame, datetime]:
@@ -559,10 +559,12 @@ async def drive_exposure(
     does not consume optional science-header fields, and waiting serially for
     unsupported/slow driver properties before ``ImageArray`` can turn a
     one-second solve into a minute-long apparent hang. The default ``full``
-    path used for saved captures remains unchanged.
+    path used for saved captures remains unchanged. ``autofocus`` reads only
+    Bayer offsets needed for the focus metric before downloading; unavailable
+    offsets remain unknown, never replaced with a guessed pattern.
     """
     drive_started = time.perf_counter()
-    if metadata_mode not in {"full", "solver"}:
+    if metadata_mode not in {"full", "solver", "autofocus"}:
         raise ValueError(f"unknown exposure metadata mode: {metadata_mode}")
     if on_stage is not None:
         on_stage(CaptureStage.EXPOSING)
@@ -573,8 +575,8 @@ async def drive_exposure(
             # connecting extra devices only to query science-header metadata
             # made a one-second plate solve wait through many 5s driver
             # timeouts before ImageArray was even downloaded.
-            telescope=None if metadata_mode == "solver" else telescope,
-            filterwheel=None if metadata_mode == "solver" else filterwheel,
+            telescope=None if metadata_mode != "full" else telescope,
+            filterwheel=None if metadata_mode != "full" else filterwheel,
             duration_s=duration_s,
             light=light_flag(frame_type),
             now=now,
@@ -647,16 +649,37 @@ async def drive_exposure(
 
     ready_elapsed_s = time.perf_counter() - drive_started
 
-    if metadata_mode == "solver":
+    if metadata_mode in {"solver", "autofocus"}:
         if on_stage is not None:
             on_stage(CaptureStage.TRANSFERRING)
+        metadata_started = time.perf_counter()
+        offset_x = offset_y = None
+        if metadata_mode == "autofocus":
+            raw_x, raw_y = await asyncio.gather(
+                _read_optional(
+                    camera, "bayeroffsetx", label="Camera.BayerOffsetX",
+                    unsupported_members=unsupported_members,
+                ),
+                _read_optional(
+                    camera, "bayeroffsety", label="Camera.BayerOffsetY",
+                    unsupported_members=unsupported_members,
+                ),
+            )
+            offset_x = _as_int(raw_x, label="Camera.BayerOffsetX")
+            offset_y = _as_int(raw_y, label="Camera.BayerOffsetY")
+        metadata_elapsed_s = time.perf_counter() - metadata_started
         transfer_started = time.perf_counter()
         frame_bytes = await _download_image_array(camera)
+        transfer_elapsed_s = time.perf_counter() - transfer_started
         _log.info(
-            "exposure timing frame=%s ready=%.3fs metadata+transfer=%.3fs total=%.3fs",
+            "exposure timing frame=%s mode=%s ready=%.3fs metadata=%.3fs "
+            "transfer=%.3fs metadata+transfer=%.3fs total=%.3fs",
             frame_type.value,
+            metadata_mode,
             ready_elapsed_s,
-            time.perf_counter() - transfer_started,
+            metadata_elapsed_s,
+            transfer_elapsed_s,
+            metadata_elapsed_s + transfer_elapsed_s,
             time.perf_counter() - drive_started,
         )
         metadata = FrameMetadata(
@@ -664,8 +687,8 @@ async def drive_exposure(
             exposure_s=duration_s,
             gain=None,
             ccd_temp_c=None,
-            bayer_offset_x=None,
-            bayer_offset_y=None,
+            bayer_offset_x=offset_x,
+            bayer_offset_y=offset_y,
             pixel_size_um=None,
             ra_deg=None,
             dec_deg=None,
@@ -689,8 +712,6 @@ async def drive_exposure(
     camera_members = (
         ("gain", "Camera.Gain"),
         ("ccdtemperature", "Camera.CCDTemperature"),
-        ("bayeroffsetx", "Camera.BayerOffsetX"),
-        ("bayeroffsety", "Camera.BayerOffsetY"),
         ("pixelsizex", "Camera.PixelSizeX"),
         ("pixelsizey", "Camera.PixelSizeY"),
         ("binx", "Camera.BinX"),
@@ -698,6 +719,7 @@ async def drive_exposure(
         ("startx", "Camera.StartX"),
         ("starty", "Camera.StartY"),
         ("sensorname", "Camera.SensorName"),
+        ("sensortype", "Camera.SensorType"),
         ("offset", "Camera.Offset"),
         ("maxadu", "Camera.MaxADU"),
         ("readoutmode", "Camera.ReadoutMode"),
@@ -728,6 +750,23 @@ async def drive_exposure(
     # native driver can delay otherwise valid small property responses while
     # streaming pixels, exhausting their deliberately short timeout budgets.
     # Header reads still overlap each other and unknown values remain absent.
+    # CFA and filter determine how this raw frame can be interpreted and grouped.
+    # Read their measured values before the supplementary header fanout: a busy
+    # native driver otherwise queues them behind unrelated reads until timeout.
+    # A failed read still stays unknown; never borrow a previous frame's values.
+    raw_bayer_x, raw_bayer_y, filter_name = await asyncio.gather(
+        _read_optional(
+            camera, "bayeroffsetx", label="Camera.BayerOffsetX",
+            unsupported_members=unsupported_members,
+        ),
+        _read_optional(
+            camera, "bayeroffsety", label="Camera.BayerOffsetY",
+            unsupported_members=unsupported_members,
+        ),
+        asyncio.sleep(0, result=None)
+        if filterwheel is None
+        else _read_filter_name(filterwheel, unsupported_members=unsupported_members),
+    )
     camera_values, telescope_values, accessory_values = await asyncio.gather(
         asyncio.gather(
             *(
@@ -754,9 +793,6 @@ async def drive_exposure(
             )
         ),
         asyncio.gather(
-            asyncio.sleep(0, result=None)
-            if filterwheel is None
-            else _read_filter_name(filterwheel, unsupported_members=unsupported_members),
             asyncio.sleep(0, result=None)
             if focuser is None
             else _read_optional(
@@ -786,8 +822,8 @@ async def drive_exposure(
     camera_value = dict(zip((member for member, _label in camera_members), camera_values, strict=True))
     gain = _as_int(camera_value["gain"], label="Camera.Gain")
     ccd_temp_c = _as_float(camera_value["ccdtemperature"], label="Camera.CCDTemperature")
-    offset_x = _as_int(camera_value["bayeroffsetx"], label="Camera.BayerOffsetX")
-    offset_y = _as_int(camera_value["bayeroffsety"], label="Camera.BayerOffsetY")
+    offset_x = _as_int(raw_bayer_x, label="Camera.BayerOffsetX")
+    offset_y = _as_int(raw_bayer_y, label="Camera.BayerOffsetY")
     pixel_size_um = _as_float(camera_value["pixelsizex"], label="Camera.PixelSizeX")
     pixel_size_y_um = _as_float(camera_value["pixelsizey"], label="Camera.PixelSizeY")
     bin_x = _as_int(camera_value["binx"], label="Camera.BinX")
@@ -881,7 +917,7 @@ async def drive_exposure(
         site_lon_deg = context.fallback_site_lon_deg
         _log.info("using canonical observing location for incomplete FITS site metadata")
 
-    filter_name, focuser_position_raw, focuser_temperature_raw = accessory_values
+    focuser_position_raw, focuser_temperature_raw = accessory_values
     focuser_position = _as_int(focuser_position_raw, label="Focuser.Position")
     focuser_temperature_c = _as_float(
         focuser_temperature_raw, label="Focuser.Temperature"
@@ -915,6 +951,8 @@ async def drive_exposure(
         subframe_y=subframe_y,
         pixel_size_y_um=pixel_size_y_um,
         sensor_name=sensor_name,
+        sensor_type=_as_int(camera_value["sensortype"], label="Camera.SensorType"),
+        sensor_metadata_checked=True,
         camera_offset=camera_offset,
         max_adu=max_adu,
         readout_mode=readout_mode,

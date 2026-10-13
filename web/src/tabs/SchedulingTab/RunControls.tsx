@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (C) 2026 Miroslav Bakoš
 
+import { translate } from "../../i18n/locale";
 import {
   usePauseRun,
   useResumeInterruptedRun,
@@ -65,9 +66,10 @@ interface RunControlsProps {
   timeZone: string | undefined;
   startBlockedReason: string | null;
   itemLabel: (itemId: string) => string;
+  onExecutionStart?: (planId: string) => void;
 }
 
-export function RunControls({ planId, nightDate, timeZone, startBlockedReason, itemLabel }: RunControlsProps) {
+export function RunControls({ planId, nightDate, timeZone, startBlockedReason, itemLabel, onExecutionStart }: RunControlsProps) {
   const snapshot = useConnectionStore((state) => state.snapshot);
   const capture = useCaptureState();
   const archive = useArchiveEntriesQuery();
@@ -170,15 +172,16 @@ export function RunControls({ planId, nightDate, timeZone, startBlockedReason, i
             onClick={() => {
               if (planId === null || nightDate === null) return;
               const parked = snapshot?.mount?.at_park === true || snapshot?.mount?.at_home === true;
-              if (parked && !window.confirm("The telescope is parked or at home. Allow this plan to unpark and move it?")) return;
+              if (parked && !window.confirm(translate("The telescope is parked or at home. Allow this plan to unpark and move it?"))) return;
               if (
                 restarting && !parked &&
                 !window.confirm(
-                  `Start a new run of ${run.plan_name} for ${nightDate}? The previous run will remain in its history.`,
+                  translate(`Start a new run of ${run.plan_name} for ${nightDate}? The previous run will remain in its history.`),
                 )
               ) {
                 return;
               }
+              onExecutionStart?.(planId);
               start.mutate({ planId, nightDate });
             }}
           >
@@ -201,6 +204,7 @@ export function RunControls({ planId, nightDate, timeZone, startBlockedReason, i
             variant="primary"
             disabled={busy}
             onClick={() => {
+              onExecutionStart?.(run.plan_id);
               resume.mutate(run.run_id);
             }}
           >
@@ -212,6 +216,7 @@ export function RunControls({ planId, nightDate, timeZone, startBlockedReason, i
             variant="primary"
             disabled={busy}
             onClick={() => {
+              onExecutionStart?.(run.plan_id);
               resumeInterrupted.mutate(run.run_id);
             }}
           >

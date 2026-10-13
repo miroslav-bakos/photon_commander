@@ -782,3 +782,71 @@ def test_header_grouping_rejects_mixed_and_out_of_order_provenance(tmp_path):
     engine.add_frame(paths["legacy"])
     with pytest.raises(LiveStackError, match="cannot mix"):
         engine.add_frame(paths["a"])
+
+
+@pytest.mark.parametrize("binning", [1, 2])
+def test_missing_cfa_preserves_stack_and_dither_group_until_next_valid_frame(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, binning: int
+) -> None:
+    metadata = replace(_metadata(), bayer_offset_x=1, bayer_offset_y=0, dither_group_id="A")
+    pixels = np.arange(64 * 64, dtype=np.uint16).reshape(64, 64)
+    first, incomplete, next_valid = (tmp_path / name for name in ("first.fits", "4572.fits", "next.fits"))
+    write_fits_file(first, pixels, metadata)
+    write_fits_file(incomplete, pixels, replace(metadata, bayer_offset_y=None, dither_group_id="B"))
+    write_fits_file(next_valid, pixels, replace(metadata, dither_group_id="B"))
+    monkeypatch.setattr(
+        "ssc.stacking.live.register_translation",
+        lambda *_args: RegistrationResult(0.0, 0.0, None, None, None, None, 0.9, 0.1, 9.0),
+    )
+    engine = LiveStackEngine(tmp_path)
+    engine.reset(binning=binning)
+    before = engine.add_frame(first)
+    previous_pixels = engine.pixels.copy()
+    with pytest.raises(LiveStackError, match="Bayer provenance is missing"):
+        engine.add_frame(incomplete)
+    assert engine.run == before
+    np.testing.assert_array_equal(engine.pixels, previous_pixels)
+    assert incomplete.exists()
+    assert "BAYERPAT" not in read_fits_image(incomplete.read_bytes()).header
+    recovered = engine.add_frame(next_valid)
+    assert recovered.frame_paths == (first, next_valid)
+
+
+@pytest.mark.parametrize("sensor_type", [None, 2])
+def test_first_missing_cfa_waits_for_first_valid_frame_without_seeding_mono(
+    tmp_path: Path, sensor_type: int | None
+) -> None:
+    pixels = np.arange(64 * 64, dtype=np.uint16).reshape(64, 64)
+    incomplete, good = tmp_path / "missing-cfa.fits", tmp_path / "measured-cfa.fits"
+    metadata = replace(
+        _metadata(), sensor_type=sensor_type, sensor_metadata_checked=True,
+        bayer_offset_x=None, bayer_offset_y=None,
+    )
+    write_fits_file(incomplete, pixels, metadata)
+    write_fits_file(good, pixels, replace(metadata, sensor_type=2, bayer_offset_x=1, bayer_offset_y=0))
+    engine = LiveStackEngine(tmp_path)
+    before = engine.reset()
+    with pytest.raises(LiveStackError, match="Bayer provenance is missing"):
+        engine.add_frame(incomplete)
+    assert engine.run == before
+    assert engine.pixels is None
+    assert incomplete.exists()
+    recovered = engine.add_frame(good)
+    assert recovered.frame_paths == (good,)
+    assert engine.pixels.shape == (64, 64, 3)
+
+
+def test_measured_mono_accepts_placeholder_offsets_without_inventing_cfa(tmp_path: Path) -> None:
+    frame = tmp_path / "mono.fits"
+    pixels = np.arange(64 * 64, dtype=np.uint16).reshape(64, 64)
+    write_fits_file(frame, pixels, replace(
+        _metadata(), sensor_type=0, sensor_metadata_checked=True,
+        bayer_offset_x=0, bayer_offset_y=0,
+    ))
+    header = read_fits_image(frame.read_bytes()).header
+    assert header["SENSTYPE"] == 0
+    assert header["CFASTATE"] == "mono"
+    assert "BAYERPAT" not in header
+    engine = LiveStackEngine(tmp_path)
+    engine.add_frame(frame)
+    assert engine.pixels.shape == pixels.shape

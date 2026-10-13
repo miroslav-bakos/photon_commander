@@ -10,6 +10,7 @@
  * a modal: a modal on a phone in the dark is one more thing to find.
  */
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { DeletePlanIcon, NewPlanIcon, RenamePlanIcon } from "../../components/ActionIcons";
 import { Button } from "../../components/Button";
 import { Card, CardTitle } from "../../components/Card";
@@ -26,6 +27,8 @@ export function PlanPicker({
   onRename,
   onDelete,
   busy,
+  readOnly = false,
+  editingControl,
   error,
 }: {
   plans: readonly PlanSummary[];
@@ -35,6 +38,8 @@ export function PlanPicker({
   onRename: (name: string) => void;
   onDelete: () => void;
   busy: boolean;
+  readOnly?: boolean;
+  editingControl?: ReactNode;
   error: string | null;
 }) {
   const [mode, setMode] = useState<"idle" | "create" | "rename" | "confirm-delete">("idle");
@@ -44,6 +49,7 @@ export function PlanPicker({
   const submitName = () => {
     const trimmed = name.trim();
     if (trimmed === "") return;
+    if (mode === "rename" && readOnly) return;
     if (mode === "create") onCreate(trimmed);
     if (mode === "rename") onRename(trimmed);
     setMode("idle");
@@ -52,7 +58,10 @@ export function PlanPicker({
 
   return (
     <Card className="space-y-3">
-      <CardTitle>Plan</CardTitle>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <CardTitle>Plan</CardTitle>
+        {editingControl}
+      </div>
 
       {plans.length === 0 ? (
         <p className="text-sm text-fg-muted">No plans yet. Create one to start scheduling a night.</p>
@@ -94,12 +103,13 @@ export function PlanPicker({
           <Field
             label={mode === "create" ? "New plan name" : "Rename plan"}
             value={name}
+            disabled={mode === "rename" && readOnly}
             onChange={(e) => {
               setName(e.target.value);
             }}
           />
           <div className="flex gap-2">
-            <Button type="submit" variant="primary" className="flex-1" disabled={busy || name.trim() === ""}>
+            <Button type="submit" variant="primary" className="flex-1" disabled={busy || (mode === "rename" && readOnly) || name.trim() === ""}>
               {mode === "create" ? <NewPlanIcon /> : <RenamePlanIcon />}
               {mode === "create" ? "Create" : "Save name"}
             </Button>
@@ -125,7 +135,7 @@ export function PlanPicker({
             <Button
               variant="danger"
               className="flex-1"
-              disabled={busy}
+              disabled={busy || readOnly}
               onClick={() => {
                 onDelete();
                 setMode("idle");
@@ -164,7 +174,7 @@ export function PlanPicker({
             <>
               <Button
                 className="flex-1"
-                disabled={busy}
+                disabled={busy || readOnly}
                 onClick={() => {
                   setName(selected.name);
                   setMode("rename");
@@ -176,7 +186,7 @@ export function PlanPicker({
               <Button
                 variant="danger"
                 className="flex-1"
-                disabled={busy}
+                disabled={busy || readOnly}
                 onClick={() => {
                   setMode("confirm-delete");
                 }}

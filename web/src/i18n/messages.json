@@ -7726,5 +7726,3189 @@
   "Free software under GPL-3.0-only. Third-party components retain their own licences.": [
     "Slobodný softvér pod licenciou GPL-3.0-only. Komponenty tretích strán si zachovávajú vlastné licencie.",
     "Svobodný software pod licencí GPL-3.0-only. Komponenty třetích stran si zachovávají vlastní licence."
+  ],
+  "Lock": [
+    "Zamknúť",
+    "Zamknout"
+  ],
+  "Unlock": [
+    "Odomknúť",
+    "Odemknout"
+  ],
+  "Lock plan": [
+    "Zamknúť plán",
+    "Zamknout plán"
+  ],
+  "Unlock plan": [
+    "Odomknúť plán",
+    "Odemknout plán"
+  ],
+  "Plan locked. Unlock to edit values or move timeline items.": [
+    "Plán je zamknutý. Pred úpravou hodnôt alebo presunom položiek na časovej osi ho odomknite.",
+    "Plán je zamknutý. Před úpravou hodnot nebo přesunem položek na časové ose jej odemkněte."
+  ],
+  "The mount will unpark and slew straight up to the zenith. Remove any loose phone or flat panel until motion finishes, and make sure the telescope and cables are clear. Continue?": [
+    "Montáž sa odparkuje a presunie priamo k zenitu. Kým sa pohyb neskončí, odstráňte voľne položený telefón alebo flat panel a skontrolujte, či má ďalekohľad aj káble voľný priestor. Pokračovať?",
+    "Montáž se odparkuje a přesune přímo k zenitu. Dokud pohyb neskončí, odstraňte volně položený telefon nebo flat panel a zkontrolujte, zda má dalekohled i kabely volný prostor. Pokračovat?"
+  ],
+  "Bias uses the camera's shortest supported exposure.": [
+    "Bias používa najkratšiu expozíciu podporovanú kamerou.",
+    "Bias používá nejkratší expozici podporovanou kamerou."
+  ],
+  "Blank repeats until stopped.": [
+    "Prázdne pole znamená opakovanie až do zastavenia.",
+    "Prázdné pole znamená opakování až do zastavení."
+  ],
+  "Enter a positive whole number.": [
+    "Zadajte kladné celé číslo.",
+    "Zadejte kladné celé číslo."
+  ],
+  "A bias needs no target.": [
+    "Bias nepotrebuje cieľ.",
+    "Bias nepotřebuje cíl."
+  ],
+  "Twilight sky": [
+    "Obloha za súmraku",
+    "Obloha za soumraku"
+  ],
+  "Slot {a}": [
+    "Pozícia {a}",
+    "Pozice {a}"
+  ],
+  "· {a} compatible biases": [
+    "· {a} kompatibilných bias snímok",
+    "· {a} kompatibilních bias snímků"
+  ],
+  "· {a} stars": [
+    "· {a} hviezd",
+    "· {a} hvězd"
+  ],
+  "· avg {a} °C": [
+    "· priemer {a} °C",
+    "· průměr {a} °C"
+  ],
+  "Preview {a}": [
+    "Náhľad {a}",
+    "Náhled {a}"
+  ],
+  "Select folder {a}": [
+    "Vybrať priečinok {a}",
+    "Vybrat složku {a}"
+  ],
+  "Open {a} folder contents": [
+    "Otvoriť obsah priečinka {a}",
+    "Otevřít obsah složky {a}"
+  ],
+  "Select {a}": [
+    "Vybrať {a}",
+    "Vybrat {a}"
+  ],
+  "Open {a}": [
+    "Otvoriť {a}",
+    "Otevřít {a}"
+  ],
+  "Could not download the selected archive items.": [
+    "Vybrané položky archívu sa nepodarilo stiahnuť.",
+    "Vybrané položky archivu se nepodařilo stáhnout."
+  ],
+  "the capture folder": [
+    "priečinok snímok",
+    "složka snímků"
+  ],
+  "{a} selected items": [
+    "Vybrané položky: {a}",
+    "Vybrané položky: {a}"
+  ],
+  "Untitled session": [
+    "Relácia bez názvu",
+    "Relace bez názvu"
+  ],
+  "Night quality: {a}. Open score factors.": [
+    "Kvalita noci: {a}. Otvoriť faktory hodnotenia.",
+    "Kvalita noci: {a}. Otevřít faktory hodnocení."
+  ],
+  "Open {a} scheduled for {b}": [
+    "Otvoriť {a} naplánované na {b}",
+    "Otevřít {a} naplánované na {b}"
+  ],
+  "an unscheduled night": [
+    "nenaplánovanú noc",
+    "nenaplánovanou noc"
+  ],
+  "{a} saved frames": [
+    "Uložené snímky: {a}",
+    "Uložené snímky: {a}"
+  ],
+  "{a} min recorded": [
+    "Zaznamenané: {a} min",
+    "Zaznamenáno: {a} min"
+  ],
+  "connection unknown": [
+    "pripojenie neznáme",
+    "připojení neznámé"
+  ],
+  "— last polled {a}": [
+    "— posledná kontrola {a}",
+    "— poslední kontrola {a}"
+  ],
+  "{a}: position {b}, HFR {c} px, {d} stars": [
+    "{a}: poloha {b}, HFR {c} px, {d} hviezd",
+    "{a}: poloha {b}, HFR {c} px, {d} hvězd"
+  ],
+  "This frame no longer exists.": [
+    "Táto snímka už neexistuje.",
+    "Tento snímek již neexistuje."
+  ],
+  "Not ready yet — still stacking or debayering.": [
+    "Zatiaľ nepripravené — prebieha skladanie alebo debayerizácia.",
+    "Zatím nepřipraveno — probíhá skládání nebo debayerizace."
+  ],
+  "Could not load this frame's image (HTTP {a}).": [
+    "Obraz tejto snímky sa nepodarilo načítať (HTTP {a}).",
+    "Obraz tohoto snímku se nepodařilo načíst (HTTP {a})."
+  ],
+  "Could not load this frame's image.": [
+    "Obraz tejto snímky sa nepodarilo načítať.",
+    "Obraz tohoto snímku se nepodařilo načíst."
+  ],
+  "Quality: …": [
+    "Kvalita: …",
+    "Kvalita: …"
+  ],
+  "Quality: unavailable": [
+    "Kvalita: nedostupná",
+    "Kvalita: nedostupná"
+  ],
+  "Frame #{a}": [
+    "Snímka č. {a}",
+    "Snímek č. {a}"
+  ],
+  "Dithering mount": [
+    "Dithering montáže",
+    "Dithering montáže"
+  ],
+  "Transferring picture": [
+    "Prenos snímky",
+    "Přenos snímku"
+  ],
+  "Could not read the filter wheel.": [
+    "Filtračné koleso sa nepodarilo načítať.",
+    "Filtrové kolo se nepodařilo načíst."
+  ],
+  "Could not change filter position.": [
+    "Pozíciu filtra sa nepodarilo zmeniť.",
+    "Pozici filtru se nepodařilo změnit."
+  ],
+  "Could not read focuser position.": [
+    "Polohu zaostrovača sa nepodarilo načítať.",
+    "Polohu ostřicího zařízení se nepodařilo načíst."
+  ],
+  "Decrease by {a}": [
+    "Znížiť o {a}",
+    "Snížit o {a}"
+  ],
+  "Increase by {a}": [
+    "Zvýšiť o {a}",
+    "Zvýšit o {a}"
+  ],
+  "Move failed.": [
+    "Pohyb zlyhal.",
+    "Pohyb selhal."
+  ],
+  "Halt failed.": [
+    "Zastavenie zlyhalo.",
+    "Zastavení selhalo."
+  ],
+  "Could not start autofocus.": [
+    "Automatické zaostrovanie sa nepodarilo spustiť.",
+    "Automatické ostření se nepodařilo spustit."
+  ],
+  "Not tracking": [
+    "Sledovanie vypnuté",
+    "Sledování vypnuto"
+  ],
+  "Status unknown": [
+    "Stav neznámy",
+    "Stav neznámý"
+  ],
+  "Quality request failed ({a})": [
+    "Požiadavka na kvalitu zlyhala ({a})",
+    "Požadavek na kvalitu selhal ({a})"
+  ],
+  "{a} · Last reading": [
+    "{a} · Posledná hodnota",
+    "{a} · Poslední hodnota"
+  ],
+  "{a} / continuous": [
+    "{a} / nepretržite",
+    "{a} / nepřetržitě"
+  ],
+  "{a} / until {b}": [
+    "{a} / do {b}",
+    "{a} / do {b}"
+  ],
+  "{a}° total": [
+    "Celkom {a}°",
+    "Celkem {a}°"
+  ],
+  "Could not prepare the report. Check the connection and try again.": [
+    "Hlásenie sa nepodarilo pripraviť. Skontrolujte pripojenie a skúste znova.",
+    "Hlášení se nepodařilo připravit. Zkontrolujte připojení a zkuste znovu."
+  ],
+  "Accepted for email delivery. Report ID: {a}": [
+    "Prijaté na odoslanie e-mailom. ID hlásenia: {a}",
+    "Přijato k odeslání e-mailem. ID hlášení: {a}"
+  ],
+  "Delivery was not confirmed. Download this report or retry with the same report ID.": [
+    "Doručenie nebolo potvrdené. Stiahnite hlásenie alebo skúste znova s rovnakým ID hlásenia.",
+    "Doručení nebylo potvrzeno. Stáhněte hlášení nebo zkuste znovu se stejným ID hlášení."
+  ],
+  "Could not browse that folder.": [
+    "Tento priečinok sa nepodarilo prehliadať.",
+    "Tuto složku se nepodařilo procházet."
+  ],
+  "Live stack {a}": [
+    "Priebežný stack {a}",
+    "Průběžný stack {a}"
+  ],
+  "Calibrating, registering, and integrating {a}…": [
+    "Kalibrácia, registrácia a integrácia {a}…",
+    "Kalibrace, registrace a integrace {a}…"
+  ],
+  "Waiting for {a} file(s) to finish writing…": [
+    "Čaká sa na dokončenie zápisu súborov: {a}…",
+    "Čeká se na dokončení zápisu souborů: {a}…"
+  ],
+  "WARNING: dark temperature mismatch": [
+    "UPOZORNENIE: teplota dark snímok sa nezhoduje",
+    "UPOZORNĚNÍ: teplota dark snímků se neshoduje"
+  ],
+  "Live stack could not be updated.": [
+    "Priebežný stack sa nepodarilo aktualizovať.",
+    "Průběžný stack se nepodařilo aktualizovat."
+  ],
+  "Capture continues, but new frames may not be added to the stack.": [
+    "Snímanie pokračuje, ale nové snímky sa nemusia pridať do stacku.",
+    "Snímání pokračuje, ale nové snímky se nemusí přidat do stacku."
+  ],
+  "Check the watch folder and calibration masters, then start a new stack.": [
+    "Skontrolujte sledovaný priečinok a hlavné kalibračné snímky, potom spustite nový stack.",
+    "Zkontrolujte sledovanou složku a hlavní kalibrační snímky, potom spusťte nový stack."
+  ],
+  "Secondary axis, positive direction (Dec/Alt) — press and hold": [
+    "Sekundárna os, kladný smer (Dec/Alt) — stlačte a podržte",
+    "Sekundární osa, kladný směr (Dec/Alt) — stiskněte a podržte"
+  ],
+  "Primary axis, negative direction (RA/Az) — press and hold": [
+    "Primárna os, záporný smer (RA/Az) — stlačte a podržte",
+    "Primární osa, záporný směr (RA/Az) — stiskněte a podržte"
+  ],
+  "Primary axis, positive direction (RA/Az) — press and hold": [
+    "Primárna os, kladný smer (RA/Az) — stlačte a podržte",
+    "Primární osa, kladný směr (RA/Az) — stiskněte a podržte"
+  ],
+  "Secondary axis, negative direction (Dec/Alt) — press and hold": [
+    "Sekundárna os, záporný smer (Dec/Alt) — stlačte a podržte",
+    "Sekundární osa, záporný směr (Dec/Alt) — stiskněte a podržte"
+  ],
+  "Solar-system body at the current time": [
+    "Teleso Slnečnej sústavy v aktuálnom čase",
+    "Těleso Sluneční soustavy v aktuálním čase"
+  ],
+  "Altitude ↑": [
+    "Výška ↑",
+    "Výška ↑"
+  ],
+  "Altitude ↓": [
+    "Výška ↓",
+    "Výška ↓"
+  ],
+  "Azimuth ← West": [
+    "Azimut ← západ",
+    "Azimut ← západ"
+  ],
+  "Azimuth → East": [
+    "Azimut → východ",
+    "Azimut → východ"
+  ],
+  "unknown age": [
+    "neznámy vek údajov",
+    "neznámé stáří údajů"
+  ],
+  "just now": [
+    "práve teraz",
+    "právě teď"
+  ],
+  "{a}s ago": [
+    "pred {a} s",
+    "před {a} s"
+  ],
+  "{a}m ago": [
+    "pred {a} min",
+    "před {a} min"
+  ],
+  "{a} accepted · {b} rejected": [
+    "Prijaté: {a} · Odmietnuté: {b}",
+    "Přijaté: {a} · Odmítnuté: {b}"
+  ],
+  "Stop {a}? The active item will be aborted and the mount will be parked.": [
+    "Zastaviť {a}? Aktívna položka sa preruší a montáž sa zaparkuje.",
+    "Zastavit {a}? Aktivní položka se přeruší a montáž se zaparkuje."
+  ],
+  "1 · Connect": [
+    "1 · Pripojenie",
+    "1 · Připojení"
+  ],
+  "Discover your telescope": [
+    "Vyhľadajte svoj ďalekohľad",
+    "Vyhledejte svůj dalekohled"
+  ],
+  "2 · Prepare": [
+    "2 · Príprava",
+    "2 · Příprava"
+  ],
+  "Choose targets and check your plan": [
+    "Vyberte ciele a skontrolujte plán",
+    "Vyberte cíle a zkontrolujte plán"
+  ],
+  "3 · Observe": [
+    "3 · Pozorovanie",
+    "3 · Pozorování"
+  ],
+  "Capture, progress and controls": [
+    "Snímanie, priebeh a ovládanie",
+    "Snímání, průběh a ovládání"
+  ],
+  "4 · Review": [
+    "4 · Vyhodnotenie",
+    "4 · Vyhodnocení"
+  ],
+  "Saved frames and night results": [
+    "Uložené snímky a výsledky noci",
+    "Uložené snímky a výsledky noci"
+  ],
+  "Moon down": [
+    "Mesiac pod horizontom",
+    "Měsíc pod obzorem"
+  ],
+  "Moon far": [
+    "Mesiac ďaleko",
+    "Měsíc daleko"
+  ],
+  "Moon interferes": [
+    "Mesiac ruší",
+    "Měsíc ruší"
+  ],
+  "Fits the field": [
+    "Zmestí sa do poľa",
+    "Vejde se do pole"
+  ],
+  "Larger than the field": [
+    "Väčší než pole",
+    "Větší než pole"
+  ],
+  "Small in this field": [
+    "Malý v tomto poli",
+    "Malý v tomto poli"
+  ],
+  "Moon up {a} – {b}": [
+    "Mesiac nad horizontom {a} – {b}",
+    "Měsíc nad obzorem {a} – {b}"
+  ],
+  "The selected comet identity is unavailable.": [
+    "Identita vybranej kométy je nedostupná.",
+    "Identita vybrané komety je nedostupná."
+  ],
+  "Comets can currently be scheduled as a single field, not a mosaic.": [
+    "Kométy možno zatiaľ plánovať ako jedno pole, nie ako mozaiku.",
+    "Komety lze zatím plánovat jako jedno pole, nikoli jako mozaiku."
+  ],
+  "A resolved target (pick one on the left)": [
+    "Určený cieľ (vyberte vľavo)",
+    "Určený cíl (vyberte vlevo)"
+  ],
+  "Plan for {a}": [
+    "Plán na {a}",
+    "Plán na {a}"
+  ],
+  "could not send to Scheduling": [
+    "nepodarilo sa odoslať do Execute",
+    "nepodařilo se odeslat do Execute"
+  ],
+  "{a} independently timed panel items": [
+    "Samostatne načasované panely: {a}",
+    "Samostatně načasované panely: {a}"
+  ],
+  "ALT/AZ mount preview": [
+    "Náhľad azimutálnej montáže",
+    "Náhled azimutální montáže"
+  ],
+  "Equatorial mount preview": [
+    "Náhľad rovníkovej montáže",
+    "Náhled rovníkové montáže"
+  ],
+  "{a} field of view preview": [
+    "Náhľad zorného poľa {a}",
+    "Náhled zorného pole {a}"
+  ],
+  "{a} — does not occur tonight": [
+    "{a} — túto noc nenastane",
+    "{a} — tuto noc nenastane"
+  ],
+  "Clear {a}": [
+    "Vymazať {a}",
+    "Vymazat {a}"
+  ],
+  "Double star": [
+    "Dvojhviezda",
+    "Dvojhvězda"
+  ],
+  "Stellar association": [
+    "Hviezdna asociácia",
+    "Hvězdná asociace"
+  ],
+  "Open cluster": [
+    "Otvorená hviezdokopa",
+    "Otevřená hvězdokupa"
+  ],
+  "Globular cluster": [
+    "Guľová hviezdokopa",
+    "Kulová hvězdokupa"
+  ],
+  "Star cloud": [
+    "Hviezdny oblak",
+    "Hvězdný oblak"
+  ],
+  "Planetary nebula": [
+    "Planetárna hmlovina",
+    "Planetární mlhovina"
+  ],
+  "Reflection nebula": [
+    "Reflexná hmlovina",
+    "Reflexní mlhovina"
+  ],
+  "Dark nebula": [
+    "Tmavá hmlovina",
+    "Temná mlhovina"
+  ],
+  "Diffuse nebula": [
+    "Difúzna hmlovina",
+    "Difuzní mlhovina"
+  ],
+  "Supernova remnant": [
+    "Pozostatok supernovy",
+    "Pozůstatek supernovy"
+  ],
+  "Unconfirmed object": [
+    "Nepotvrdený objekt",
+    "Nepotvrzený objekt"
+  ],
+  "The observing site's local noon could not be resolved.": [
+    "Miestne poludnie pozorovacieho miesta sa nepodarilo určiť.",
+    "Místní poledne pozorovacího místa se nepodařilo určit."
+  ],
+  "{a} does not occur — the sun stays above that altitude all night at this location and date.": [
+    "{a} nenastane — Slnko zostáva nad touto výškou celú noc v tomto mieste a dátume.",
+    "{a} nenastane — Slunce zůstává nad touto výškou celou noc v tomto místě a datu."
+  ],
+  "{a} does not occur — the sun stays below that altitude all night at this location and date.": [
+    "{a} nenastane — Slnko zostáva pod touto výškou celú noc v tomto mieste a dátume.",
+    "{a} nenastane — Slunce zůstává pod touto výškou celou noc v tomto místě a datu."
+  ],
+  "{a} does not fall inside the selected night.": [
+    "{a} nepatrí do vybranej noci.",
+    "{a} nespadá do vybrané noci."
+  ],
+  "{a} was not returned for this night.": [
+    "{a} nebolo vrátené pre túto noc.",
+    "{a} nebylo vráceno pro tuto noc."
+  ],
+  "The mount is {a}. Polar alignment must open the arm and move the scope. Confirm that it is safe to move before continuing.": [
+    "Montáž je {a}. Polárne zarovnanie musí otvoriť rameno a pohnúť ďalekohľadom. Pred pokračovaním potvrďte, že pohyb je bezpečný.",
+    "Montáž je {a}. Polární ustavení musí otevřít rameno a pohnout dalekohledem. Před pokračováním potvrďte, že pohyb je bezpečný."
+  ],
+  "The mount is {a}. Recheck must move through {b} sky positions. Confirm that it is safe to move before continuing.": [
+    "Montáž je {a}. Opätovná kontrola vyžaduje presun cez {b} pozícií na oblohe. Pred pokračovaním potvrďte, že pohyb je bezpečný.",
+    "Montáž je {a}. Opětovná kontrola vyžaduje přesun přes {b} pozic na obloze. Před pokračováním potvrďte, že pohyb je bezpečný."
+  ],
+  "5+ adds residual checks": [
+    "5 a viac pridáva kontrolu rezíduí",
+    "5 a více přidává kontrolu reziduí"
+  ],
+  "{a}° between points": [
+    "{a}° medzi bodmi",
+    "{a}° mezi body"
+  ],
+  "Separation from mount pointing: {a} (mount has not reported a position yet).": [
+    "Vzdialenosť od smeru montáže: {a} (montáž zatiaľ neposlala polohu).",
+    "Vzdálenost od směru montáže: {a} (montáž zatím neposlala polohu)."
+  ],
+  "Separation from mount pointing: {a}′": [
+    "Vzdialenosť od smeru montáže: {a}′",
+    "Vzdálenost od směru montáže: {a}′"
+  ],
+  "the Seestar app field": [
+    "pole aplikácie Seestar",
+    "pole aplikace Seestar"
+  ],
+  "the coordinates you entered": [
+    "zadané súradnice",
+    "zadané souřadnice"
+  ],
+  "Solve {a}. A single field cannot verify polar alignment after movement. Stop live capture and run a new five-point measurement.": [
+    "Riešenie {a}. Jedno pole nemôže overiť polárne zarovnanie po pohybe. Zastavte živé snímanie a spustite nové päťbodové meranie.",
+    "Řešení {a}. Jedno pole nemůže ověřit polární ustavení po pohybu. Zastavte živé snímání a spusťte nové pětibodové měření."
+  ],
+  "Artificial sky · no device commands": [
+    "Umelá obloha · bez príkazov zariadeniu",
+    "Umělá obloha · bez příkazů zařízení"
+  ],
+  "Simulation failed": [
+    "Simulácia zlyhala",
+    "Simulace selhala"
+  ],
+  "Duration (minutes)": [
+    "Trvanie (minúty)",
+    "Doba trvání (minuty)"
+  ],
+  "An estimate for the timeline, not a completion signal. Blank means instantaneous.": [
+    "Odhad pre časovú os, nie signál dokončenia. Prázdne pole znamená okamžitú akciu.",
+    "Odhad pro časovou osu, nikoli signál dokončení. Prázdné pole znamená okamžitou akci."
+  ],
+  "Positive is after, negative is before.": [
+    "Kladné znamená po udalosti, záporné pred udalosťou.",
+    "Kladné znamená po události, záporné před událostí."
+  ],
+  "Position {a}": [
+    "Pozícia {a}",
+    "Pozice {a}"
+  ],
+  "Offline filter choices; the selected name is checked against the wheel when the plan runs.": [
+    "Offline výber filtrov; vybraný názov sa pri spustení plánu overí na filtračnom kolese.",
+    "Offline výběr filtrů; vybraný název se při spuštění plánu ověří na filtrovém kole."
+  ],
+  "Duration per panel (minutes)": [
+    "Trvanie na panel (minúty)",
+    "Doba trvání na panel (minuty)"
+  ],
+  "Timeline and ASAP chaining only. The action still finishes from device state.": [
+    "Iba pre časovú os a nadväzovanie ASAP. Akcia sa naďalej dokončuje podľa stavu zariadenia.",
+    "Pouze pro časovou osu a navazování ASAP. Akce se nadále dokončuje podle stavu zařízení."
+  ],
+  "Failure guard for asynchronous device completion, never a success timer.": [
+    "Limit zlyhania pre asynchrónne dokončenie zariadenia, nikdy časovač úspechu.",
+    "Limit selhání pro asynchronní dokončení zařízení, nikdy časovač úspěchu."
+  ],
+  "(leave unchanged)": [
+    "(ponechať bez zmeny)",
+    "(ponechat beze změny)"
+  ],
+  "Wait for reconnection.": [
+    "Počkajte na obnovenie spojenia.",
+    "Počkejte na obnovení spojení."
+  ],
+  "Set the site in Settings → Location.": [
+    "Nastavte miesto v Nastavenia → Poloha.",
+    "Nastavte místo v Nastavení → Poloha."
+  ],
+  "Connect the mount in Settings → Devices.": [
+    "Pripojte montáž v Nastavenia → Zariadenia.",
+    "Připojte montáž v Nastavení → Zařízení."
+  ],
+  "Connect the camera in Settings → Devices.": [
+    "Pripojte kameru v Nastavenia → Zariadenia.",
+    "Připojte kameru v Nastavení → Zařízení."
+  ],
+  "Choose a capture folder in Settings.": [
+    "Vyberte priečinok snímok v nastaveniach.",
+    "Vyberte složku snímků v nastavení."
+  ],
+  "Less than 1 GB remains. Free capture storage before starting.": [
+    "Zostáva menej než 1 GB. Pred spustením uvoľnite úložisko snímok.",
+    "Zbývá méně než 1 GB. Před spuštěním uvolněte úložiště snímků."
+  ],
+  "Storage could not be checked; verify it in Library.": [
+    "Úložisko sa nepodarilo skontrolovať; overte ho v knižnici.",
+    "Úložiště se nepodařilo zkontrolovat; ověřte jej v knihovně."
+  ],
+  "Conditions could not be checked; verify the sky before starting.": [
+    "Podmienky sa nepodarilo skontrolovať; pred spustením overte stav oblohy.",
+    "Podmínky se nepodařilo zkontrolovat; před spuštěním ověřte stav oblohy."
+  ],
+  "Select a plan and observing night.": [
+    "Vyberte plán a pozorovaciu noc.",
+    "Vyberte plán a pozorovací noc."
+  ],
+  "Autofocus steps will fail unless a focuser is connected.": [
+    "Kroky automatického zaostrovania zlyhajú, ak zaostrovač nie je pripojený.",
+    "Kroky automatického ostření selžou, pokud ostřicí zařízení není připojeno."
+  ],
+  "Waiting for live server state.": [
+    "Čaká sa na aktuálny stav servera.",
+    "Čeká se na aktuální stav serveru."
+  ],
+  "Select or create a plan first.": [
+    "Najskôr vyberte alebo vytvorte plán.",
+    "Nejprve vyberte nebo vytvořte plán."
+  ],
+  "Stop {a} before starting another run.": [
+    "Pred spustením ďalšieho behu zastavte {a}.",
+    "Před spuštěním dalšího běhu zastavte {a}."
+  ],
+  "The telescope is parked or at home. Allow this plan to unpark and move it?": [
+    "Ďalekohľad je zaparkovaný alebo v domovskej polohe. Povoliť plánu odparkovanie a pohyb?",
+    "Dalekohled je zaparkovaný nebo v domovské poloze. Povolit plánu odparkování a pohyb?"
+  ],
+  "Start a new run of {a} for {b}? The previous run will remain in its history.": [
+    "Spustiť nový beh {a} na {b}? Predchádzajúci beh zostane v histórii.",
+    "Spustit nový běh {a} na {b}? Předchozí běh zůstane v historii."
+  ],
+  "The plan did not change state.": [
+    "Stav plánu sa nezmenil.",
+    "Stav plánu se nezměnil."
+  ],
+  "Resolve the failed preflight item, then try the command again.": [
+    "Vyriešte neúspešnú položku kontroly pred spustením a potom skúste príkaz znova.",
+    "Vyřešte neúspěšnou položku kontroly před spuštěním a potom zkuste příkaz znovu."
+  ],
+  "The save was not confirmed. Your pending change is kept here; check the server before retrying.": [
+    "Uloženie nebolo potvrdené. Rozpracovaná zmena je tu zachovaná; pred opakovaním skontrolujte server.",
+    "Uložení nebylo potvrzeno. Rozpracovaná změna je zde zachována; před opakováním zkontrolujte server."
+  ],
+  "A different plan was returned.": [
+    "Bol vrátený iný plán.",
+    "Byl vrácen jiný plán."
+  ],
+  "The pending change is not in the saved plan. You may retry it against the original revision.": [
+    "Rozpracovaná zmena nie je v uloženom pláne. Môžete ju skúsiť uložiť znova proti pôvodnej revízii.",
+    "Rozpracovaná změna není v uloženém plánu. Můžete ji zkusit uložit znovu proti původní revizi."
+  ],
+  "The saved plan has changed. Your pending change is kept, but it cannot overwrite the newer revision. Review the saved plan before reapplying it.": [
+    "Uložený plán sa zmenil. Rozpracovaná zmena je zachovaná, ale nemôže prepísať novšiu revíziu. Pred opakovaním skontrolujte uložený plán.",
+    "Uložený plán se změnil. Rozpracovaná změna je zachována, ale nemůže přepsat novější revizi. Před opakováním zkontrolujte uložený plán."
+  ],
+  "Cannot check the saved plan yet. Your pending change is still kept; reconnect and check again.": [
+    "Uložený plán zatiaľ nemožno skontrolovať. Rozpracovaná zmena je zachovaná; obnovte spojenie a skontrolujte znova.",
+    "Uložený plán zatím nelze zkontrolovat. Rozpracovaná změna je zachována; obnovte spojení a zkontrolujte znovu."
+  ],
+  "compile failed": [
+    "zostavenie plánu zlyhalo",
+    "sestavení plánu selhalo"
+  ],
+  "could not create the plan": [
+    "plán sa nepodarilo vytvoriť",
+    "plán se nepodařilo vytvořit"
+  ],
+  "could not delete the plan": [
+    "plán sa nepodarilo odstrániť",
+    "plán se nepodařilo odstranit"
+  ],
+  "could not load the plan": [
+    "plán sa nepodarilo načítať",
+    "plán se nepodařilo načíst"
+  ],
+  "could not save the plan": [
+    "plán sa nepodarilo uložiť",
+    "plán se nepodařilo uložit"
+  ],
+  "Check the pending plan save before starting.": [
+    "Pred spustením skontrolujte nepotvrdené uloženie plánu.",
+    "Před spuštěním zkontrolujte nepotvrzené uložení plánu."
+  ],
+  "Wait for the plan save to finish before starting.": [
+    "Pred spustením počkajte na dokončenie uloženia plánu.",
+    "Před spuštěním počkejte na dokončení uložení plánu."
+  ],
+  "Save or cancel the current item edit before starting the plan.": [
+    "Pred spustením plánu uložte alebo zrušte aktuálnu úpravu položky.",
+    "Před spuštěním plánu uložte nebo zrušte aktuální úpravu položky."
+  ],
+  "Fix the plan errors before starting.": [
+    "Pred spustením opravte chyby plánu.",
+    "Před spuštěním opravte chyby plánu."
+  ],
+  "Fix the compiled schedule errors before starting.": [
+    "Pred spustením opravte chyby zostaveného harmonogramu.",
+    "Před spuštěním opravte chyby sestaveného harmonogramu."
+  ],
+  "Could not apply the plan to this night.": [
+    "Plán sa nepodarilo použiť pre túto noc.",
+    "Plán se nepodařilo použít pro tuto noc."
+  ],
+  "validation failed": [
+    "overenie zlyhalo",
+    "ověření selhalo"
+  ],
+  "this browser's zone": [
+    "časové pásmo prehliadača",
+    "časové pásmo prohlížeče"
+  ],
+  "Site wall-clock time ({a}); the zone comes from Settings, not from the plan.": [
+    "Miestny čas pozorovacieho miesta ({a}); pásmo pochádza z nastavení, nie z plánu.",
+    "Místní čas pozorovacího místa ({a}); pásmo pochází z nastavení, nikoli z plánu."
+  ],
+  "First (before clocks go back)": [
+    "Prvý (pred posunom hodín späť)",
+    "První (před posunem hodin zpět)"
+  ],
+  "Second (after clocks go back)": [
+    "Druhý (po posune hodín späť)",
+    "Druhý (po posunu hodin zpět)"
+  ],
+  "— no astronomical night on this date at this latitude": [
+    "— v tomto dátume a zemepisnej šírke nenastáva astronomická noc",
+    "— v tomto datu a zeměpisné šířce nenastává astronomická noc"
+  ],
+  "Moon: phase not reported": [
+    "Mesiac: fáza nebola oznámená",
+    "Měsíc: fáze nebyla oznámena"
+  ],
+  "not compiled": [
+    "nezostavené",
+    "nesestaveno"
+  ],
+  "unschedulable — {a}": [
+    "nemožno naplánovať — {a}",
+    "nelze naplánovat — {a}"
+  ],
+  "IN PROGRESS": [
+    "PREBIEHA",
+    "PROBÍHÁ"
+  ],
+  "Reorder item {a}": [
+    "Zmeniť poradie položky {a}",
+    "Změnit pořadí položky {a}"
+  ],
+  "Edit item {a}": [
+    "Upraviť položku {a}",
+    "Upravit položku {a}"
+  ],
+  "· stale forecast": [
+    "· zastaraná predpoveď",
+    "· zastaralá předpověď"
+  ],
+  "Current time {a}": [
+    "Aktuálny čas {a}",
+    "Aktuální čas {a}"
+  ],
+  "This browser does not know the site's time zone ({a}); the start was not changed.": [
+    "Prehliadač nepozná časové pásmo miesta ({a}); začiatok nebol zmenený.",
+    "Prohlížeč nezná časové pásmo místa ({a}); začátek nebyl změněn."
+  ],
+  "Altitude limit {a}°": [
+    "Výškový limit {a}°",
+    "Výškový limit {a}°"
+  ],
+  "Panel {a},{b}: {c} – {d}": [
+    "Panel {a},{b}: {c} – {d}",
+    "Panel {a},{b}: {c} – {d}"
+  ],
+  "This item overlaps another scheduled item.": [
+    "Táto položka sa prekrýva s inou naplánovanou položkou.",
+    "Tato položka se překrývá s jinou naplánovanou položkou."
+  ],
+  "Ends {a} — not a fixed duration.": [
+    "Končí {a} — nejde o pevné trvanie.",
+    "Končí {a} — nejde o pevnou dobu trvání."
+  ],
+  "Converts \"until {a}\" to a duration.": [
+    "Zmení „do {a}“ na trvanie.",
+    "Změní „do {a}“ na dobu trvání."
+  ],
+  "{a} min total": [
+    "Celkom {a} min",
+    "Celkem {a} min"
+  ],
+  "{a} min/panel · {b} min total": [
+    "{a} min/panel · celkom {b} min",
+    "{a} min/panel · celkem {b} min"
+  ],
+  "no target": [
+    "bez cieľa",
+    "bez cíle"
+  ],
+  "{a} (body)": [
+    "{a} (teleso)",
+    "{a} (těleso)"
+  ],
+  "{a} (comet)": [
+    "{a} (kométa)",
+    "{a} (kometa)"
+  ],
+  "Review the physical adjustment, then Resume to accept and continue.": [
+    "Skontrolujte fyzické nastavenie a potom stlačte Pokračovať na potvrdenie a pokračovanie.",
+    "Zkontrolujte fyzické nastavení a potom stiskněte Pokračovat pro potvrzení a pokračování."
+  ],
+  "Polar-alignment best field": [
+    "Najlepšie pole pre polárne zarovnanie",
+    "Nejlepší pole pro polární ustavení"
+  ],
+  "until block end,": [
+    "do konca bloku,",
+    "do konce bloku,"
+  ],
+  "through {a}": [
+    "cez {a}",
+    "přes {a}"
+  ],
+  "· live stack": [
+    "· priebežný stack",
+    "· průběžný stack"
+  ],
+  "gain {a}": [
+    "zisk {a}",
+    "zisk {a}"
+  ],
+  "no position": [
+    "bez polohy",
+    "bez polohy"
+  ],
+  "Target type": [
+    "Typ cieľa",
+    "Typ cíle"
+  ],
+  "Catalogue object": [
+    "Objekt katalógu",
+    "Objekt katalogu"
+  ],
+  "Solar-system body": [
+    "Teleso Slnečnej sústavy",
+    "Těleso Sluneční soustavy"
+  ],
+  "Comet (from Planning)": [
+    "Kométa (z plánovania)",
+    "Kometa (z plánování)"
+  ],
+  "Current pointing (no target)": [
+    "Aktuálny smer (bez cieľa)",
+    "Aktuální směr (bez cíle)"
+  ],
+  "Leave as current pointing to sync at wherever the scope is pointing.": [
+    "Ponechajte aktuálny smer pre synchronizáciu tam, kam ďalekohľad práve smeruje.",
+    "Ponechte aktuální směr pro synchronizaci tam, kam dalekohled právě míří."
+  ],
+  "Target name": [
+    "Názov cieľa",
+    "Název cíle"
+  ],
+  "Dec (J2000)": [
+    "Dec (J2000)",
+    "Dec (J2000)"
+  ],
+  "Its position is computed fresh when this item runs, never stored — it moves between now and then.": [
+    "Poloha sa vypočíta pri vykonaní položky a neukladá sa — dovtedy sa teleso pohne.",
+    "Poloha se vypočítá při provedení položky a neukládá se — do té doby se těleso pohne."
+  ],
+  "Framing mode": [
+    "Režim rámovania",
+    "Režim rámování"
+  ],
+  "PA offset": [
+    "Odchýlka PA",
+    "Odchylka PA"
+  ],
+  "Autofocus before capture": [
+    "Automatické zaostrovanie pred snímaním",
+    "Automatické ostření před snímáním"
+  ],
+  "No autofocus": [
+    "Bez automatického zaostrovania",
+    "Bez automatického ostření"
+  ],
+  "Slew to this panel first, then autofocus before live stacking starts.": [
+    "Najskôr presuňte ďalekohľad na tento panel a potom zaostrite pred spustením priebežného stacku.",
+    "Nejprve přesuňte dalekohled na tento panel a potom zaostřete před spuštěním průběžného stacku."
+  ],
+  "Blank means no limit requested.": [
+    "Prázdne pole znamená bez požadovaného limitu.",
+    "Prázdné pole znamená bez požadovaného limitu."
+  ],
+  "Minimum moon separation": [
+    "Minimálna vzdialenosť od Mesiaca",
+    "Minimální vzdálenost od Měsíce"
+  ],
+  "Choose a filter-wheel position.": [
+    "Vyberte pozíciu filtračného kolesa.",
+    "Vyberte pozici filtrového kola."
+  ],
+  "Unpark before slew": [
+    "Odparkovať pred presunom",
+    "Odparkovat před přesunem"
+  ],
+  "Catalog or manual target": [
+    "Cieľ z katalógu alebo ručne zadaný",
+    "Cíl z katalogu nebo ručně zadaný"
+  ],
+  "Park after home": [
+    "Zaparkovať po návrate domov",
+    "Zaparkovat po návratu domů"
+  ],
+  "Start position": [
+    "Počiatočná poloha",
+    "Počáteční poloha"
+  ],
+  "Seestar field": [
+    "Pole Seestar",
+    "Pole Seestar"
+  ],
+  "Selected target": [
+    "Vybraný cieľ",
+    "Vybraný cíl"
+  ],
+  "Target RA": [
+    "RA cieľa",
+    "RA cíle"
+  ],
+  "Target Dec": [
+    "Dec cieľa",
+    "Dec cíle"
+  ],
+  "PA points": [
+    "Body PA",
+    "Body PA"
+  ],
+  "PA separation": [
+    "Rozostup PA",
+    "Rozestup PA"
+  ],
+  "PA exposure": [
+    "Expozícia PA",
+    "Expozice PA"
+  ],
+  "PA gain": [
+    "Zisk PA",
+    "Zisk PA"
+  ],
+  "PA start": [
+    "Začiatok PA",
+    "Začátek PA"
+  ],
+  "Manual target": [
+    "Ručne zadaný cieľ",
+    "Ručně zadaný cíl"
+  ],
+  "PA target RA": [
+    "RA cieľa PA",
+    "RA cíle PA"
+  ],
+  "PA target Dec": [
+    "Dec cieľa PA",
+    "Dec cíle PA"
+  ],
+  "Blank keeps the device's own setting.": [
+    "Prázdne pole ponechá nastavenie zariadenia.",
+    "Prázdné pole ponechá nastavení zařízení."
+  ],
+  "Temperature trigger": [
+    "Teplotný spúšťač",
+    "Teplotní spouštěč"
+  ],
+  "Refocus when the temperature has moved this much; blank means on the clock only.": [
+    "Znova zaostriť pri tejto zmene teploty; prázdne pole znamená iba podľa času.",
+    "Znovu zaostřit při této změně teploty; prázdné pole znamená pouze podle času."
+  ],
+  "How many frames": [
+    "Počet snímok",
+    "Počet snímků"
+  ],
+  "Fixed count": [
+    "Pevný počet",
+    "Pevný počet"
+  ],
+  "Until the block ends": [
+    "Do konca bloku",
+    "Do konce bloku"
+  ],
+  "“Until the block ends” needs this item to have its own end (duration, or an event) — without one there is no window to fill.": [
+    "„Do konca bloku“ vyžaduje vlastný koniec položky (trvanie alebo udalosť) — bez neho neexistuje časové okno.",
+    "„Do konce bloku“ vyžaduje vlastní konec položky (trvání nebo událost) — bez něj neexistuje časové okno."
+  ],
+  "Choose a filter-wheel position. Left unchanged, this block images through the position already in place.": [
+    "Vyberte pozíciu filtračného kolesa. Bez zmeny bude blok snímať cez aktuálnu pozíciu.",
+    "Vyberte pozici filtrového kola. Beze změny bude blok snímat přes aktuální pozici."
+  ],
+  "Dither from": [
+    "Dither od",
+    "Dither od"
+  ],
+  "Dither amount": [
+    "Veľkosť ditheringu",
+    "Velikost ditheringu"
+  ],
+  "Legacy fixed amount from an older plan; new plans use a range.": [
+    "Pôvodná pevná hodnota zo staršieho plánu; nové plány používajú rozsah.",
+    "Původní pevná hodnota ze staršího plánu; nové plány používají rozsah."
+  ],
+  "Dither to": [
+    "Dither do",
+    "Dither do"
+  ],
+  "Dither every": [
+    "Dither každých",
+    "Dither každých"
+  ],
+  "Drift threshold": [
+    "Limit driftu",
+    "Limit driftu"
+  ],
+  "Operator confirmation": [
+    "Potvrdenie obsluhou",
+    "Potvrzení obsluhou"
+  ],
+  "Timed wait only": [
+    "Iba časované čakanie",
+    "Pouze časované čekání"
+  ],
+  "Operator instructions": [
+    "Pokyny pre obsluhu",
+    "Pokyny pro obsluhu"
+  ],
+  "Raw frames only": [
+    "Iba surové snímky",
+    "Pouze surové snímky"
+  ],
+  "Already safe": [
+    "Už v bezpečnom stave",
+    "Již v bezpečném stavu"
+  ],
+  "M31 first light": [
+    "Prvé snímanie M31",
+    "První snímání M31"
+  ],
+  "Use live polar refinement to adjust the mount physically. Resume only when the result is stable and acceptable; Resume is the durable acceptance.": [
+    "Použite živé spresnenie polárneho zarovnania na fyzické nastavenie montáže. Pokračujte až pri stabilnom a prijateľnom výsledku; Pokračovať predstavuje trvalé potvrdenie.",
+    "Použijte živé zpřesnění polárního ustavení pro fyzické nastavení montáže. Pokračujte až při stabilním a přijatelném výsledku; Pokračovat představuje trvalé potvrzení."
+  ],
+  "Sun / Moon event": [
+    "Udalosť Slnka / Mesiaca",
+    "Událost Slunce / Měsíce"
+  ],
+  "After previous": [
+    "Po predchádzajúcej",
+    "Po předchozí"
+  ],
+  "Solar transit": [
+    "Prechod Slnka meridiánom",
+    "Průchod Slunce meridiánem"
+  ],
+  "Moon transit": [
+    "Prechod Mesiaca meridiánom",
+    "Průchod Měsíce meridiánem"
+  ],
+  "Rises above": [
+    "Vystúpi nad",
+    "Vystoupí nad"
+  ],
+  "Sets below": [
+    "Klesne pod",
+    "Klesne pod"
+  ],
+  "Astro. midnight": [
+    "Astronomická polnoc",
+    "Astronomická půlnoc"
+  ],
+  "Until event": [
+    "Do udalosti",
+    "Do události"
+  ],
+  "Until target event": [
+    "Do udalosti cieľa",
+    "Do události cíle"
+  ],
+  "{a} · does not occur": [
+    "{a} · nenastane",
+    "{a} · nenastane"
+  ],
+  "{a} does not occur ({b}).": [
+    "{a} nenastane ({b}).",
+    "{a} nenastane ({b})."
+  ],
+  "overlaps previous": [
+    "prekrýva predchádzajúcu položku",
+    "překrývá předchozí položku"
+  ],
+  "past dark window": [
+    "mimo tmavého časového okna",
+    "mimo temné časové okno"
+  ],
+  "below min altitude": [
+    "pod minimálnou výškou",
+    "pod minimální výškou"
+  ],
+  "dips below min alt": [
+    "klesá pod minimálnu výšku",
+    "klesá pod minimální výšku"
+  ],
+  "moon too close": [
+    "Mesiac príliš blízko",
+    "Měsíc příliš blízko"
+  ],
+  "high transit: rotation spike": [
+    "vysoký prechod: prudká rotácia",
+    "vysoký průchod: prudká rotace"
+  ],
+  "event does not occur": [
+    "udalosť nenastane",
+    "událost nenastane"
+  ],
+  "target event does not occur": [
+    "udalosť cieľa nenastane",
+    "událost cíle nenastane"
+  ],
+  "needs a target": [
+    "vyžaduje cieľ",
+    "vyžaduje cíl"
+  ],
+  "PA field unavailable": [
+    "pole PA nedostupné",
+    "pole PA nedostupné"
+  ],
+  "time does not exist (DST)": [
+    "čas neexistuje (letný čas)",
+    "čas neexistuje (letní čas)"
+  ],
+  "invalid mosaic grid": [
+    "neplatná mriežka mozaiky",
+    "neplatná mřížka mozaiky"
+  ],
+  "panels not laid out": [
+    "panely nie sú rozvrhnuté",
+    "panely nejsou rozvrženy"
+  ],
+  "unknown lens": [
+    "neznáma optika",
+    "neznámá optika"
+  ],
+  "Rain risk": [
+    "Riziko dažďa",
+    "Riziko deště"
+  ],
+  "Fog or dew risk": [
+    "Riziko hmly alebo rosy",
+    "Riziko mlhy nebo rosy"
+  ],
+  "Strong wind": [
+    "Silný vietor",
+    "Silný vítr"
+  ],
+  "Partly cloudy": [
+    "Čiastočne oblačno",
+    "Částečně oblačno"
+  ],
+  "Conditions unknown": [
+    "Podmienky neznáme",
+    "Podmínky neznámé"
+  ],
+  "{a}% cloud": [
+    "Oblačnosť {a}%",
+    "Oblačnost {a}%"
+  ],
+  "{a}% rain": [
+    "Dážď {a}%",
+    "Déšť {a}%"
+  ],
+  "{a}°C above dew point": [
+    "{a}°C nad rosným bodom",
+    "{a}°C nad rosným bodem"
+  ],
+  "{a} km/h wind": [
+    "Vietor {a} km/h",
+    "Vítr {a} km/h"
+  ],
+  "Restart Photon Commander now? Active capture, stacking, and broadcasts will stop.": [
+    "Reštartovať Photon Commander teraz? Aktívne snímanie, skladanie a vysielanie sa zastavia.",
+    "Restartovat Photon Commander nyní? Aktivní snímání, skládání a vysílání se zastaví."
+  ],
+  "Reboot the whole Raspberry Pi now? Photon Commander will disconnect while it boots.": [
+    "Reštartovať celé Raspberry Pi teraz? Photon Commander sa počas štartu odpojí.",
+    "Restartovat celé Raspberry Pi nyní? Photon Commander se během startu odpojí."
+  ],
+  "Shut down the whole Raspberry Pi now? You will need to power it on physically.": [
+    "Vypnúť celé Raspberry Pi teraz? Bude ho potrebné fyzicky zapnúť.",
+    "Vypnout celé Raspberry Pi nyní? Bude jej nutné fyzicky zapnout."
+  ],
+  "An absolute path on the machine running ssc-core, not this browser.": [
+    "Absolútna cesta na počítači so serverom ssc-core, nie v tomto prehliadači.",
+    "Absolutní cesta na počítači se serverem ssc-core, nikoli v tomto prohlížeči."
+  ],
+  "Relative to the root folder. Built from the tags listed below.": [
+    "Relatívne ku koreňovému priečinku. Zostavené zo značiek uvedených nižšie.",
+    "Relativně ke kořenové složce. Sestaveno ze značek uvedených níže."
+  ],
+  "A filename stem built from the same tags. Photon Commander appends .fits automatically.": [
+    "Základ názvu súboru zostavený z rovnakých značiek. Photon Commander automaticky pridá .fits.",
+    "Základ názvu souboru sestavený ze stejných značek. Photon Commander automaticky přidá .fits."
+  ],
+  "Relative to the root capture folder.": [
+    "Relatívne ku koreňovému priečinku snímok.",
+    "Relativně ke kořenové složce snímků."
+  ],
+  "Use %FILTER% to separate flat sets.": [
+    "Použite %FILTER% na oddelenie flat sád.",
+    "Použijte %FILTER% pro oddělení flat sad."
+  ],
+  "Filename stem; .fits is appended automatically.": [
+    "Základ názvu súboru; .fits sa pridá automaticky.",
+    "Základ názvu souboru; .fits se přidá automaticky."
+  ],
+  "typed manually": [
+    "zadané ručne",
+    "zadáno ručně"
+  ],
+  "from a LAN scan": [
+    "z vyhľadávania v LAN",
+    "z vyhledávání v LAN"
+  ],
+  "a previously remembered address": [
+    "predtým uložená adresa",
+    "dříve uložená adresa"
+  ],
+  "· profile {a}": [
+    "· profil {a}",
+    "· profil {a}"
+  ],
+  "· last good {a}": [
+    "· posledné funkčné {a}",
+    "· poslední funkční {a}"
+  ],
+  "Could not export settings.": [
+    "Nastavenia sa nepodarilo exportovať.",
+    "Nastavení se nepodařilo exportovat."
+  ],
+  "Configuration file is larger than 2 MiB.": [
+    "Konfiguračný súbor je väčší než 2 MiB.",
+    "Konfigurační soubor je větší než 2 MiB."
+  ],
+  "Could not read configuration.": [
+    "Konfiguráciu sa nepodarilo načítať.",
+    "Konfiguraci se nepodařilo načíst."
+  ],
+  "Could not import settings.": [
+    "Nastavenia sa nepodarilo importovať.",
+    "Nastavení se nepodařilo importovat."
+  ],
+  "Needs setup": [
+    "Vyžaduje nastavenie",
+    "Vyžaduje nastavení"
+  ],
+  "Not installed": [
+    "Nenainštalované",
+    "Nenainstalováno"
+  ],
+  "There's already a point near that bearing — drag it instead of adding another.": [
+    "Blízko tohto smeru už je bod — presuňte ho namiesto pridania ďalšieho.",
+    "Blízko tohoto směru již je bod — přesuňte jej místo přidání dalšího."
+  ],
+  "Delete point at azimuth {a}": [
+    "Odstrániť bod s azimutom {a}",
+    "Odstranit bod s azimutem {a}"
+  ],
+  "PEM file is too large": [
+    "Súbor PEM je príliš veľký",
+    "Soubor PEM je příliš velký"
+  ],
+  "Choose a private RSA PEM key": [
+    "Vyberte súkromný kľúč RSA PEM",
+    "Vyberte soukromý klíč RSA PEM"
+  ],
+  "Could not read the PEM file": [
+    "Súbor PEM sa nepodarilo načítať",
+    "Soubor PEM se nepodařilo načíst"
+  ],
+  "This browser does not support geolocation.": [
+    "Prehliadač nepodporuje určovanie polohy.",
+    "Prohlížeč nepodporuje určování polohy."
+  ],
+  "Private access active": [
+    "Súkromný prístup aktívny",
+    "Soukromý přístup aktivní"
+  ],
+  "Public exposure": [
+    "Verejná dostupnosť",
+    "Veřejná dostupnost"
+  ],
+  "Network bind is not private": [
+    "Sieťové rozhranie nie je súkromné",
+    "Síťové rozhraní není soukromé"
+  ],
+  "Ready to configure": [
+    "Pripravené na nastavenie",
+    "Připraveno k nastavení"
+  ],
+  "Sign-in required": [
+    "Vyžaduje prihlásenie",
+    "Vyžaduje přihlášení"
+  ],
+  "Service unavailable": [
+    "Služba nedostupná",
+    "Služba nedostupná"
+  ],
+  "Stored in this machine's keyring and never returned to the browser.": [
+    "Uložené v kľúčenke tohto počítača; nikdy sa neposiela do prehliadača.",
+    "Uloženo v klíčence tohoto počítače; nikdy se neposílá do prohlížeče."
+  ],
+  "selected, unavailable": [
+    "vybrané, nedostupné",
+    "vybráno, nedostupné"
+  ],
+  "{a} API key": [
+    "Kľúč API {a}",
+    "Klíč API {a}"
+  ],
+  "Your own key, under your own licence. Stored in this machine's keyring and never sent to the browser.": [
+    "Váš vlastný kľúč s vlastnou licenciou. Uložený v kľúčenke tohto počítača; nikdy sa neposiela do prehliadača.",
+    "Váš vlastní klíč s vlastní licencí. Uložený v klíčence tohoto počítače; nikdy se neposílá do prohlížeče."
+  ],
+  "Met.no requires a real contact in the User-Agent of every request. It is sent to them with each forecast, so do not use an address you would not publish.": [
+    "Met.no vyžaduje skutočný kontakt v User-Agent každej požiadavky. Posiela sa pri každej predpovedi, preto nepoužívajte adresu, ktorú nechcete zverejniť.",
+    "Met.no vyžaduje skutečný kontakt v User-Agent každého požadavku. Posílá se při každé předpovědi, proto nepoužívejte adresu, kterou nechcete zveřejnit."
+  ],
+  "This is not a valid JSON configuration file.": [
+    "Toto nie je platný konfiguračný súbor JSON.",
+    "Toto není platný konfigurační soubor JSON."
+  ],
+  "Configuration must be an object.": [
+    "Konfigurácia musí byť objekt.",
+    "Konfigurace musí být objekt."
+  ],
+  "Unsupported Photon Commander configuration format.": [
+    "Nepodporovaný formát konfigurácie Photon Commander.",
+    "Nepodporovaný formát konfigurace Photon Commander."
+  ],
+  "Configuration export time is invalid.": [
+    "Čas exportu konfigurácie je neplatný.",
+    "Čas exportu konfigurace je neplatný."
+  ],
+  "Server settings are missing or invalid.": [
+    "Nastavenia servera chýbajú alebo sú neplatné.",
+    "Nastavení serveru chybí nebo je neplatné."
+  ],
+  "Browser settings are missing or invalid.": [
+    "Nastavenia prehliadača chýbajú alebo sú neplatné.",
+    "Nastavení prohlížeče chybí nebo je neplatné."
+  ],
+  "Unsupported browser setting: {a}": [
+    "Nepodporované nastavenie prehliadača: {a}",
+    "Nepodporované nastavení prohlížeče: {a}"
+  ],
+  "Invalid saved layout: {a}": [
+    "Neplatné uložené rozloženie: {a}",
+    "Neplatné uložené rozložení: {a}"
+  ],
+  "Invalid saved layout.": [
+    "Neplatné uložené rozloženie.",
+    "Neplatné uložené rozložení."
+  ],
+  "RTSP stream preview: {a}": [
+    "Náhľad streamu RTSP: {a}",
+    "Náhled streamu RTSP: {a}"
+  ],
+  "{a} rolling graph": [
+    "Priebežný graf {a}",
+    "Průběžný graf {a}"
+  ],
+  "No throttling or undervoltage ({a}).": [
+    "Bez obmedzenia výkonu alebo podpätia ({a}).",
+    "Bez omezení výkonu nebo podpětí ({a})."
+  ],
+  "Rig control is connected, but the event connection is unavailable. Live device updates may be delayed.": [
+    "Ovládanie zostavy je pripojené, ale spojenie udalostí nie je dostupné. Živé aktualizácie zariadenia môžu meškať.",
+    "Ovládání sestavy je připojené, ale spojení událostí není dostupné. Živé aktualizace zařízení mohou mít zpoždění."
+  ],
+  "Battery: {a}% · Fully charged — external power connected · measured {b} · stale · {c}": [
+    "Batéria: {a}% · Plne nabité — externé napájanie pripojené · merané {b} · neaktuálne · {c}",
+    "Baterie: {a}% · Plně nabito — externí napájení připojeno · měřeno {b} · neaktuální · {c}"
+  ],
+  "Battery: {a}% · Fully charged — external power connected · measured {b} · stale": [
+    "Batéria: {a}% · Plne nabité — externé napájanie pripojené · merané {b} · neaktuálne",
+    "Baterie: {a}% · Plně nabito — externí napájení připojeno · měřeno {b} · neaktuální"
+  ],
+  "Battery: {a}% · Fully charged — external power connected · measured {b} · {c}": [
+    "Batéria: {a}% · Plne nabité — externé napájanie pripojené · merané {b} · {c}",
+    "Baterie: {a}% · Plně nabito — externí napájení připojeno · měřeno {b} · {c}"
+  ],
+  "Battery {a} percent, Fully charged — external power connected, stale": [
+    "Batéria {a} percent, Plne nabité — externé napájanie pripojené, neaktuálne",
+    "Baterie {a} procent, Plně nabito — externí napájení připojeno, neaktuální"
+  ],
+  "Battery: {a}% · Fully charged — external power connected · measured {b}": [
+    "Batéria: {a}% · Plne nabité — externé napájanie pripojené · merané {b}",
+    "Baterie: {a}% · Plně nabito — externí napájení připojeno · měřeno {b}"
+  ],
+  "Excellent — {a}/100. {b} Score breakdown: {c}. Forecast is stale since {d}.": [
+    "Výborné — {a}/100. {b} Rozpis skóre: {c}. Predpoveď je neaktuálna od {d}.",
+    "Výborné — {a}/100. {b} Rozpis skóre: {c}. Předpověď je neaktuální od {d}."
+  ],
+  "Very poor — {a}/100. {b} Score breakdown: {c}. Forecast is stale since {d}.": [
+    "Veľmi slabé — {a}/100. {b} Rozpis skóre: {c}. Predpoveď je neaktuálna od {d}.",
+    "Velmi slabé — {a}/100. {b} Rozpis skóre: {c}. Předpověď je neaktuální od {d}."
+  ],
+  "Live connection lost. Controls will return after reconnection.": [
+    "Živé spojenie sa prerušilo. Ovládanie sa obnoví po opätovnom pripojení.",
+    "Živé spojení se přerušilo. Ovládání se obnoví po opětovném připojení."
+  ],
+  "Battery: {a}% · External power connected · measured {b} · stale · {c}": [
+    "Batéria: {a}% · Externé napájanie pripojené · merané {b} · neaktuálne · {c}",
+    "Baterie: {a}% · Externí napájení připojeno · měřeno {b} · neaktuální · {c}"
+  ],
+  "Battery {a} percent, Fully charged — external power connected": [
+    "Batéria {a} percent, Plne nabité — externé napájanie pripojené",
+    "Baterie {a} procent, Plně nabito — externí napájení připojeno"
+  ],
+  "Good — {a}/100. {b} Score breakdown: {c}. Forecast is stale since {d}.": [
+    "Dobré — {a}/100. {b} Rozpis skóre: {c}. Predpoveď je neaktuálna od {d}.",
+    "Dobré — {a}/100. {b} Rozpis skóre: {c}. Předpověď je neaktuální od {d}."
+  ],
+  "Fair — {a}/100. {b} Score breakdown: {c}. Forecast is stale since {d}.": [
+    "Priemerné — {a}/100. {b} Rozpis skóre: {c}. Predpoveď je neaktuálna od {d}.",
+    "Průměrné — {a}/100. {b} Rozpis skóre: {c}. Předpověď je neaktuální od {d}."
+  ],
+  "Poor — {a}/100. {b} Score breakdown: {c}. Forecast is stale since {d}.": [
+    "Slabé — {a}/100. {b} Rozpis skóre: {c}. Predpoveď je neaktuálna od {d}.",
+    "Slabé — {a}/100. {b} Rozpis skóre: {c}. Předpověď je neaktuální od {d}."
+  ],
+  "Rig telemetry is stale. Waiting for a fresh device check.": [
+    "Telemetria zostavy je neaktuálna. Čaká sa na novú kontrolu zariadenia.",
+    "Telemetrie sestavy je neaktuální. Čeká se na novou kontrolu zařízení."
+  ],
+  "Battery: {a}% · External power connected · measured {b} · stale": [
+    "Batéria: {a}% · Externé napájanie pripojené · merané {b} · neaktuálne",
+    "Baterie: {a}% · Externí napájení připojeno · měřeno {b} · neaktuální"
+  ],
+  "Battery: {a}% · Power state unknown · measured {b} · stale · {c}": [
+    "Batéria: {a}% · Stav napájania neznámy · merané {b} · neaktuálne · {c}",
+    "Baterie: {a}% · Stav napájení neznámý · měřeno {b} · neaktuální · {c}"
+  ],
+  "Battery: {a}% · Power state unknown · measured {b} · stale": [
+    "Batéria: {a}% · Stav napájania neznámy · merané {b} · neaktuálne",
+    "Baterie: {a}% · Stav napájení neznámý · měřeno {b} · neaktuální"
+  ],
+  "Battery: {a}% · External power connected · measured {b} · {c}": [
+    "Batéria: {a}% · Externé napájanie pripojené · merané {b} · {c}",
+    "Baterie: {a}% · Externí napájení připojeno · měřeno {b} · {c}"
+  ],
+  "Battery {a} percent, External power connected, stale": [
+    "Batéria {a} percent, Externé napájanie pripojené, neaktuálne",
+    "Baterie {a} procent, Externí napájení připojeno, neaktuální"
+  ],
+  "Battery: {a}% · External power connected · measured {b}": [
+    "Batéria: {a}% · Externé napájanie pripojené · merané {b}",
+    "Baterie: {a}% · Externí napájení připojeno · měřeno {b}"
+  ],
+  "Resize secondary panel height, currently {a} pixels": [
+    "Zmeniť výšku sekundárneho panela, aktuálne {a} pixelov",
+    "Změnit výšku sekundárního panelu, aktuálně {a} pixelů"
+  ],
+  "Battery: {a}% · Power state unknown · measured {b} · {c}": [
+    "Batéria: {a}% · Stav napájania neznámy · merané {b} · {c}",
+    "Baterie: {a}% · Stav napájení neznámý · měřeno {b} · {c}"
+  ],
+  "Battery: {a}% · Discharging · measured {b} · stale · {c}": [
+    "Batéria: {a}% · Vybíjanie · merané {b} · neaktuálne · {c}",
+    "Baterie: {a}% · Vybíjení · měřeno {b} · neaktuální · {c}"
+  ],
+  "Resize primary panel height, currently {a} pixels": [
+    "Zmeniť výšku primárneho panela, aktuálne {a} pixelov",
+    "Změnit výšku primárního panelu, aktuálně {a} pixelů"
+  ],
+  "primary + secondary axis · dead-man protected": [
+    "primárna + sekundárna os · ochrana pri uvoľnení ovládania",
+    "primární + sekundární osa · ochrana při uvolnění ovládání"
+  ],
+  "Resize detail panel height, currently {a} pixels": [
+    "Zmeniť výšku podrobného panela, aktuálne {a} pixelov",
+    "Změnit výšku podrobného panelu, aktuálně {a} pixelů"
+  ],
+  "Battery {a} percent, Power state unknown, stale": [
+    "Batéria {a} percent, Stav napájania neznámy, neaktuálne",
+    "Baterie {a} procent, Stav napájení neznámý, neaktuální"
+  ],
+  "Battery: {a}% · Power state unknown · measured {b}": [
+    "Batéria: {a}% · Stav napájania neznámy · merané {b}",
+    "Baterie: {a}% · Stav napájení neznámý · měřeno {b}"
+  ],
+  "Battery: {a}% · Charging · measured {b} · stale · {c}": [
+    "Batéria: {a}% · Nabíjanie · merané {b} · neaktuálne · {c}",
+    "Baterie: {a}% · Nabíjení · měřeno {b} · neaktuální · {c}"
+  ],
+  "Battery: {a}% · Discharging · measured {b} · stale": [
+    "Batéria: {a}% · Vybíjanie · merané {b} · neaktuálne",
+    "Baterie: {a}% · Vybíjení · měřeno {b} · neaktuální"
+  ],
+  "Battery {a} percent, External power connected": [
+    "Batéria {a} percent, Externé napájanie pripojené",
+    "Baterie {a} procent, Externí napájení připojeno"
+  ],
+  "The night prediction could not be loaded.": [
+    "Predpoveď na noc sa nepodarilo načítať.",
+    "Předpověď na noc se nepodařilo načíst."
+  ],
+  "Seestar sensor temperature unavailable — {a}": [
+    "Teplota snímača Seestar nie je dostupná — {a}",
+    "Teplota snímače Seestar není dostupná — {a}"
+  ],
+  "Battery: {a}% · Charging · measured {b} · stale": [
+    "Batéria: {a}% · Nabíjanie · merané {b} · neaktuálne",
+    "Baterie: {a}% · Nabíjení · měřeno {b} · neaktuální"
+  ],
+  "Resize {a} panel height, currently {b} pixels": [
+    "Zmeniť výšku panela {a}, aktuálne {b} pixelov",
+    "Změnit výšku panelu {a}, aktuálně {b} pixelů"
+  ],
+  "Battery: {a}% · Discharging · measured {b} · {c}": [
+    "Batéria: {a}% · Vybíjanie · merané {b} · {c}",
+    "Baterie: {a}% · Vybíjení · měřeno {b} · {c}"
+  ],
+  "Dew heater state has not been read yet": [
+    "Stav vyhrievania proti rose ešte nebol načítaný",
+    "Stav vyhřívání proti rose ještě nebyl načten"
+  ],
+  "Seestar sensor temperature unavailable": [
+    "Teplota snímača Seestar nie je dostupná",
+    "Teplota snímače Seestar není dostupná"
+  ],
+  "Calibrating, registering and stacking": [
+    "Kalibrácia, zarovnávanie a skladanie",
+    "Kalibrace, zarovnávání a skládání"
+  ],
+  "Already down before the window starts": [
+    "Pod obzorom už pred začiatkom okna",
+    "Pod obzorem již před začátkem okna"
+  ],
+  "Resize right panel, currently {a} pixels": [
+    "Zmeniť veľkosť pravého panela, aktuálne {a} pixelov",
+    "Změnit velikost pravého panelu, aktuálně {a} pixelů"
+  ],
+  "Battery {a} percent, Power state unknown": [
+    "Batéria {a} percent, Stav napájania neznámy",
+    "Baterie {a} procent, Stav napájení neznámý"
+  ],
+  "Excellent — {a}/100. {b} Score breakdown: {c}.": [
+    "Výborné — {a}/100. {b} Rozpis skóre: {c}.",
+    "Výborné — {a}/100. {b} Rozpis skóre: {c}."
+  ],
+  "Very poor — {a}/100. {b} Score breakdown: {c}.": [
+    "Veľmi slabé — {a}/100. {b} Rozpis skóre: {c}.",
+    "Velmi slabé — {a}/100. {b} Rozpis skóre: {c}."
+  ],
+  "Calculating this night's prediction.": [
+    "Vypočítava sa predpoveď na túto noc.",
+    "Vypočítává se předpověď na tuto noc."
+  ],
+  "Resize left panel, currently {a} pixels": [
+    "Zmeniť veľkosť ľavého panela, aktuálne {a} pixelov",
+    "Změnit velikost levého panelu, aktuálně {a} pixelů"
+  ],
+  "Seestar sensor temperature: {a} (stale)": [
+    "Teplota snímača Seestar: {a} (neaktuálna)",
+    "Teplota snímače Seestar: {a} (neaktuální)"
+  ],
+  "Pipeline stage: Transferring picture": [
+    "Fáza spracovania: Prenos snímky",
+    "Fáze zpracování: Přenos snímku"
+  ],
+  "Battery: {a}% · Charging · measured {b} · {c}": [
+    "Batéria: {a}% · Nabíjanie · merané {b} · {c}",
+    "Baterie: {a}% · Nabíjení · měřeno {b} · {c}"
+  ],
+  "Battery {a} percent, Discharging, stale": [
+    "Batéria {a} percent, Vybíjanie, neaktuálne",
+    "Baterie {a} procent, Vybíjení, neaktuální"
+  ],
+  "Battery: {a}% · Discharging · measured {b}": [
+    "Batéria: {a}% · Vybíjanie · merané {b}",
+    "Baterie: {a}% · Vybíjení · měřeno {b}"
+  ],
+  "Already up before the window starts": [
+    "Nad obzorom už pred začiatkom okna",
+    "Nad obzorem již před začátkem okna"
+  ],
+  "secondary axis · dead-man protected": [
+    "sekundárna os · ochrana pri uvoľnení ovládania",
+    "sekundární osa · ochrana při uvolnění ovládání"
+  ],
+  "No forecast covers this night yet.": [
+    "Pre túto noc zatiaľ nie je dostupná predpoveď.",
+    "Pro tuto noc zatím není dostupná předpověď."
+  ],
+  "No astronomical darkness tonight.": [
+    "Túto noc nenastane astronomická tma.",
+    "Tuto noc nenastane astronomická tma."
+  ],
+  "Resize {a} height, currently {b} pixels": [
+    "Zmeniť výšku: {a}, aktuálne {b} pixelov",
+    "Změnit výšku: {a}, aktuálně {b} pixelů"
+  ],
+  "primary axis · dead-man protected": [
+    "primárna os · ochrana pri uvoľnení ovládania",
+    "primární osa · ochrana při uvolnění ovládání"
+  ],
+  "Battery {a} percent, Charging, stale": [
+    "Batéria {a} percent, Nabíjanie, neaktuálne",
+    "Baterie {a} procent, Nabíjení, neaktuální"
+  ],
+  "Battery: {a}% · Charging · measured {b}": [
+    "Batéria: {a}% · Nabíjanie · merané {b}",
+    "Baterie: {a}% · Nabíjení · měřeno {b}"
+  ],
+  "Good — {a}/100. {b} Score breakdown: {c}.": [
+    "Dobré — {a}/100. {b} Rozpis skóre: {c}.",
+    "Dobré — {a}/100. {b} Rozpis skóre: {c}."
+  ],
+  "Fair — {a}/100. {b} Score breakdown: {c}.": [
+    "Priemerné — {a}/100. {b} Rozpis skóre: {c}.",
+    "Průměrné — {a}/100. {b} Rozpis skóre: {c}."
+  ],
+  "Poor — {a}/100. {b} Score breakdown: {c}.": [
+    "Slabé — {a}/100. {b} Rozpis skóre: {c}.",
+    "Slabé — {a}/100. {b} Rozpis skóre: {c}."
+  ],
+  "Connecting to Photon Commander…": [
+    "Pripájanie k Photon Commander…",
+    "Připojování k Photon Commander…"
+  ],
+  "Pipeline stage: Dithering mount": [
+    "Fáza spracovania: Posun montáže",
+    "Fáze zpracování: Posun montáže"
+  ],
+  "Camera platesolving PA — {a}s of {b}s": [
+    "Kamera rieši polárne zarovnanie — {a} s z {b} s",
+    "Kamera řeší polární ustavení — {a} s z {b} s"
+  ],
+  "No moonrise in the dark window": [
+    "Mesiac počas tmavého okna nevychádza",
+    "Měsíc během tmavého okna nevychází"
+  ],
+  "Preparing calibration sequence": [
+    "Príprava série calibration",
+    "Příprava série calibration"
+  ],
+  "Waxing crescent, {a}% illuminated": [
+    "Dorastajúci kosáčik, osvetlenie {a} %",
+    "Dorůstající srpek, osvětlení {a} %"
+  ],
+  "Waning crescent, {a}% illuminated": [
+    "Ubúdajúci kosáčik, osvetlenie {a} %",
+    "Ubývající srpek, osvětlení {a} %"
+  ],
+  "No moonset in the dark window": [
+    "Mesiac počas tmavého okna nezapadá",
+    "Měsíc během tmavého okna nezapadá"
+  ],
+  "Waxing gibbous, {a}% illuminated": [
+    "Dorastajúci Mesiac, osvetlenie {a} %",
+    "Dorůstající Měsíc, osvětlení {a} %"
+  ],
+  "Waning gibbous, {a}% illuminated": [
+    "Ubúdajúci Mesiac, osvetlenie {a} %",
+    "Ubývající Měsíc, osvětlení {a} %"
+  ],
+  "Battery {a} percent, Discharging": [
+    "Batéria {a} percent, Vybíjanie",
+    "Baterie {a} procent, Vybíjení"
+  ],
+  "Resize secondary panel height": [
+    "Zmeniť výšku sekundárneho panela",
+    "Změnit výšku sekundárního panelu"
+  ],
+  "Capturing calibration frames": [
+    "Snímanie kalibračných snímok",
+    "Pořizování kalibračních snímků"
+  ],
+  "Not scored: data unavailable": [
+    "Bez hodnotenia: údaje nie sú dostupné",
+    "Bez hodnocení: údaje nejsou dostupné"
+  ],
+  "Seestar sensor temperature: {a}": [
+    "Teplota snímača Seestar: {a}",
+    "Teplota snímače Seestar: {a}"
+  ],
+  "Camera capturing PA — {a}s of {b}s": [
+    "Kamera sníma polárne zarovnanie — {a} s z {b} s",
+    "Kamera snímá polární ustavení — {a} s z {b} s"
+  ],
+  "Finding calibration exposure": [
+    "Hľadanie expozície pre calibration",
+    "Hledání expozice pro calibration"
+  ],
+  "Centering: Capturing solving": [
+    "Centrovanie: Snímanie a astrometrické riešenie",
+    "Centrování: Snímání a astrometrické řešení"
+  ],
+  "First quarter, {a}% illuminated": [
+    "Prvá štvrť, osvetlenie {a} %",
+    "První čtvrť, osvětlení {a} %"
+  ],
+  "Live device updates delayed": [
+    "Živé aktualizácie zariadenia meškajú",
+    "Živé aktualizace zařízení mají zpoždění"
+  ],
+  "Plate solving and centering": [
+    "Astrometrické riešenie a centrovanie",
+    "Astrometrické řešení a centrování"
+  ],
+  "Stream picture in picture: {a}": [
+    "Prenos v obraze v obraze: {a}",
+    "Přenos v obrazu v obraze: {a}"
+  ],
+  "Downloading {a} target imagery": [
+    "Sťahovanie snímok cieľa {a}",
+    "Stahování snímků cíle {a}"
+  ],
+  "Mount: Not tracking (stale)": [
+    "Montáž: Nesleduje (neaktuálne)",
+    "Montáž: Nesleduje (neaktuální)"
+  ],
+  "Pipeline stage: Downloading": [
+    "Fáza spracovania: Sťahovanie",
+    "Fáze zpracování: Stahování"
+  ],
+  "Camera settling PA — {a}s of {b}s": [
+    "Kamera čaká na ustálenie polárneho zarovnania — {a} s z {b} s",
+    "Kamera čeká na ustálení polárního ustavení — {a} s z {b} s"
+  ],
+  "Building calibration master": [
+    "Vytváranie master snímky calibration",
+    "Vytváření master snímku calibration"
+  ],
+  "Last quarter, {a}% illuminated": [
+    "Posledná štvrť, osvetlenie {a} %",
+    "Poslední čtvrť, osvětlení {a} %"
+  ],
+  "Resize primary panel height": [
+    "Zmeniť výšku primárneho panela",
+    "Změnit výšku primárního panelu"
+  ],
+  "Capturing polar refinement": [
+    "Snímanie spresnenia polárneho zarovnania",
+    "Snímání upřesnění polárního ustavení"
+  ],
+  "Downloading target imagery": [
+    "Sťahovanie snímok cieľa",
+    "Stahování snímků cíle"
+  ],
+  "Resynced: server restarted": [
+    "Znova synchronizované: server sa reštartoval",
+    "Znovu synchronizováno: server se restartoval"
+  ],
+  "Polar alignment: Preflight": [
+    "Polárne zarovnanie: Vstupná kontrola",
+    "Polární ustavení: Vstupní kontrola"
+  ],
+  "Polar alignment: Capturing": [
+    "Polárne zarovnanie: Snímanie",
+    "Polární ustavení: Snímání"
+  ],
+  "Battery {a} percent, Charging": [
+    "Batéria {a} percent, Nabíjanie",
+    "Baterie {a} procent, Nabíjení"
+  ],
+  "Resize detail panel height": [
+    "Zmeniť výšku podrobného panela",
+    "Změnit výšku podrobného panelu"
+  ],
+  "Forecast is stale since {a}.": [
+    "Predpoveď je neaktuálna od {a}.",
+    "Předpověď je neaktuální od {a}."
+  ],
+  "Camera capturing — {a}s of {b}s": [
+    "Kamera sníma — {a} s z {b} s",
+    "Kamera snímá — {a} s z {b} s"
+  ],
+  "Polar alignment: Settling": [
+    "Polárne zarovnanie: Ustaľovanie",
+    "Polární ustavení: Ustalování"
+  ],
+  "Solving polar refinement": [
+    "Riešenie spresnenia polárneho zarovnania",
+    "Řešení upřesnění polárního ustavení"
+  ],
+  "Refining polar alignment": [
+    "Spresňovanie polárneho zarovnania",
+    "Upřesňování polárního ustavení"
+  ],
+  "Resynced: missed updates": [
+    "Znova synchronizované: vynechané aktualizácie",
+    "Znovu synchronizováno: vynechané aktualizace"
+  ],
+  "Pipeline stage: Exposing": [
+    "Fáza spracovania: Exponovanie",
+    "Fáze zpracování: Exponování"
+  ],
+  "Camera settling — {a}s of {b}s": [
+    "Kamera čaká na ustálenie — {a} s z {b} s",
+    "Kamera čeká na ustálení — {a} s z {b} s"
+  ],
+  "Preparing light sequence": [
+    "Príprava série light",
+    "Příprava série light"
+  ],
+  "Polar alignment: Working": [
+    "Polárne zarovnanie: Spracovanie",
+    "Polární ustavení: Zpracování"
+  ],
+  "Polar alignment: Pending": [
+    "Polárne zarovnanie: Čakanie",
+    "Polární ustavení: Čekání"
+  ],
+  "Polar alignment: Solving": [
+    "Polárne zarovnanie: Astrometrické riešenie",
+    "Polární ustavení: Astrometrické řešení"
+  ],
+  "Full moon, {a}% illuminated": [
+    "Spln, osvetlenie {a} %",
+    "Úplněk, osvětlení {a} %"
+  ],
+  "Waiting for stack input": [
+    "Čakanie na vstup pre skladanie",
+    "Čekání na vstup pro skládání"
+  ],
+  "{a} more active operations": [
+    "Ďalšie aktívne operácie: {a}",
+    "Další aktivní operace: {a}"
+  ],
+  "Mount: Tracking (stale)": [
+    "Montáž: Sledovanie (neaktuálne)",
+    "Montáž: Sledování (neaktuální)"
+  ],
+  "Preparing dark sequence": [
+    "Príprava série dark",
+    "Příprava série dark"
+  ],
+  "Preparing flat sequence": [
+    "Príprava série flat",
+    "Příprava série flat"
+  ],
+  "Preparing bias sequence": [
+    "Príprava série bias",
+    "Příprava série bias"
+  ],
+  "Polar alignment: Solved": [
+    "Polárne zarovnanie: Vyriešené",
+    "Polární ustavení: Vyřešeno"
+  ],
+  "Polar alignment: Failed": [
+    "Polárne zarovnanie: Zlyhalo",
+    "Polární ustavení: Selhalo"
+  ],
+  "New moon, {a}% illuminated": [
+    "Nov, osvetlenie {a} %",
+    "Nov, osvětlení {a} %"
+  ],
+  "Camera platesolving PA": [
+    "Kamera rieši polárne zarovnanie",
+    "Kamera řeší polární ustavení"
+  ],
+  "Rig telemetry is stale": [
+    "Telemetria zostavy je neaktuálna",
+    "Telemetrie sestavy je neaktuální"
+  ],
+  "Dithering and settling": [
+    "Posun a ustálenie",
+    "Posun a ustálení"
+  ],
+  "Mount: Slewing (stale)": [
+    "Montáž: Presun (neaktuálne)",
+    "Montáž: Přesun (neaktuální)"
+  ],
+  "Mount: Unknown (stale)": [
+    "Montáž: Neznáme (neaktuálne)",
+    "Montáž: Neznámé (neaktuální)"
+  ],
+  "Pipeline stage: Saving": [
+    "Fáza spracovania: Ukladanie",
+    "Fáze zpracování: Ukládání"
+  ],
+  "Capturing light frames": [
+    "Snímanie svetelných snímok",
+    "Pořizování světelných snímků"
+  ],
+  "Finding light exposure": [
+    "Hľadanie expozície pre light",
+    "Hledání expozice pro light"
+  ],
+  "Setting tracking rate": [
+    "Nastavenie rýchlosti sledovania",
+    "Nastavení rychlosti sledování"
+  ],
+  "Finalizing live stack": [
+    "Dokončovanie živého skladania",
+    "Dokončování živého skládání"
+  ],
+  "Transferring exposure": [
+    "Prenos expozície",
+    "Přenos expozice"
+  ],
+  "Resynced: fell behind": [
+    "Znova synchronizované: oneskorené aktualizácie",
+    "Znovu synchronizováno: opožděné aktualizace"
+  ],
+  "Mount: Parked (stale)": [
+    "Montáž: Zaparkovaná (neaktuálne)",
+    "Montáž: Zaparkovaná (neaktuální)"
+  ],
+  "Building light master": [
+    "Vytváranie master snímky light",
+    "Vytváření master snímku light"
+  ],
+  "Capturing dark frames": [
+    "Snímanie tmavých snímok",
+    "Pořizování temných snímků"
+  ],
+  "Finding dark exposure": [
+    "Hľadanie expozície pre dark",
+    "Hledání expozice pro dark"
+  ],
+  "Capturing flat frames": [
+    "Snímanie flat snímok",
+    "Pořizování flat snímků"
+  ],
+  "Finding flat exposure": [
+    "Hľadanie expozície pre flat",
+    "Hledání expozice pro flat"
+  ],
+  "Capturing bias frames": [
+    "Snímanie bias snímok",
+    "Pořizování bias snímků"
+  ],
+  "Finding bias exposure": [
+    "Hľadanie expozície pre bias",
+    "Hledání expozice pro bias"
+  ],
+  "Autofocus: Validation": [
+    "Automatické zaostrovanie: Overenie",
+    "Automatické ostření: Ověření"
+  ],
+  "Centering: Evaluating": [
+    "Centrovanie: Vyhodnotenie",
+    "Centrování: Vyhodnocení"
+  ],
+  "Centering: Correcting": [
+    "Centrovanie: Korekcia",
+    "Centrování: Korekce"
+  ],
+  "Live connection lost": [
+    "Živé spojenie sa prerušilo",
+    "Živé spojení se přerušilo"
+  ],
+  "Preparing live stack": [
+    "Príprava živého skladania",
+    "Příprava živého skládání"
+  ],
+  "Downloading exposure": [
+    "Sťahovanie expozície",
+    "Stahování expozice"
+  ],
+  "Stays down all night": [
+    "Celú noc pod obzorom",
+    "Celou noc pod obzorem"
+  ],
+  "Downloading {a} sky map": [
+    "Sťahovanie mapy oblohy {a}",
+    "Stahování mapy oblohy {a}"
+  ],
+  "Resize {a} panel height": [
+    "Zmeniť výšku panela {a}",
+    "Změnit výšku panelu {a}"
+  ],
+  "Building dark master": [
+    "Vytváranie master snímky dark",
+    "Vytváření master snímku dark"
+  ],
+  "Building flat master": [
+    "Vytváranie master snímky flat",
+    "Vytváření master snímku flat"
+  ],
+  "Building bias master": [
+    "Vytváranie master snímky bias",
+    "Vytváření master snímku bias"
+  ],
+  "Centering: Preparing": [
+    "Centrovanie: Príprava",
+    "Centrování: Příprava"
+  ],
+  "Centering: Completed": [
+    "Centrovanie: Dokončené",
+    "Centrování: Dokončeno"
+  ],
+  "Power state unknown": [
+    "Stav napájania neznámy",
+    "Stav napájení neznámý"
+  ],
+  "Camera capturing PA": [
+    "Kamera sníma polárne zarovnanie",
+    "Kamera snímá polární ustavení"
+  ],
+  "Synchronizing mount": [
+    "Synchronizácia montáže",
+    "Synchronizace montáže"
+  ],
+  "Moving filter wheel": [
+    "Pohyb filtrového kolesa",
+    "Pohyb filtrového kola"
+  ],
+  "Discovering devices": [
+    "Vyhľadávanie zariadení",
+    "Vyhledávání zařízení"
+  ],
+  "Mount: Not tracking": [
+    "Montáž: Nesleduje",
+    "Montáž: Nesleduje"
+  ],
+  "Mount: Home (stale)": [
+    "Montáž: Domovská poloha (neaktuálne)",
+    "Montáž: Domovská poloha (neaktuální)"
+  ],
+  "Autofocus: Baseline": [
+    "Automatické zaostrovanie: Východiskové meranie",
+    "Automatické ostření: Výchozí měření"
+  ],
+  "Autofocus: Starting": [
+    "Automatické zaostrovanie: Spúšťanie",
+    "Automatické ostření: Spouštění"
+  ],
+  "Centering: Settling": [
+    "Centrovanie: Ustaľovanie",
+    "Centrování: Ustalování"
+  ],
+  "Centering: Tracking": [
+    "Centrovanie: Sledovanie",
+    "Centrování: Sledování"
+  ],
+  "Camera settling PA": [
+    "Kamera čaká na ustálenie polárneho zarovnania",
+    "Kamera čeká na ustálení polárního ustavení"
+  ],
+  "No score reduction": [
+    "Bez zníženia skóre",
+    "Bez snížení skóre"
+  ],
+  "Stays up all night": [
+    "Celú noc nad obzorom",
+    "Celou noc nad obzorem"
+  ],
+  "Autofocus: Control": [
+    "Automatické zaostrovanie: Kontrola",
+    "Automatické ostření: Kontrola"
+  ],
+  "Centering: Slewing": [
+    "Centrovanie: Presun",
+    "Centrování: Přesun"
+  ],
+  "Excellent {a} · stale": [
+    "Výborné {a} · neaktuálne",
+    "Výborné {a} · neaktuální"
+  ],
+  "Very poor {a} · stale": [
+    "Veľmi slabé {a} · neaktuálne",
+    "Velmi slabé {a} · neaktuální"
+  ],
+  "Autofocus: Coarse": [
+    "Automatické zaostrovanie: Hrubé zaostrenie",
+    "Automatické ostření: Hrubé zaostření"
+  ],
+  "Centering: Failed": [
+    "Centrovanie: Zlyhalo",
+    "Centrování: Selhalo"
+  ],
+  "Camera capturing": [
+    "Kamera sníma",
+    "Kamera snímá"
+  ],
+  "server restarted": [
+    "server sa reštartoval",
+    "server se restartoval"
+  ],
+  "Setting tracking": [
+    "Nastavenie sledovania",
+    "Nastavení sledování"
+  ],
+  "Dew-point margin": [
+    "Odstup od rosného bodu",
+    "Odstup od rosného bodu"
+  ],
+  "Camera settling": [
+    "Kamera čaká na ustálenie",
+    "Kamera čeká na ustálení"
+  ],
+  "Changing filter": [
+    "Zmena filtra",
+    "Změna filtru"
+  ],
+  "Saving exposure": [
+    "Ukladanie expozície",
+    "Ukládání expozice"
+  ],
+  "Capturing frame": [
+    "Snímanie snímky",
+    "Pořizování snímku"
+  ],
+  "Waxing crescent": [
+    "Dorastajúci kosáčik",
+    "Dorůstající srpek"
+  ],
+  "Waning crescent": [
+    "Ubúdajúci kosáčik",
+    "Ubývající srpek"
+  ],
+  "Schedule held: {a}": [
+    "Harmonogram pozdržaný: {a}",
+    "Harmonogram pozdržen: {a}"
+  ],
+  "Mount: Tracking": [
+    "Montáž: Sledovanie",
+    "Montáž: Sledování"
+  ],
+  "Autofocus: Fine": [
+    "Automatické zaostrovanie: Jemné zaostrenie",
+    "Automatické ostření: Jemné zaostření"
+  ],
+  "missed updates": [
+    "vynechané aktualizácie",
+    "vynechané aktualizace"
+  ],
+  "Moving focuser": [
+    "Pohyb zaostrovača",
+    "Pohyb ostřiče"
+  ],
+  "Waxing gibbous": [
+    "Dorastajúci Mesiac",
+    "Dorůstající Měsíc"
+  ],
+  "Waning gibbous": [
+    "Ubúdajúci Mesiac",
+    "Ubývající Měsíc"
+  ],
+  "Resize {a} height": [
+    "Zmeniť výšku: {a}",
+    "Změnit výšku: {a}"
+  ],
+  ", dew point {a}°C": [
+    ", rosný bod {a}°C",
+    ", rosný bod {a}°C"
+  ],
+  "Mount: Slewing": [
+    "Montáž: Presun",
+    "Montáž: Přesun"
+  ],
+  "Mount: Unknown": [
+    "Montáž: Neznáme",
+    "Montáž: Neznámé"
+  ],
+  "Dew heater off": [
+    "Vyhrievanie proti rose vypnuté",
+    "Vyhřívání proti rose vypnuté"
+  ],
+  "Exposing light": [
+    "Exponovanie svetelnej snímky",
+    "Exponování světelného snímku"
+  ],
+  "Exposing frame": [
+    "Exponovanie snímky",
+    "Exponování snímku"
+  ],
+  "Reconnecting…": [
+    "Opätovné pripájanie…",
+    "Opětovné připojování…"
+  ],
+  "Jogging scope": [
+    "Ručný pohyb ďalekohľadu",
+    "Ruční pohyb dalekohledu"
+  ],
+  "Slewing scope": [
+    "Presun ďalekohľadu",
+    "Přesun dalekohledu"
+  ],
+  "First quarter": [
+    "Prvá štvrť",
+    "První čtvrť"
+  ],
+  "RTSP stream: {a}": [
+    "Prenos RTSP: {a}",
+    "Přenos RTSP: {a}"
+  ],
+  "Mount: Parked": [
+    "Montáž: Zaparkovaná",
+    "Montáž: Zaparkovaná"
+  ],
+  "Dew heater on": [
+    "Vyhrievanie proti rose zapnuté",
+    "Vyhřívání proti rose zapnuté"
+  ],
+  "Exposing dark": [
+    "Exponovanie tmavej snímky",
+    "Exponování temného snímku"
+  ],
+  "Exposing flat": [
+    "Exponovanie flat snímky",
+    "Exponování flat snímku"
+  ],
+  "Exposing bias": [
+    "Exponovanie bias snímky",
+    "Exponování bias snímku"
+  ],
+  "Good {a} · stale": [
+    "Dobré {a} · neaktuálne",
+    "Dobré {a} · neaktuální"
+  ],
+  "Fair {a} · stale": [
+    "Priemerné {a} · neaktuálne",
+    "Průměrné {a} · neaktuální"
+  ],
+  "Poor {a} · stale": [
+    "Slabé {a} · neaktuálne",
+    "Slabé {a} · neaktuální"
+  ],
+  "Running plan": [
+    "Spustený plán",
+    "Spuštěný plán"
+  ],
+  "Autofocusing": [
+    "Automatické zaostrovanie",
+    "Automatické ostření"
+  ],
+  "Finding home": [
+    "Hľadanie domovskej polohy",
+    "Hledání domovské polohy"
+  ],
+  "Setting gain": [
+    "Nastavenie zisku",
+    "Nastavení zisku"
+  ],
+  "Last quarter": [
+    "Posledná štvrť",
+    "Poslední čtvrť"
+  ],
+  ", wind {a} km/h": [
+    ", vietor {a} km/h",
+    ", vítr {a} km/h"
+  ],
+  "Discharging": [
+    "Vybíjanie",
+    "Vybíjení"
+  ],
+  "In progress": [
+    "Prebieha",
+    "Probíhá"
+  ],
+  "Downloading": [
+    "Sťahovanie",
+    "Stahování"
+  ],
+  "Camera idle": [
+    "Kamera nečinná",
+    "Kamera nečinná"
+  ],
+  "fell behind": [
+    "oneskorené aktualizácie",
+    "opožděné aktualizace"
+  ],
+  "Rig offline": [
+    "Zostava je odpojená",
+    "Sestava je odpojená"
+  ],
+  "Plan paused": [
+    "Plán pozastavený",
+    "Plán pozastaven"
+  ],
+  "No forecast": [
+    "Bez predpovede",
+    "Bez předpovědi"
+  ],
+  "Mount: Home": [
+    "Montáž: Domovská poloha",
+    "Montáž: Domovská poloha"
+  ],
+  "Iteration {a}": [
+    "Iterácia {a}",
+    "Iterace {a}"
+  ],
+  "Weather {a}°C": [
+    "Počasie {a}°C",
+    "Počasí {a}°C"
+  ],
+  "Excellent {a}": [
+    "Výborné {a}",
+    "Výborné {a}"
+  ],
+  "Very poor {a}": [
+    "Veľmi slabé {a}",
+    "Velmi slabé {a}"
+  ],
+  "Unparking": [
+    "Odparkovanie",
+    "Odparkování"
+  ],
+  "Excellent": [
+    "Výborné",
+    "Výborné"
+  ],
+  "Very poor": [
+    "Veľmi slabé",
+    "Velmi slabé"
+  ],
+  "Full moon": [
+    "Spln",
+    "Úplněk"
+  ],
+  "{a} · queue {b}": [
+    "{a} · front {b}",
+    "{a} · fronta {b}"
+  ],
+  "Charging": [
+    "Nabíjanie",
+    "Nabíjení"
+  ],
+  "Exposing": [
+    "Exponovanie",
+    "Exponování"
+  ],
+  "Starting": [
+    "Spúšťanie",
+    "Spouštění"
+  ],
+  "New moon": [
+    "Nov",
+    "Nov"
+  ],
+  "{a} samples": [
+    "Počet vzoriek: {a}",
+    "Počet vzorků: {a}"
+  ],
+  "−{a} points": [
+    "−{a} bodov",
+    "−{a} bodů"
+  ],
+  "Parking": [
+    "Parkovanie",
+    "Parkování"
+  ],
+  "Working": [
+    "Prebieha spracovanie",
+    "Probíhá zpracování"
+  ],
+  "Filter {a}": [
+    "Filter {a}",
+    "Filtr {a}"
+  ],
+  "{a}/{b} items": [
+    "{a}/{b} položiek",
+    "{a}/{b} položek"
+  ],
+  "Browse {a}": [
+    "Prehľadávať: {a}",
+    "Procházet: {a}"
+  ],
+  "Saving": [
+    "Ukladanie",
+    "Ukládání"
+  ],
+  "Clouds": [
+    "Oblačnosť",
+    "Oblačnost"
+  ],
+  "{a} files": [
+    "Počet súborov: {a}",
+    "Počet souborů: {a}"
+  ],
+  "Plan {a}": [
+    "Plán {a}",
+    "Plán {a}"
+  ],
+  "Good {a}": [
+    "Dobré {a}",
+    "Dobré {a}"
+  ],
+  "Fair {a}": [
+    "Priemerné {a}",
+    "Průměrné {a}"
+  ],
+  "Poor {a}": [
+    "Slabé {a}",
+    "Slabé {a}"
+  ],
+  "Home": [
+    "Domovská poloha",
+    "Domovská poloha"
+  ],
+  "Held": [
+    "Pozdržané",
+    "Pozdrženo"
+  ],
+  "Good": [
+    "Dobré",
+    "Dobré"
+  ],
+  "Fair": [
+    "Priemerné",
+    "Průměrné"
+  ],
+  "Poor": [
+    "Slabé",
+    "Slabé"
+  ],
+  "autofocus found no measurable stars or fewer than three credible stars at the starting position": [
+    "Automatické zaostrovanie v počiatočnej polohe nenašlo merateľné hviezdy alebo našlo menej než tri spoľahlivé hviezdy.",
+    "Automatické ostření ve výchozí poloze nenašlo měřitelné hvězdy nebo našlo méně než tři spolehlivé hvězdy."
+  ],
+  "autofocus candidate validation found insufficient measurable stars": [
+    "Overenie navrhnutej polohy zaostrenia nenašlo dostatok merateľných hviezd.",
+    "Ověření navržené polohy zaostření nenašlo dostatek měřitelných hvězd."
+  ],
+  "autofocus control validation found insufficient measurable stars": [
+    "Kontrolné meranie zaostrenia nenašlo dostatok merateľných hviezd.",
+    "Kontrolní měření zaostření nenašlo dostatek měřitelných hvězd."
+  ],
+  "a capture loop is already running; stop it before starting another capture": [
+    "Séria snímania už prebieha; pred ďalším snímaním ju zastavte.",
+    "Série snímání již probíhá; před dalším snímáním ji zastavte."
+  ],
+  "a capture or capture loop is already running": [
+    "Snímanie alebo séria snímania už prebieha.",
+    "Snímání nebo série snímání již probíhá."
+  ],
+  "no capture loop is running": [
+    "Neprebieha žiadna séria snímania.",
+    "Neprobíhá žádná série snímání."
+  ],
+  "no capture folder is configured; set one in Settings > Capture before starting a capture": [
+    "Nie je nastavený priečinok snímok; pred snímaním ho nastavte v Nastavenia > Snímanie.",
+    "Není nastavena složka snímků; před snímáním ji nastavte v Nastavení > Snímání."
+  ],
+  "camera acquisition is already running; only one exposure runs at a time": [
+    "Kamera už sníma; naraz môže prebiehať iba jedna expozícia.",
+    "Kamera již snímá; současně může probíhat pouze jedna expozice."
+  ],
+  "cannot dither safely without fresh J2000 mount coordinates": [
+    "Bez aktuálnych súradníc montáže J2000 nemožno bezpečne vykonať dithering.",
+    "Bez aktuálních souřadnic montáže J2000 nelze bezpečně provést dithering."
+  ],
+  "cannot dither safely without fresh J2000 mount coordinates after waiting 60 seconds for telemetry to recover": [
+    "Ani po 60 sekundách čakania na obnovu telemetrie nie sú dostupné aktuálne súradnice montáže J2000; dithering nemožno bezpečne vykonať.",
+    "Ani po 60 sekundách čekání na obnovení telemetrie nejsou dostupné aktuální souřadnice montáže J2000; dithering nelze bezpečně provést."
+  ],
+  "cannot dither safely without the active telephoto optic's pixel scale": [
+    "Bez uhlovej mierky pixelu aktívneho teleobjektívu nemožno bezpečne vykonať dithering.",
+    "Bez úhlového měřítka pixelu aktivního teleobjektivu nelze bezpečně provést dithering."
+  ],
+  "waiting for stopped mount before restoring dither tracking": [
+    "Čaká sa na zastavenie montáže pred obnovením sledovania po ditheringu.",
+    "Čeká se na zastavení montáže před obnovením sledování po ditheringu."
+  ],
+  "mount did not confirm tracking after dither": [
+    "Montáž nepotvrdila sledovanie po ditheringu.",
+    "Montáž nepotvrdila sledování po ditheringu."
+  ],
+  "Recovering ambiguous dither without another offset": [
+    "Obnovuje sa nepotvrdený dithering bez ďalšieho posunu.",
+    "Obnovuje se nepotvrzený dithering bez dalšího posunu."
+  ],
+  "Dither recovery: tracking reset not yet confirmed": [
+    "Obnova ditheringu: obnovenie sledovania zatiaľ nie je potvrdené.",
+    "Obnova ditheringu: obnovení sledování zatím není potvrzeno."
+  ],
+  "observing window ended during dither recovery": [
+    "Pozorovacie okno sa skončilo počas obnovy ditheringu.",
+    "Pozorovací okno skončilo během obnovy ditheringu."
+  ],
+  "Dither diagnostic camera cleanup pending; exposure blocked": [
+    "Čaká sa na ukončenie diagnostického snímania ditheringu; expozícia je blokovaná.",
+    "Čeká se na ukončení diagnostického snímání ditheringu; expozice je blokována."
+  ],
+  "image verification timed out": [
+    "Vypršal časový limit overenia snímky.",
+    "Vypršel časový limit ověření snímku."
+  ],
+  "fresh stopped tracking telemetry required for image verification": [
+    "Overenie snímky vyžaduje aktuálnu telemetriu potvrdzujúcu zastavenú montáž so zapnutým sledovaním.",
+    "Ověření snímku vyžaduje aktuální telemetrii potvrzující zastavenou montáž se zapnutým sledováním."
+  ],
+  "image position changed beyond 5 arcsec": [
+    "Poloha snímky sa zmenila o viac než 5 oblúkových sekúnd.",
+    "Poloha snímku se změnila o více než 5 úhlových vteřin."
+  ],
+  "Preparing calibration run": [
+    "Pripravuje sa kalibračné snímanie.",
+    "Připravuje se kalibrační snímání."
+  ],
+  "per-filter flats require a connected filter wheel": [
+    "Ploché snímky pre jednotlivé filtre vyžadujú pripojené filtrové koleso.",
+    "Ploché snímky pro jednotlivé filtry vyžadují připojené filtrové kolo."
+  ],
+  "flat exposure did not converge": [
+    "Expozíciu plochých snímok sa nepodarilo doladiť.",
+    "Expozici plochých snímků se nepodařilo doladit."
+  ],
+  "retained integration is missing after restart; saved raw FITS require reconstruction before cleanup can complete": [
+    "Po reštarte chýba uchovaná integrácia; pred dokončením čistenia treba obnoviť integráciu z uložených nespracovaných FITS.",
+    "Po restartu chybí uchovaná integrace; před dokončením čištění je nutné obnovit integraci z uložených nezpracovaných FITS."
+  ],
+  "no capture-session lights folder exists yet": [
+    "Priečinok svetelných snímok tejto relácie zatiaľ neexistuje.",
+    "Složka světelných snímků této relace zatím neexistuje."
+  ],
+  "no live stack has been started": [
+    "Žiadne živé skladanie zatiaľ nebolo spustené.",
+    "Žádné živé skládání zatím nebylo spuštěno."
+  ],
+  "the wide-camera stream requires an unparked mount": [
+    "Prenos zo širokouhlej kamery vyžaduje odparkovanú montáž.",
+    "Přenos ze širokoúhlé kamery vyžaduje odparkovanou montáž."
+  ],
+  "Another camera owner blocks scheduled recovery": [
+    "Plánovanú obnovu blokuje iná operácia používajúca kameru.",
+    "Plánovanou obnovu blokuje jiná operace používající kameru."
+  ],
+  "Active capture owner blocks scheduled recovery": [
+    "Plánovanú obnovu blokuje prebiehajúce snímanie.",
+    "Plánovanou obnovu blokuje probíhající snímání."
+  ],
+  "camera unavailable during recovery": [
+    "Kamera nie je počas obnovy dostupná.",
+    "Kamera není během obnovy dostupná."
+  ],
+  "Camera idle unconfirmed; unknown acquisition not aborted": [
+    "Nečinnosť kamery nie je potvrdená; snímanie s neznámym pôvodom nebolo prerušené.",
+    "Nečinnost kamery není potvrzena; snímání s neznámým původem nebylo přerušeno."
+  ],
+  "connection recovery unavailable": [
+    "Obnova pripojenia nie je dostupná.",
+    "Obnova připojení není dostupná."
+  ],
+  "no observing location is set: add one in Settings > Location before starting a run": [
+    "Nie je nastavené pozorovacie miesto: pred spustením ho pridajte v Nastavenia > Poloha.",
+    "Není nastaveno pozorovací místo: před spuštěním jej přidejte v Nastavení > Poloha."
+  ],
+  "dawn safety verification is pending; science is disabled": [
+    "Čaká sa na overenie bezpečného stavu pri svitaní; vedecké snímanie je zablokované.",
+    "Čeká se na ověření bezpečného stavu za svítání; vědecké snímání je zablokováno."
+  ],
+  "dawn safety cutoff reached or dawn boundary unknown; science cannot resume": [
+    "Dosiahol sa bezpečnostný limit svitania alebo jeho čas nie je známy; vedecké snímanie nemožno obnoviť.",
+    "Byl dosažen bezpečnostní limit svítání nebo jeho čas není znám; vědecké snímání nelze obnovit."
+  ],
+  "dawn safety operation exceeded 60 seconds": [
+    "Bezpečnostná operácia pri svitaní prekročila 60 sekúnd.",
+    "Bezpečnostní operace za svítání překročila 60 sekund."
+  ],
+  "dawn safety cutoff": [
+    "Bezpečnostné ukončenie pri svitaní.",
+    "Bezpečnostní ukončení za svítání."
+  ],
+  "dawn safety device unavailable": [
+    "Zariadenie pre bezpečnostnú operáciu pri svitaní nie je dostupné.",
+    "Zařízení pro bezpečnostní operaci za svítání není dostupné."
+  ],
+  "run is paused": [
+    "Beh plánu je pozastavený.",
+    "Běh plánu je pozastaven."
+  ],
+  "awaiting a fresh gate sample": [
+    "Čaká sa na aktuálne údaje pre vyhodnotenie podmienok.",
+    "Čeká se na aktuální údaje pro vyhodnocení podmínek."
+  ],
+  "scheduled window ended while operation unavailable; saved frames retained": [
+    "Plánované okno sa skončilo, kým operácia nebola dostupná; uložené snímky sa zachovali.",
+    "Plánované okno skončilo, zatímco operace nebyla dostupná; uložené snímky byly zachovány."
+  ],
+  "scheduled window ended before this run started; skipped to begin from the current time": [
+    "Plánované okno sa skončilo pred spustením; preskočené, aby plán pokračoval od aktuálneho času.",
+    "Plánované okno skončilo před spuštěním; přeskočeno, aby plán pokračoval od aktuálního času."
+  ],
+  "scheduled panel window ended during recovery; closing saved acquisition": [
+    "Plánované okno panela sa skončilo počas obnovy; uzatvára sa uložené snímanie.",
+    "Plánované okno panelu skončilo během obnovy; uzavírá se uložené snímání."
+  ],
+  "window ended while acquisition blocked; saved frames retained": [
+    "Okno sa skončilo počas blokovania snímania; uložené snímky sa zachovali.",
+    "Okno skončilo během blokování snímání; uložené snímky byly zachovány."
+  ],
+  "Item timing unavailable; waiting until window end": [
+    "Časovanie položky nie je dostupné; čaká sa do konca okna.",
+    "Časování položky není dostupné; čeká se do konce okna."
+  ],
+  "operation remains held for safe operator recovery": [
+    "Operácia zostáva pozastavená, aby ju mohla obsluha bezpečne obnoviť.",
+    "Operace zůstává pozastavena, aby ji mohla obsluha bezpečně obnovit."
+  ],
+  "Recovery level {level}: verifying device connection": [
+    "Obnova úrovne {level}: overuje sa pripojenie zariadenia.",
+    "Obnova úrovně {level}: ověřuje se připojení zařízení."
+  ],
+  "Recovery level {level}: verifying camera idle": [
+    "Obnova úrovne {level}: overuje sa nečinnosť kamery.",
+    "Obnova úrovně {level}: ověřuje se nečinnost kamery."
+  ],
+  "Recovery level {level}: verifying stopped tracking": [
+    "Obnova úrovne {level}: overuje sa zastavená montáž so zapnutým sledovaním.",
+    "Obnova úrovně {level}: ověřuje se zastavená montáž se zapnutým sledováním."
+  ],
+  "Building master from {count} retained frames": [
+    "Vytvára sa hlavná kalibračná snímka z {count} uchovaných snímok.",
+    "Vytváří se hlavní kalibrační snímek z {count} uchovaných snímků."
+  ],
+  "the Dark shutter position cannot be used for flat frames; select only illuminated filter positions": [
+    "Polohu uzávierky Dark nemožno použiť na ploché snímky; vyberte iba polohy prepúšťajúce svetlo.",
+    "Polohu závěrky Dark nelze použít pro ploché snímky; vyberte pouze polohy propouštějící světlo."
+  ],
+  "AutofocusConditionsError: autofocus found no measurable stars or fewer than three credible stars at the starting position": [
+    "AutofocusConditionsError: Automatické zaostrovanie v počiatočnej polohe nenašlo merateľné hviezdy alebo našlo menej než tri spoľahlivé hviezdy.",
+    "AutofocusConditionsError: Automatické ostření ve výchozí poloze nenašlo měřitelné hvězdy nebo našlo méně než tři spolehlivé hvězdy."
+  ],
+  "AutofocusConditionsError: autofocus candidate validation found insufficient measurable stars": [
+    "AutofocusConditionsError: Overenie navrhnutej polohy zaostrenia nenašlo dostatok merateľných hviezd.",
+    "AutofocusConditionsError: Ověření navržené polohy zaostření nenašlo dostatek měřitelných hvězd."
+  ],
+  "AutofocusConditionsError: autofocus control validation found insufficient measurable stars": [
+    "AutofocusConditionsError: Kontrolné meranie zaostrenia nenašlo dostatok merateľných hviezd.",
+    "AutofocusConditionsError: Kontrolní měření zaostření nenašlo dostatek měřitelných hvězd."
+  ],
+  "not connected to the scope": [
+    "Nie je pripojené k ďalekohľadu.",
+    "Není připojeno k dalekohledu."
+  ],
+  "not connected to the filter wheel": [
+    "Nie je pripojené k filtrovému kolesu.",
+    "Není připojeno k filtrovému kolu."
+  ],
+  "the active observing location has no recorded timezone: add one in Settings > Location before compiling a plan. A schedule compiled against the wrong zone is a wrong observing night.": [
+    "Aktívne pozorovacie miesto nemá zaznamenané časové pásmo: pred zostavením plánu ho pridajte v Nastavenia > Poloha. Rozvrh zostavený pre nesprávne pásmo patrí k nesprávnej pozorovacej noci.",
+    "Aktivní pozorovací místo nemá zaznamenáno časové pásmo: před sestavením plánu jej přidejte v Nastavení > Poloha. Rozvrh sestavený pro nesprávné pásmo patří k nesprávné pozorovací noci."
+  ],
+  "avg total {a}%": [
+    "priemer celkovej oblačnosti {a}%",
+    "průměr celkové oblačnosti {a}%"
+  ],
+  "low {a}%": [
+    "nízka oblačnosť {a}%",
+    "nízká oblačnost {a}%"
+  ],
+  "high {a}%": [
+    "vysoká oblačnosť {a}%",
+    "vysoká oblačnost {a}%"
+  ],
+  "low unavailable": [
+    "nízka oblačnosť nedostupná",
+    "nízká oblačnost nedostupná"
+  ],
+  "high unavailable": [
+    "vysoká oblačnosť nedostupná",
+    "vysoká oblačnost nedostupná"
+  ],
+  "{a}% average cloud cover": [
+    "priemerná oblačnosť {a}%",
+    "průměrná oblačnost {a}%"
+  ],
+  "{a}% high cloud degrading transparency": [
+    "vysoká oblačnosť {a}% znižuje priehľadnosť",
+    "vysoká oblačnost {a}% snižuje průzračnost"
+  ],
+  "{a}% low cloud": [
+    "nízka oblačnosť {a}%",
+    "nízká oblačnost {a}%"
+  ],
+  "{a}% illuminated, above horizon {b}% of dark window": [
+    "osvetlenie {a}%, nad horizontom {b}% tmavého okna",
+    "osvětlení {a}%, nad obzorem {b}% temného okna"
+  ],
+  "{a}% illuminated, above horizon {b}% of dark window, mean altitude {c}°": [
+    "osvetlenie {a}%, nad horizontom {b}% tmavého okna, priemerná výška {c}°",
+    "osvětlení {a}%, nad obzorem {b}% temného okna, průměrná výška {c}°"
+  ],
+  "moon {a}% illuminated, up {b}% of the dark window": [
+    "Mesiac osvetlený na {a}%, nad horizontom počas {b}% tmavého okna",
+    "Měsíc osvětlený na {a}%, nad obzorem během {b}% temného okna"
+  ],
+  "avg temperature/dew-point margin {a}°C": [
+    "priemerný rozdiel teploty a rosného bodu {a}°C",
+    "průměrný rozdíl teploty a rosného bodu {a}°C"
+  ],
+  "dew-point margin only {a}°C — dew/haze risk": [
+    "rozdiel od rosného bodu iba {a}°C — riziko rosy alebo oparu",
+    "rozdíl od rosného bodu pouze {a}°C — riziko rosy nebo oparu"
+  ],
+  "temperature/dew-point data unavailable": [
+    "údaje o teplote a rosnom bode nedostupné",
+    "údaje o teplotě a rosném bodu nedostupné"
+  ],
+  "avg wind {a} m/s": [
+    "priemerný vietor {a} m/s",
+    "průměrný vítr {a} m/s"
+  ],
+  "{a} m/s wind — may affect tracking stability": [
+    "vietor {a} m/s — môže ovplyvniť stabilitu sledovania",
+    "vítr {a} m/s — může ovlivnit stabilitu sledování"
+  ],
+  "wind data unavailable": [
+    "údaje o vetre nedostupné",
+    "údaje o větru nedostupné"
+  ],
+  "max precipitation chance {a}%": [
+    "maximálna pravdepodobnosť zrážok {a}%",
+    "maximální pravděpodobnost srážek {a}%"
+  ],
+  "{a}% chance of precipitation": [
+    "pravdepodobnosť zrážok {a}%",
+    "pravděpodobnost srážek {a}%"
+  ],
+  "precipitation data unavailable": [
+    "údaje o zrážkach nedostupné",
+    "údaje o srážkách nedostupné"
+  ],
+  "avg humidity {a}%": [
+    "priemerná vlhkosť {a}%",
+    "průměrná vlhkost {a}%"
+  ],
+  "humidity data unavailable": [
+    "údaje o vlhkosti nedostupné",
+    "údaje o vlhkosti nedostupné"
+  ],
+  "clear skies and a favourable moon forecast for tonight": [
+    "jasná obloha a priaznivá predpoveď Mesiaca na túto noc",
+    "jasná obloha a příznivá předpověď Měsíce na tuto noc"
+  ],
+  "Aborted": [
+    "Prerušené",
+    "Přerušeno"
+  ],
+  "Asterism": [
+    "Asterizmus",
+    "Asterismus"
+  ],
+  "Back": [
+    "Späť",
+    "Zpět"
+  ],
+  "Body": [
+    "Teleso",
+    "Těleso"
+  ],
+  "COMPLETED": [
+    "DOKONČENÉ",
+    "DOKONČENO"
+  ],
+  "Calibration": [
+    "Kalibrácia",
+    "Kalibrace"
+  ],
+  "Civil": [
+    "Občiansky",
+    "Občanský"
+  ],
+  "Cloudy": [
+    "Zamračené",
+    "Zataženo"
+  ],
+  "Comet": [
+    "Kométa",
+    "Kometa"
+  ],
+  "Concepts": [
+    "Pojmy",
+    "Pojmy"
+  ],
+  "Copying": [
+    "Kopírovanie",
+    "Kopírování"
+  ],
+  "Daily": [
+    "Denne",
+    "Denně"
+  ],
+  "Dashboard": [
+    "Prehľad",
+    "Přehled"
+  ],
+  "Destination": [
+    "Cieľové miesto",
+    "Cílové místo"
+  ],
+  "Disable": [
+    "Vypnúť",
+    "Vypnout"
+  ],
+  "EAST": [
+    "VÝCHOD",
+    "VÝCHOD"
+  ],
+  "Enable": [
+    "Zapnúť",
+    "Zapnout"
+  ],
+  "Equatorial": [
+    "Rovníkový",
+    "Rovníkový"
+  ],
+  "Failed": [
+    "Zlyhalo",
+    "Selhalo"
+  ],
+  "Filter": [
+    "Filter",
+    "Filtr"
+  ],
+  "Galaxy": [
+    "Galaxia",
+    "Galaxie"
+  ],
+  "Installed": [
+    "Nainštalované",
+    "Nainstalováno"
+  ],
+  "Lunar": [
+    "Mesačný",
+    "Měsíční"
+  ],
+  "Master": [
+    "Hlavná snímka",
+    "Hlavní snímek"
+  ],
+  "Moved": [
+    "Presunuté",
+    "Přesunuto"
+  ],
+  "Narrowband": [
+    "Úzkopásmové",
+    "Úzkopásmové"
+  ],
+  "OVERLAPPING": [
+    "PREKRÝVA SA",
+    "PŘEKRÝVÁ SE"
+  ],
+  "Optic": [
+    "Optika",
+    "Optika"
+  ],
+  "Panel": [
+    "Panel",
+    "Panel"
+  ],
+  "Planet": [
+    "Planéta",
+    "Planeta"
+  ],
+  "Required": [
+    "Povinné",
+    "Povinné"
+  ],
+  "Safety": [
+    "Bezpečnosť",
+    "Bezpečnost"
+  ],
+  "Separation": [
+    "Vzdialenosť",
+    "Vzdálenost"
+  ],
+  "Settling": [
+    "Ustaľovanie",
+    "Ustalování"
+  ],
+  "Sidereal": [
+    "Hviezdny",
+    "Hvězdný"
+  ],
+  "Skipped": [
+    "Vynechané",
+    "Vynecháno"
+  ],
+  "Solar": [
+    "Slnečný",
+    "Sluneční"
+  ],
+  "Stacking": [
+    "Skladanie",
+    "Skládání"
+  ],
+  "Star": [
+    "Hviezda",
+    "Hvězda"
+  ],
+  "Transferring": [
+    "Prenos",
+    "Přenos"
+  ],
+  "Transit": [
+    "Prechod meridiánom",
+    "Průchod meridiánem"
+  ],
+  "Transits": [
+    "Prechody meridiánom",
+    "Průchody meridiánem"
+  ],
+  "Troubleshooting": [
+    "Riešenie problémov",
+    "Řešení problémů"
+  ],
+  "WEST": [
+    "ZÁPAD",
+    "ZÁPAD"
+  ],
+  "Yearly": [
+    "Ročne",
+    "Ročně"
+  ],
+  "Enable item {a}": [
+    "Zapnúť položku {a}",
+    "Zapnout položku {a}"
+  ],
+  "Disable item {a}": [
+    "Vypnúť položku {a}",
+    "Vypnout položku {a}"
+  ],
+  "Browser location needs a secure connection, which this app does not have when reached over the plain http:// LAN address (the one the pairing QR code uses). Use Manual entry below, or open this app as http://localhost on the machine running ssc-core itself, where it does work.": [
+    "Poloha z prehliadača vyžaduje bezpečné pripojenie, ktoré pri otvorení aplikácie cez bežnú LAN adresu http:// (použitú v párovacom QR kóde) nie je dostupné. Použite ručné zadanie nižšie alebo otvorte aplikáciu cez http://localhost priamo na počítači so serverom ssc-core, kde táto funkcia funguje.",
+    "Poloha z prohlížeče vyžaduje bezpečné připojení, které při otevření aplikace přes běžnou LAN adresu http:// (použitou v párovacím QR kódu) není dostupné. Použijte ruční zadání níže nebo otevřete aplikaci přes http://localhost přímo na počítači se serverem ssc-core, kde tato funkce funguje."
+  ],
+  "Settle": [
+    "Ustálenie",
+    "Ustálení"
+  ],
+  "Capture + solve": [
+    "Snímanie a astrometria",
+    "Snímání a astrometrie"
+  ],
+  "Confirm": [
+    "Potvrdiť",
+    "Potvrdit"
+  ],
+  "Frame (EQ mode — fixed for the whole session)": [
+    "Pole (režim EQ — pevné počas celej relácie)",
+    "Pole (režim EQ — pevné po celou relaci)"
+  ],
+  "Guaranteed-keep region (survives stacking)": [
+    "Zaručene zachovaná oblasť (zostane po skladaní)",
+    "Zaručeně zachovaná oblast (zůstane po skládání)"
+  ],
+  "Swept envelope (sky touched over the session)": [
+    "Obal prechodu (obloha obsiahnutá počas relácie)",
+    "Obálka průchodu (obloha zahrnutá během relace)"
+  ],
+  "Frame at session end": [
+    "Pole na konci relácie",
+    "Pole na konci relace"
+  ],
+  "Frame at the scrubbed instant": [
+    "Pole vo vybranom okamihu",
+    "Pole ve vybraném okamžiku"
+  ],
+  "Your horizon profile (approximate — held at the target's bearing at session start)": [
+    "Váš profil horizontu (približný — podľa smeru cieľa na začiatku relácie)",
+    "Váš profil obzoru (přibližný — podle směru cíle na začátku relace)"
+  ],
+  "Tele": [
+    "Teleobjektív",
+    "Teleobjektiv"
+  ],
+  "Wide": [
+    "Širokouhlá",
+    "Širokoúhlá"
+  ],
+  "Nova": [
+    "Nova",
+    "Nova"
+  ],
+  "(unset)": [
+    "(nenastavené)",
+    "(nenastaveno)"
+  ],
+  "Yes": [
+    "Áno",
+    "Ano"
+  ],
+  "No": [
+    "Nie",
+    "Ne"
+  ],
+  "Safe dark transition": [
+    "Bezpečný prechod na dark",
+    "Bezpečný přechod na dark"
+  ],
+  "Alt-az": [
+    "Azimutálny",
+    "Azimutální"
+  ],
+  "Naut.": [
+    "Nautický",
+    "Nautický"
+  ],
+  "Meridian": [
+    "Meridián",
+    "Meridián"
+  ],
+  "Zenith": [
+    "Zenit",
+    "Zenit"
+  ],
+  "The mount is parked. Polar alignment must open the arm and move the scope. Confirm that it is safe to move before continuing.": [
+    "Montáž je zaparkovaná. Polárne zarovnanie musí otvoriť rameno a pohnúť ďalekohľadom. Pred pokračovaním potvrďte, že pohyb je bezpečný.",
+    "Montáž je zaparkovaná. Polární ustavení musí otevřít rameno a pohnout dalekohledem. Před pokračováním potvrďte, že pohyb je bezpečný."
+  ],
+  "The mount is at Home. Polar alignment must open the arm and move the scope. Confirm that it is safe to move before continuing.": [
+    "Montáž je v domovskej polohe. Polárne zarovnanie musí otvoriť rameno a pohnúť ďalekohľadom. Pred pokračovaním potvrďte, že pohyb je bezpečný.",
+    "Montáž je v domovské poloze. Polární ustavení musí otevřít rameno a pohnout dalekohledem. Před pokračováním potvrďte, že pohyb je bezpečný."
+  ],
+  "The mount is parked. Recheck must move through {count} sky positions. Confirm that it is safe to move before continuing.": [
+    "Montáž je zaparkovaná. Opätovná kontrola vyžaduje presun cez {count} pozícií na oblohe. Pred pokračovaním potvrďte, že pohyb je bezpečný.",
+    "Montáž je zaparkovaná. Opětovná kontrola vyžaduje přesun přes {count} pozic na obloze. Před pokračováním potvrďte, že pohyb je bezpečný."
+  ],
+  "The mount is at Home. Recheck must move through {count} sky positions. Confirm that it is safe to move before continuing.": [
+    "Montáž je v domovskej polohe. Opätovná kontrola vyžaduje presun cez {count} pozícií na oblohe. Pred pokračovaním potvrďte, že pohyb je bezpečný.",
+    "Montáž je v domovské poloze. Opětovná kontrola vyžaduje přesun přes {count} pozic na obloze. Před pokračováním potvrďte, že pohyb je bezpečný."
+  ],
+  "Horizon point, azimuth {az}, altitude {alt}. Arrow keys move it; Delete removes it.": [
+    "Bod horizontu, azimut {az}, výška {alt}. Šípky ho posunú; Delete ho odstráni.",
+    "Bod obzoru, azimut {az}, výška {alt}. Šipky jej posunou; Delete jej odstraní."
+  ],
+  "Horizon point, azimuth {az}, altitude {alt}, selected. Arrow keys move it; Delete removes it.": [
+    "Vybraný bod horizontu, azimut {az}, výška {alt}. Šípky ho posunú; Delete ho odstráni.",
+    "Vybraný bod obzoru, azimut {az}, výška {alt}. Šipky jej posunou; Delete jej odstraní."
+  ],
+  "Capture light set": [
+    "Snímať sadu svetlých snímok",
+    "Snímat sadu světlých snímků"
+  ],
+  "Capture bias set": [
+    "Snímať sadu bias snímok",
+    "Snímat sadu bias snímků"
+  ],
+  "Capture flat set": [
+    "Snímať sadu flat snímok",
+    "Snímat sadu flat snímků"
+  ],
+  "Generated dark master": [
+    "Vytvorená hlavná dark snímka",
+    "Vytvořený hlavní dark snímek"
+  ],
+  "Generated flat master": [
+    "Vytvorená hlavná flat snímka",
+    "Vytvořený hlavní flat snímek"
+  ],
+  "Generated bias master": [
+    "Vytvorená hlavná bias snímka",
+    "Vytvořený hlavní bias snímek"
+  ],
+  "Looping · {activity}…": [
+    "Opakovanie · {activity}…",
+    "Opakování · {activity}…"
+  ],
+  "Looping · {activity} ({type})…": [
+    "Opakovanie · {activity} ({type})…",
+    "Opakování · {activity} ({type})…"
+  ],
+  "Deleted {count} file ({size}).": [
+    "Počet odstránených súborov: {count} ({size}).",
+    "Počet odstraněných souborů: {count} ({size})."
+  ],
+  "Deleted {count} files ({size}).": [
+    "Počet odstránených súborov: {count} ({size}).",
+    "Počet odstraněných souborů: {count} ({size})."
+  ],
+  "Permanently delete {count} selected item?": [
+    "Natrvalo odstrániť vybrané položky: {count}?",
+    "Natrvalo odstranit vybrané položky: {count}?"
+  ],
+  "Permanently delete {count} selected items?": [
+    "Natrvalo odstrániť vybrané položky: {count}?",
+    "Natrvalo odstranit vybrané položky: {count}?"
+  ],
+  "Moved {files} file in {items} selected item to {destination}.": [
+    "Presunuté súbory: {files}, vybrané položky: {items}, cieľ: {destination}.",
+    "Přesunuté soubory: {files}, vybrané položky: {items}, cíl: {destination}."
+  ],
+  "Moved {files} file in {items} selected items to {destination}.": [
+    "Presunuté súbory: {files}, vybrané položky: {items}, cieľ: {destination}.",
+    "Přesunuté soubory: {files}, vybrané položky: {items}, cíl: {destination}."
+  ],
+  "Moved {files} files in {items} selected item to {destination}.": [
+    "Presunuté súbory: {files}, vybrané položky: {items}, cieľ: {destination}.",
+    "Přesunuté soubory: {files}, vybrané položky: {items}, cíl: {destination}."
+  ],
+  "Moved {files} files in {items} selected items to {destination}.": [
+    "Presunuté súbory: {files}, vybrané položky: {items}, cieľ: {destination}.",
+    "Přesunuté soubory: {files}, vybrané položky: {items}, cíl: {destination}."
+  ],
+  "Copied {files} file in {items} selected item to {destination}.": [
+    "Skopírované súbory: {files}, vybrané položky: {items}, cieľ: {destination}.",
+    "Zkopírované soubory: {files}, vybrané položky: {items}, cíl: {destination}."
+  ],
+  "Copied {files} file in {items} selected items to {destination}.": [
+    "Skopírované súbory: {files}, vybrané položky: {items}, cieľ: {destination}.",
+    "Zkopírované soubory: {files}, vybrané položky: {items}, cíl: {destination}."
+  ],
+  "Copied {files} files in {items} selected item to {destination}.": [
+    "Skopírované súbory: {files}, vybrané položky: {items}, cieľ: {destination}.",
+    "Zkopírované soubory: {files}, vybrané položky: {items}, cíl: {destination}."
+  ],
+  "Copied {files} files in {items} selected items to {destination}.": [
+    "Skopírované súbory: {files}, vybrané položky: {items}, cieľ: {destination}.",
+    "Zkopírované soubory: {files}, vybrané položky: {items}, cíl: {destination}."
+  ],
+  "The selected comet is no longer present in the bundled JPL catalogue.": [
+    "Vybraná kométa už nie je v pribalenom katalógu JPL.",
+    "Vybraná kometa již není v přibaleném katalogu JPL."
+  ],
+  "The current comet orbit is not safe for automated pointing.": [
+    "Aktuálna dráha kométy nie je bezpečná pre automatické smerovanie.",
+    "Aktuální dráha komety není bezpečná pro automatické zaměřování."
+  ],
+  "Could not create archive ZIP ({status})": [
+    "Archív ZIP sa nepodarilo vytvoriť ({status})",
+    "Archiv ZIP se nepodařilo vytvořit ({status})"
+  ],
+  "This server has no {path}. It is almost certainly running older code than the interface it is serving — restart ssc-core and reload.": [
+    "Server nemá {path}. Pravdepodobne používa starší kód než zobrazované rozhranie — reštartujte ssc-core a načítajte stránku znova.",
+    "Server nemá {path}. Pravděpodobně používá starší kód než zobrazované rozhraní — restartujte ssc-core a načtěte stránku znovu."
+  ],
+  "request failed with status {status}": [
+    "požiadavka zlyhala so stavom {status}",
+    "požadavek selhal se stavem {status}"
+  ],
+  "Download interrupted: no data received for 30 seconds. Reconnect and retry the download.": [
+    "Sťahovanie bolo prerušené: 30 sekúnd neprišli žiadne údaje. Obnovte spojenie a skúste sťahovanie znova.",
+    "Stahování bylo přerušeno: 30 sekund nepřišla žádná data. Obnovte spojení a zkuste stahování znovu."
+  ],
+  "Operation {id} may still be running. Reconnect and check its status before trying again.": [
+    "Operácia {id} môže stále prebiehať. Pred ďalším pokusom obnovte spojenie a skontrolujte jej stav.",
+    "Operace {id} může stále probíhat. Před dalším pokusem obnovte spojení a zkontrolujte její stav."
+  ],
+  "Could not read operation {id} (HTTP {status}).": [
+    "Operáciu {id} sa nepodarilo načítať (HTTP {status}).",
+    "Operaci {id} se nepodařilo načíst (HTTP {status})."
+  ],
+  "Paused from Photon Commander": [
+    "Pozastavené z Photon Commander",
+    "Pozastaveno z Photon Commander"
+  ],
+  "Resumed from Photon Commander": [
+    "Obnovené z Photon Commander",
+    "Obnoveno z Photon Commander"
+  ],
+  "Stopped from Photon Commander": [
+    "Zastavené z Photon Commander",
+    "Zastaveno z Photon Commander"
+  ],
+  "No usable native Alpaca surface is answering at {endpoint}. Probe evidence: UDP {udp} did not answer within {seconds}s, trying the standard Alpaca port {port}; no Alpaca server answered there ({error}), so the JSON-RPC control port is the only surface left to try. Check device service availability and the Alpaca Protocol setting. SSC did not try legacy JSON-RPC on {legacy} because current Seestar firmware can leave that port open without answering commands.": [
+    "Na {endpoint} neodpovedá žiadne použiteľné natívne rozhranie Alpaca. Výsledok overenia: UDP {udp} neodpovedalo do {seconds} s, skúšam štandardný port Alpaca {port}; žiadny server Alpaca tam neodpovedal ({error}), takže zostáva skúsiť iba riadiaci port JSON-RPC. Skontrolujte dostupnosť služby zariadenia a nastavenie Alpaca Protocol. SSC neskúsil staršie rozhranie JSON-RPC na {legacy}, pretože aktuálny firmvér Seestar môže ponechať tento port otvorený bez odpovedania na príkazy.",
+    "Na {endpoint} neodpovídá žádné použitelné nativní rozhraní Alpaca. Výsledek ověření: UDP {udp} neodpovědělo do {seconds} s, zkouším standardní port Alpaca {port}; žádný server Alpaca tam neodpověděl ({error}), takže zbývá zkusit pouze řídicí port JSON-RPC. Zkontrolujte dostupnost služby zařízení a nastavení Alpaca Protocol. SSC nezkusil starší rozhraní JSON-RPC na {legacy}, protože aktuální firmware Seestar může ponechat tento port otevřený bez odpovídání na příkazy."
+  ],
+  "No usable native Alpaca surface is answering at {endpoint}. Probe evidence: UDP {udp} advertised AlpacaPort {port}; no Alpaca server answered there ({error}), so the JSON-RPC control port is the only surface left to try. Check device service availability and the Alpaca Protocol setting. SSC did not try legacy JSON-RPC on {legacy} because current Seestar firmware can leave that port open without answering commands.": [
+    "Na {endpoint} neodpovedá žiadne použiteľné natívne rozhranie Alpaca. Výsledok overenia: UDP {udp} oznámilo AlpacaPort {port}; žiadny server Alpaca tam neodpovedal ({error}), takže zostáva skúsiť iba riadiaci port JSON-RPC. Skontrolujte dostupnosť služby zariadenia a nastavenie Alpaca Protocol. SSC neskúsil staršie rozhranie JSON-RPC na {legacy}, pretože aktuálny firmvér Seestar môže ponechať tento port otvorený bez odpovedania na príkazy.",
+    "Na {endpoint} neodpovídá žádné použitelné nativní rozhraní Alpaca. Výsledek ověření: UDP {udp} oznámilo AlpacaPort {port}; žádný server Alpaca tam neodpověděl ({error}), takže zbývá zkusit pouze řídicí port JSON-RPC. Zkontrolujte dostupnost služby zařízení a nastavení Alpaca Protocol. SSC nezkusil starší rozhraní JSON-RPC na {legacy}, protože aktuální firmware Seestar může ponechat tento port otevřený bez odpovídání na příkazy."
+  ],
+  "connect failed: No usable native Alpaca surface is answering at {endpoint}. Probe evidence: UDP {udp} did not answer within {seconds}s, trying the standard Alpaca port {port}; no Alpaca server answered there ({error}), so the JSON-RPC control port is the only surface left to try. Check device service availability and the Alpaca Protocol setting. SSC did not try legacy JSON-RPC on {legacy} because current Seestar firmware can leave that port open without answering commands.": [
+    "Pripojenie zlyhalo: Na {endpoint} neodpovedá žiadne použiteľné natívne rozhranie Alpaca. Výsledok overenia: UDP {udp} neodpovedalo do {seconds} s, skúšam štandardný port Alpaca {port}; žiadny server Alpaca tam neodpovedal ({error}), takže zostáva skúsiť iba riadiaci port JSON-RPC. Skontrolujte dostupnosť služby zariadenia a nastavenie Alpaca Protocol. SSC neskúsil staršie rozhranie JSON-RPC na {legacy}, pretože aktuálny firmvér Seestar môže ponechať tento port otvorený bez odpovedania na príkazy.",
+    "Připojení selhalo: Na {endpoint} neodpovídá žádné použitelné nativní rozhraní Alpaca. Výsledek ověření: UDP {udp} neodpovědělo do {seconds} s, zkouším standardní port Alpaca {port}; žádný server Alpaca tam neodpověděl ({error}), takže zbývá zkusit pouze řídicí port JSON-RPC. Zkontrolujte dostupnost služby zařízení a nastavení Alpaca Protocol. SSC nezkusil starší rozhraní JSON-RPC na {legacy}, protože aktuální firmware Seestar může ponechat tento port otevřený bez odpovídání na příkazy."
+  ],
+  "connect failed: No usable native Alpaca surface is answering at {endpoint}. Probe evidence: UDP {udp} advertised AlpacaPort {port}; no Alpaca server answered there ({error}), so the JSON-RPC control port is the only surface left to try. Check device service availability and the Alpaca Protocol setting. SSC did not try legacy JSON-RPC on {legacy} because current Seestar firmware can leave that port open without answering commands.": [
+    "Pripojenie zlyhalo: Na {endpoint} neodpovedá žiadne použiteľné natívne rozhranie Alpaca. Výsledok overenia: UDP {udp} oznámilo AlpacaPort {port}; žiadny server Alpaca tam neodpovedal ({error}), takže zostáva skúsiť iba riadiaci port JSON-RPC. Skontrolujte dostupnosť služby zariadenia a nastavenie Alpaca Protocol. SSC neskúsil staršie rozhranie JSON-RPC na {legacy}, pretože aktuálny firmvér Seestar môže ponechať tento port otvorený bez odpovedania na príkazy.",
+    "Připojení selhalo: Na {endpoint} neodpovídá žádné použitelné nativní rozhraní Alpaca. Výsledek ověření: UDP {udp} oznámilo AlpacaPort {port}; žádný server Alpaca tam neodpověděl ({error}), takže zbývá zkusit pouze řídicí port JSON-RPC. Zkontrolujte dostupnost služby zařízení a nastavení Alpaca Protocol. SSC nezkusil starší rozhraní JSON-RPC na {legacy}, protože aktuální firmware Seestar může ponechat tento port otevřený bez odpovídání na příkazy."
+  ],
+  "connect failed: telescope.connected: [{code}] No usable native Alpaca surface is answering at {endpoint}. Probe evidence: UDP {udp} did not answer within {seconds}s, trying the standard Alpaca port {port}; no Alpaca server answered there ({error}), so the JSON-RPC control port is the only surface left to try. Check device service availability and the Alpaca Protocol setting. SSC did not try legacy JSON-RPC on {legacy} because current Seestar firmware can leave that port open without answering commands.": [
+    "Pripojenie zlyhalo: telescope.connected: [{code}] Na {endpoint} neodpovedá žiadne použiteľné natívne rozhranie Alpaca. Výsledok overenia: UDP {udp} neodpovedalo do {seconds} s, skúšam štandardný port Alpaca {port}; žiadny server Alpaca tam neodpovedal ({error}), takže zostáva skúsiť iba riadiaci port JSON-RPC. Skontrolujte dostupnosť služby zariadenia a nastavenie Alpaca Protocol. SSC neskúsil staršie rozhranie JSON-RPC na {legacy}, pretože aktuálny firmvér Seestar môže ponechať tento port otvorený bez odpovedania na príkazy.",
+    "Připojení selhalo: telescope.connected: [{code}] Na {endpoint} neodpovídá žádné použitelné nativní rozhraní Alpaca. Výsledek ověření: UDP {udp} neodpovědělo do {seconds} s, zkouším standardní port Alpaca {port}; žádný server Alpaca tam neodpověděl ({error}), takže zbývá zkusit pouze řídicí port JSON-RPC. Zkontrolujte dostupnost služby zařízení a nastavení Alpaca Protocol. SSC nezkusil starší rozhraní JSON-RPC na {legacy}, protože aktuální firmware Seestar může ponechat tento port otevřený bez odpovídání na příkazy."
+  ],
+  "connect failed: telescope.connected: [{code}] No usable native Alpaca surface is answering at {endpoint}. Probe evidence: UDP {udp} advertised AlpacaPort {port}; no Alpaca server answered there ({error}), so the JSON-RPC control port is the only surface left to try. Check device service availability and the Alpaca Protocol setting. SSC did not try legacy JSON-RPC on {legacy} because current Seestar firmware can leave that port open without answering commands.": [
+    "Pripojenie zlyhalo: telescope.connected: [{code}] Na {endpoint} neodpovedá žiadne použiteľné natívne rozhranie Alpaca. Výsledok overenia: UDP {udp} oznámilo AlpacaPort {port}; žiadny server Alpaca tam neodpovedal ({error}), takže zostáva skúsiť iba riadiaci port JSON-RPC. Skontrolujte dostupnosť služby zariadenia a nastavenie Alpaca Protocol. SSC neskúsil staršie rozhranie JSON-RPC na {legacy}, pretože aktuálny firmvér Seestar môže ponechať tento port otvorený bez odpovedania na príkazy.",
+    "Připojení selhalo: telescope.connected: [{code}] Na {endpoint} neodpovídá žádné použitelné nativní rozhraní Alpaca. Výsledek ověření: UDP {udp} oznámilo AlpacaPort {port}; žádný server Alpaca tam neodpověděl ({error}), takže zbývá zkusit pouze řídicí port JSON-RPC. Zkontrolujte dostupnost služby zařízení a nastavení Alpaca Protocol. SSC nezkusil starší rozhraní JSON-RPC na {legacy}, protože aktuální firmware Seestar může ponechat tento port otevřený bez odpovídání na příkazy."
   ]
 }

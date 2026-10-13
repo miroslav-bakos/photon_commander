@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (C) 2026 Miroslav Bakoš
 
-import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderWithQueryClient } from "../../test/queryClient";
@@ -21,6 +22,29 @@ function json(body: unknown): Response {
 }
 
 describe("LiveStackingTab", () => {
+  it("changes the preview when a new target reuses the same stack sequence and count", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 404 })));
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
+    const key = ["capture", "live-stack", "status"];
+    const stack = { sequence: 1, output_path: "/NGC7023/live_001.fit", parameters_path: "",
+      frame_count: 3, dark_master: null, bias_master: null, flat_master: null,
+      active: true, error: null };
+    client.setQueryData(key, stack);
+    const view = renderWithQueryClient(<QueryClientProvider client={client}><LiveStackingTab /></QueryClientProvider>);
+    try {
+      const oldImage = await screen.findByRole("img", { name: "Live stack 1" });
+      const oldUrl = oldImage.getAttribute("src");
+      await act(async () => { client.setQueryData(key, { ...stack, output_path: "/M31/live_001.fit" }); });
+      await waitFor(() => {
+        const image = screen.getByRole("img", { name: "Live stack 1" });
+        expect(image.getAttribute("src")).not.toBe(oldUrl);
+        expect(image).not.toBe(oldImage);
+      });
+    } finally {
+      view.unmount();
+      client.clear();
+    }
+  });
   it.each([[1800 * 1024 ** 2, "2"], [3800 * 1024 ** 2, "1"]])(
     "uses host RAM for a new stack default (%s bytes)", async (total, expected) => {
       vi.stubGlobal("fetch", vi.fn().mockImplementation((input: string | Request) => {
@@ -50,8 +74,8 @@ describe("LiveStackingTab", () => {
 
   it("reconnects to the server-owned run and shows its masters and stop control", async () => {
     let resetBody: Record<string, unknown> | null = null;
-    vi.stubGlobal("fetch", vi.fn().mockImplementation((input: string, init?: RequestInit) => {
-      const pathname = new URL(input, "http://localhost").pathname;
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(async (input: string | Request, init?: RequestInit) => {
+      const pathname = new URL(typeof input === "string" ? input : input.url, "http://localhost").pathname;
       if (pathname.endsWith("/masters")) {
         return Promise.resolve(json({
           masters: [
@@ -62,8 +86,8 @@ describe("LiveStackingTab", () => {
         }));
       }
       if (pathname === "/api/capture/live-stack" || pathname === "/api/capture/live-stack/reset") {
-        if (pathname.endsWith("/reset") && init?.body !== undefined) {
-          resetBody = JSON.parse(init.body as string) as Record<string, unknown>;
+        if (pathname.endsWith("/reset")) {
+          resetBody = input instanceof Request ? await input.json() as Record<string, unknown> : JSON.parse(init?.body as string) as Record<string, unknown>;
         }
         return Promise.resolve(json({
           sequence: 7,
@@ -120,7 +144,7 @@ describe("LiveStackingTab", () => {
 
     expect(await screen.findByRole("img", { name: "Live stack 7" })).toHaveAttribute(
       "src",
-      "/api/capture/live-stack/image?v=7-3&auto_crop=true",
+      "/api/capture/live-stack/image?stack=%2Fcaptures%2Flive_007.fit%3A7&v=3&auto_crop=true",
     );
     expect(screen.getByText(/3 frame\(s\).*live_007/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Stop stacking" })).toBeInTheDocument();
@@ -164,8 +188,8 @@ describe("LiveStackingTab", () => {
   });
 
   it("restores disabled automatic master selection from the running stack", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockImplementation((input: string) => {
-      const pathname = new URL(input, "http://localhost").pathname;
+    vi.stubGlobal("fetch", vi.fn().mockImplementation((input: string | Request) => {
+      const pathname = new URL(typeof input === "string" ? input : input.url, "http://localhost").pathname;
       if (pathname.endsWith("/masters")) return Promise.resolve(json({ masters: [] }));
       if (pathname === "/api/capture/live-stack") {
         return Promise.resolve(json({
@@ -214,8 +238,8 @@ describe("LiveStackingTab", () => {
   });
 
   it("fits on opening and returning, while allowing intentional native zoom and cropping", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockImplementation((input: string) => {
-      const pathname = new URL(input, "http://localhost").pathname;
+    vi.stubGlobal("fetch", vi.fn().mockImplementation((input: string | Request) => {
+      const pathname = new URL(typeof input === "string" ? input : input.url, "http://localhost").pathname;
       if (pathname === "/api/capture/live-stack") {
         return Promise.resolve(json({
           sequence: 2,
@@ -260,7 +284,7 @@ describe("LiveStackingTab", () => {
     const crop = screen.getByRole("checkbox", { name: /Auto-crop dithering edges/ });
     expect(crop).toBeChecked();
     await user.click(crop);
-    expect(image).toHaveAttribute("src", "/api/capture/live-stack/image?v=2-2&auto_crop=false");
+    expect(image).toHaveAttribute("src", "/api/capture/live-stack/image?stack=%2Fcaptures%2Flive_002.fit%3A2&v=2&auto_crop=false");
     await user.dblClick(viewer);
     expect(viewer).toHaveAttribute("aria-pressed", "true");
     unmount();
@@ -281,8 +305,8 @@ describe("LiveStackingTab", () => {
   });
 
   it("browses and selects a server-side watch folder", async () => {
-    const fetchMock = vi.fn().mockImplementation((input: string) => {
-      const url = new URL(input, "http://localhost");
+    const fetchMock = vi.fn().mockImplementation((input: string | Request) => {
+      const url = new URL(typeof input === "string" ? input : input.url, "http://localhost");
       if (url.pathname === "/api/capture/live-stack/directories") {
         const path = url.searchParams.get("path");
         if (path === "/captures/Pictures") {
@@ -301,7 +325,7 @@ describe("LiveStackingTab", () => {
 
     await user.type(screen.getByLabelText("Watch folder (optional)"), "/old/path");
     await user.click(screen.getByRole("button", { name: "Browse" }));
-    expect(fetchMock).toHaveBeenCalledWith("/api/capture/live-stack/directories", expect.anything());
+    expect(fetchMock.mock.calls.some(([input]) => input instanceof Request && new URL(input.url).pathname === "/api/capture/live-stack/directories")).toBe(true);
     await user.click(await screen.findByRole("button", { name: "Pictures" }));
     await user.click(await screen.findByRole("button", { name: "live_test" }));
     await user.click(screen.getByRole("button", { name: "Select this folder" }));

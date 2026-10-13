@@ -176,6 +176,22 @@ def debayer(mosaic: NDArray[np.float64], pattern: str) -> NDArray[np.float64]:
     return np.stack(channels, axis=-1)
 
 
+def debayer_green(mosaic: NDArray[np.float64], pattern: str) -> NDArray[np.float64]:
+    """Return exactly ``debayer(mosaic, pattern)[..., 1]`` without RGB allocation.
+
+    Focus measurements consume only green; retain the same full-resolution
+    interpolation and border handling rather than changing the HFR metric.
+    """
+    if pattern not in _PATTERN_TILES:
+        raise FitsWriteError(f"unknown Bayer pattern {pattern!r}")
+    if mosaic.ndim != 2:
+        raise FitsWriteError(f"debayer needs a single 2-D plane; got shape {mosaic.shape}")
+    mask = _channel_mask(pattern, "G", *mosaic.shape)
+    summed = _neighborhood_sum(np.where(mask, mosaic, 0.0))
+    weight_summed = _neighborhood_sum(mask.astype(np.float64))
+    return np.where(weight_summed > 0, summed / np.maximum(weight_summed, 1.0), 0.0)
+
+
 def _format_card(key: str, value: object) -> str:
     if len(key) > 8:
         raise FitsWriteError(f"header keyword {key!r} is longer than 8 characters")
@@ -343,6 +359,20 @@ def write_fits_bytes(
     if metadata.ccd_temp_c is not None:
         cards.append(_format_card("CCD-TEMP", float(metadata.ccd_temp_c)))
     pattern = bayer_pattern(metadata.bayer_offset_x, metadata.bayer_offset_y)
+    if metadata.sensor_type is not None:
+        cards.append(_format_card("SENSTYPE", metadata.sensor_type))
+        if metadata.sensor_type != 2:
+            # Mono offsets may be zero placeholders; other sensor families
+            # cannot be interpreted with an RGGB-family demosaic.
+            pattern = None
+    if metadata.sensor_metadata_checked:
+        cfa_state = (
+            "mono" if metadata.sensor_type == 0
+            else "unsupported" if metadata.sensor_type not in (None, 2)
+            else "bayer" if pattern is not None
+            else "unknown"
+        )
+        cards.append(_format_card("CFASTATE", cfa_state))
     if pattern is not None:
         cards.append(_format_card("BAYERPAT", pattern))
     cards.append(_format_card("ROWORDER", ROW_ORDER))
@@ -443,6 +473,7 @@ __all__ = [
     "FitsWriteError",
     "bayer_pattern",
     "debayer",
+    "debayer_green",
     "write_fits_bytes",
     "write_fits_file",
 ]

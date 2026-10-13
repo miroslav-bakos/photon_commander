@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (C) 2026 Miroslav Bakoš
+import { setLanguage } from "../i18n/locale";
 
 /**
  * Regression for a live bug (owner, 2026-09-10: "the latest sliders
@@ -98,6 +99,7 @@ function stubFetch() {
 }
 
 afterEach(() => {
+  act(() => { setLanguage("en"); });
   hoisted.onViewChangeRef.current = null;
   hoisted.onFovMovedRef.current = null;
   hoisted.setDisplay.mockClear();
@@ -316,6 +318,22 @@ describe("SkyMap display options", () => {
     expect(hoisted.setDisplay).toHaveBeenCalled();
     const latest = hoisted.setDisplay.mock.calls.at(-1)?.[0];
     expect(latest?.skyLinesOpacity).toBeCloseTo(0.4);
+  });
+
+  it("sends caption language updates without replacing the map or moving its view", async () => {
+    stubFetch();
+    const { container } = renderWithQueryClient(<SkyMap />);
+    await waitFor(() => { expect(hoisted.setDisplay).toHaveBeenCalled(); });
+    const frame = container.querySelector("iframe");
+    expect(frame).not.toBeNull();
+    hoisted.goto.mockClear();
+    act(() => { setLanguage("sk"); });
+    expect(hoisted.setDisplay.mock.calls.at(-1)?.[0].language).toBe("sk");
+    expect(container.querySelector("iframe")).toBe(frame);
+    expect(hoisted.goto).not.toHaveBeenCalled();
+    act(() => { setLanguage("cs"); });
+    expect(hoisted.setDisplay.mock.calls.at(-1)?.[0].language).toBe("cs");
+    expect(container.querySelector("iframe")).toBe(frame);
   });
 
   it("re-issues setDisplay with a changed catalogue opacity after mount", async () => {

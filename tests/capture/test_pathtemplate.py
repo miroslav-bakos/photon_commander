@@ -101,7 +101,7 @@ def test_default_filename_template_renders_a_sortable_stem() -> None:
     assert stem == "lights_M42_30s_-10.123_LP_20260910-220000_0003"
 
 
-def test_date_tag_is_utc_date_only_for_folders_and_filenames() -> None:
+def test_date_tag_is_local_date_only_for_folders_and_filenames() -> None:
     date_obs = datetime(2026, 9, 10, 1, 23, 45, tzinfo=UTC)
     metadata = _metadata(object_name="M42", frame_type=FrameType.LIGHT)
     folder = render_capture_path(
@@ -120,7 +120,53 @@ def test_date_tag_is_utc_date_only_for_folders_and_filenames() -> None:
     )
 
     assert folder == Path("2026-09-09") / "20260910"
-    assert filename == "lights_20260910_20260910-012345_0003"
+    assert filename == "lights_20260910_20260910-032345_0003"
+
+
+@pytest.mark.parametrize(
+    "date_obs,expected_date,expected_time,expected_night",
+    [
+        ("2026-09-10T22:30:00+00:00", "20260911", "003000", "2026-09-10"),
+        ("2026-01-10T22:30:00+00:00", "20260110", "233000", "2026-01-10"),
+        ("2026-03-29T00:30:00+00:00", "20260329", "013000", "2026-03-28"),
+        ("2026-03-29T01:30:00+00:00", "20260329", "033000", "2026-03-28"),
+        ("2026-10-25T00:30:00+00:00", "20261025", "023000", "2026-10-24"),
+        ("2026-10-25T01:30:00+00:00", "20261025", "023000", "2026-10-24"),
+    ],
+)
+def test_local_timestamp_tags_follow_site_date_and_dst(
+    date_obs: str, expected_date: str, expected_time: str, expected_night: str
+) -> None:
+    observed = datetime.fromisoformat(date_obs)
+    metadata = replace(_metadata(object_name="M42"), date_obs=observed)
+    stem = render_capture_filename(
+        "%DATE%_%DATETIME%_%DATEOFCAPTURE%_%SEQUENCE%",
+        metadata=metadata,
+        date_obs=observed,
+        sequence=3,
+        tz=VIENNA,
+    )
+    assert stem == f"{expected_date}_{expected_date}-{expected_time}_{expected_night}_0003"
+    assert metadata.date_obs is observed  # The FITS/catalogue timestamp remains UTC.
+
+
+def test_explicit_utc_tags_preserve_original_time_at_local_date_boundary() -> None:
+    observed = datetime(2026, 9, 10, 22, 30, tzinfo=UTC)
+    metadata = _metadata(object_name="M42")
+    assert render_capture_filename(
+        "%DATEUTC%_%DATETIMEUTC%",
+        metadata=metadata,
+        date_obs=observed,
+        sequence=3,
+        tz=VIENNA,
+    ) == "20260910_20260910-223000"
+    assert render_capture_path(
+        "%DATEUTC%/%DATETIMEUTC%",
+        metadata=metadata,
+        date_obs=observed,
+        sequence=3,
+        tz=VIENNA,
+    ) == Path("20260910") / "20260910-223000"
 
 
 def test_date_tag_works_for_calibration_filenames() -> None:

@@ -380,6 +380,15 @@ def _apply_item_transition(state: RunState, record: JournalRecord) -> RunState:
             pending_effect = record.effect
         elif record.effect_outcome is not None:
             pending_effect = None
+            if (record.effect is not None
+                    and record.effect.name is EffectName.CENTER_TARGET
+                    and record.effect.args.get("resume_autofocus_during_capture")
+                    and record.effect_outcome is EffectOutcome.COMPLETED):
+                # A centering detour must not consume a persisted focus intent.
+                # The live quality monitor may be reset by centering/restart.
+                pending_effect = EffectCall(
+                    name=EffectName.AUTOFOCUS, args={"during_capture": True}
+                )
         dithered_after_frame = item.dithered_after_frame
         last_frame_completed = item.last_frame_completed
         if record.effect is not None and record.effect_outcome is EffectOutcome.COMPLETED:
@@ -3174,7 +3183,9 @@ async def run(
             if (
                 current is not None
                 and field_key not in verified_fields
-                and decision.effect.name in {EffectName.EXPOSE_FRAME, EffectName.DITHER}
+                and decision.effect.name in {
+                    EffectName.EXPOSE_FRAME, EffectName.DITHER, EffectName.AUTOFOCUS
+                }
                 # An unresolved offset must finish its stopped/settling recovery
                 # before any new physical command. Do not repeat it here.
                 and not (decision.resumed and decision.effect.name is EffectName.DITHER)
@@ -3189,7 +3200,11 @@ async def run(
                         item_id=decision.item_id, step=decision.step,
                         panel_index=decision.panel_index, attempt=decision.attempt,
                         effect=EffectCall(name=EffectName.CENTER_TARGET,
-                                          args={**centering.args, "resume_field_verification": True}),
+                                          args={**centering.args, "resume_field_verification": True,
+                                                "resume_autofocus_during_capture": (
+                                                    decision.effect.name is EffectName.AUTOFOCUS
+                                                    and bool(decision.effect.args.get("during_capture"))
+                                                )}),
                         resumed=False, new_status=decision.new_status,
                     )
             state = await _issue_effect(

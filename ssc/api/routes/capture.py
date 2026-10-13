@@ -820,13 +820,14 @@ async def live_stack_image(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="no live stack frame is available"
         )
-    # The browser URL includes stack sequence, accepted-frame count and crop
-    # mode, so each rendered bitmap is immutable. Reuse it instantly when a
-    # user returns to the tab instead of recomputing a large autostretch.
+    # This endpoint renders the current stack, not a historical URL version.
+    # A handoff can happen after status was read, so immutable HTTP caching
+    # would pin the wrong target indefinitely. The service already caches
+    # rendering by engine identity, sequence, frame count and crop mode.
     return Response(
         content=rendered,
         media_type="image/png",
-        headers={"Cache-Control": "private, max-age=31536000, immutable"},
+        headers={"Cache-Control": "no-store"},
     )
 
 

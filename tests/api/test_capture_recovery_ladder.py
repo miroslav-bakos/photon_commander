@@ -67,6 +67,17 @@ async def test_unknown_camera_owner_is_never_aborted():
     assert service._section.last_error.startswith('Recovery level 1 camera_idle:')
 
 
+async def test_center_recovery_does_not_enable_tracking_at_unknown_reconnected_pointing():
+    camera = SimpleNamespace(get=AsyncMock(return_value=0), put=AsyncMock())
+    service = service_for(camera)
+    service._restore_dither_tracking = AsyncMock(side_effect=DeviceGatewayError('below horizon'))
+    ensure = AsyncMock()
+    await service.recover_scheduled_operation(level=3, operation='center_target', ensure_link=ensure)
+    ensure.assert_awaited_once()
+    camera.get.assert_awaited_with('camerastate')
+    service._restore_dither_tracking.assert_not_awaited()
+
+
 async def test_other_owner_blocks_reconnect_and_cleanup():
     camera = SimpleNamespace(get=AsyncMock(return_value=2), put=AsyncMock())
     service = service_for(camera)

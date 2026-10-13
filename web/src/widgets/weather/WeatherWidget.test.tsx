@@ -3,6 +3,8 @@
 
 import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { act } from "react";
+import { setLanguage } from "../../i18n/locale";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import type { ForecastPoint, WeatherForecast } from "../../api/weather";
@@ -15,6 +17,7 @@ import { WeatherWidget } from "./WeatherWidget";
 
 afterEach(() => {
   cleanup();
+  act(() => { setLanguage("en"); });
   vi.unstubAllGlobals();
 });
 
@@ -162,6 +165,15 @@ describe("WeatherWidget", () => {
     expect(screen.getByText("Dark window")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Score breakdown" })).toHaveTextContent("−20.0 points");
     expect(screen.getByRole("region", { name: "Score breakdown" })).toHaveTextContent("−5.0 points");
+    act(() => { setLanguage("cs"); });
+    expect(within(miniCalendar).getByTestId(`mini-night-${today}`)).toHaveAttribute("title", expect.stringContaining("Průměrné — 52/100."));
+    const breakdown = screen.getByRole("region", { name: "Rozpis skóre" });
+    expect(breakdown).toHaveTextContent("průměr celkové oblačnosti 40.0%");
+    expect(breakdown).toHaveTextContent("nízká oblačnost 0.0%");
+    expect(breakdown).not.toHaveTextContent("avg total");
+    expect(breakdown).not.toHaveTextContent("points");
+    act(() => { setLanguage("sk"); });
+    expect(screen.getByRole("region", { name: "Rozpis skóre" })).toHaveTextContent("priemer celkovej oblačnosti 40.0%");
   });
 
   it("maps early-morning forecast rows to the previous observing night", async () => {

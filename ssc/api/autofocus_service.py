@@ -18,6 +18,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -33,7 +34,7 @@ from ssc.api.capture_service import (
 )
 from ssc.api.tasks import TaskRegistry
 from ssc.capture import FrameType, measure_frame_quality
-from ssc.capture.fits import bayer_pattern, debayer
+from ssc.capture.fits import bayer_pattern, debayer_green
 from ssc.client.errors import AlpacaErrorNumber, AlpacaRemoteError, AlpacaTransportError
 from ssc.state.events import AutofocusChanged, NoticeCleared, NoticeRaised
 from ssc.state.models import (
@@ -746,6 +747,7 @@ class AutofocusService:
         if self._sample_quality_override is not None:
             return await self._sample_quality_override()
         assert self._camera is not None
+        acquisition_started = time.perf_counter()
         for attempt in range(_SAMPLE_TRANSPORT_RETRIES + 1):
             try:
                 frame, _started_at = await drive_exposure(
@@ -762,6 +764,7 @@ class AutofocusService:
                     ),
                     frame_type=FrameType.LIGHT,
                     unsupported_members=self._unsupported_metadata_members,
+                    metadata_mode="autofocus",
                 )
                 break
             except (ExposureTimeoutError, AlpacaTransportError, AlpacaRemoteError) as exc:
@@ -779,12 +782,23 @@ class AutofocusService:
                 )
                 await self._sleep(_SAMPLE_RETRY_DELAY_S)
                 await self._camera.connect()
-        return await asyncio.to_thread(
-            self._measure,
-            frame.pixels,
-            frame.metadata.bayer_offset_x,
-            frame.metadata.bayer_offset_y,
+        acquisition_s = time.perf_counter() - acquisition_started
+        queued_at = time.perf_counter()
+
+        def measure() -> tuple[tuple[float | None, int], float, float]:
+            began = time.perf_counter()
+            quality = self._measure(
+                frame.pixels, frame.metadata.bayer_offset_x, frame.metadata.bayer_offset_y
+            )
+            return quality, began - queued_at, time.perf_counter() - began
+
+        quality, queue_s, compute_s = await asyncio.to_thread(measure)
+        _log.info(
+            "autofocus sample timing acquisition=%.3fs analysis_queue=%.3fs "
+            "analysis_compute=%.3fs total=%.3fs",
+            acquisition_s, queue_s, compute_s, time.perf_counter() - acquisition_started,
         )
+        return quality
 
     @staticmethod
     def _measure(
@@ -793,7 +807,7 @@ class AutofocusService:
         plane = pixels.astype(np.float64)
         pattern = bayer_pattern(offset_x, offset_y)
         if pattern is not None:
-            plane = debayer(plane, pattern)[..., 1]
+            plane = debayer_green(plane, pattern)
         quality = measure_frame_quality(plane, pixel_size_um=None, focal_length_mm=None)
         return quality.hfr_px, quality.star_count
 

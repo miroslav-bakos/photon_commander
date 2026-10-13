@@ -24,6 +24,21 @@ function shapeLabel(shape: FovShape | undefined): string | undefined {
 }
 
 describe("celestialEquatorShape", () => {
+  it("localizes reference labels without changing geometry or identifiers", () => {
+    const inputs = { latitudeDeg: 48, longitudeDeg: 17, instant: new Date("2026-10-13T00:00:00Z") };
+    const original = meridianShapes(inputs);
+    for (const language of ["sk", "cs"] as const) {
+      const localized = meridianShapes(inputs, language);
+      expect(shapeLabel(localized[0])).toBe("Meridián");
+      expect(shapeLabel(localized[1])).toBe("Zenit");
+      localized.forEach((shape, index) => {
+        expect({ ...shape, label: undefined }).toEqual({ ...original[index], label: undefined });
+      });
+      const equator = celestialEquatorShape(language);
+      expect(shapeLabel(equator)).not.toBe("Celestial equator");
+      expect({ ...equator, label: undefined }).toEqual({ ...celestialEquatorShape(), label: undefined });
+    }
+  });
   it("is a closed Dec = 0 path around the whole sky", () => {
     const shape = celestialEquatorShape();
     if (shape.kind !== "polyline") throw new Error("expected a polyline");

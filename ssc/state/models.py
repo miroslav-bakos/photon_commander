@@ -252,12 +252,12 @@ class MountState(StateModel):
     test in ``tests/api/test_ws_replay.py`` re-validates a replayed snapshot
     with this same class, and ``extra="forbid"`` refuses a computed field as
     input even though pydantic happily emits it as output. Whoever constructs
-    a fresh reading sets ``stale=False`` (it was just taken); staleness that
-    accrues *without* a new reading is instead recomputed by
-    :func:`refresh_mount_staleness` at the two points a client is handed "the
-    truth" — ``GET /api/state`` and every WS ``snapshot`` frame — mirroring
-    how DESIGN.md already treats a forced resnapshot as the moment staleness
-    gets settled, not any arbitrary read in between.
+    a fresh reading sets ``stale=False``. The gateway validates its acquisition
+    timestamp before publication and emits a stale transition when a retained
+    reading expires, independently of blocked or failed polls. Staleness is
+    also recomputed by :func:`refresh_mount_staleness` for ``GET /api/state``
+    and every WS ``snapshot`` frame. Clients render that server decision;
+    their display clocks cannot override it.
     """
 
     polled_at: datetime | None = None
@@ -380,9 +380,9 @@ class AlpacaDevicesState(StateModel):
 
     ``stale`` mirrors :attr:`MountState.stale` exactly, including why it is a
     plain field rather than a ``@computed_field`` — see that docstring.
-    Recomputed against wall-clock only at the two moments a client is handed
-    "the truth" (:func:`refresh_devices_staleness`), never on a live push,
-    which is always fresh by construction.
+    The gateway publishes expiry transitions even when a poll is blocked.
+    :func:`refresh_devices_staleness` also refreshes the flag for REST and
+    WebSocket snapshots, as for mount telemetry.
     """
 
     polled_at: datetime | None = None

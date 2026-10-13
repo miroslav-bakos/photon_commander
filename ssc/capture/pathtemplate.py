@@ -192,16 +192,30 @@ PATH_TAGS: Final[tuple[PathTag, ...]] = (
     ),
     PathTag(
         name="DATE",
-        description="Exposure start date in UTC, derived from DATE-OBS "
+        description="Exposure start date in the site's timezone, derived from DATE-OBS "
         "(format YYYYMMDD, without time). Unlike DATEOFCAPTURE, this is the "
-        "frame's UTC calendar date, not the local observing-night date.",
+        "frame's local calendar date, not the noon-to-noon observing-night date.",
+        field=None,
+        render=lambda ctx: ctx.date_obs.astimezone(ctx.tz).strftime("%Y%m%d"),
+    ),
+    PathTag(
+        name="DATETIME",
+        description="Exposure start time in the site's timezone, derived from DATE-OBS "
+        "(format YYYYMMDD-HHMMSS, without a timezone suffix). Repeated autumn "
+        "times share this tag; SEQUENCE and filename collision handling distinguish files.",
+        field=None,
+        render=lambda ctx: ctx.date_obs.astimezone(ctx.tz).strftime("%Y%m%d-%H%M%S"),
+    ),
+    PathTag(
+        name="DATEUTC",
+        description="Exposure start date in UTC, derived from DATE-OBS "
+        "(format YYYYMMDD, without time).",
         field=None,
         render=lambda ctx: ctx.date_obs.astimezone(UTC).strftime("%Y%m%d"),
     ),
     PathTag(
-        name="DATETIME",
-        description="Exposure start time in UTC, derived from DATE-OBS "
-        "(format YYYYMMDD-HHMMSS).",
+        name="DATETIMEUTC",
+        description="Exposure start time in UTC, derived from DATE-OBS (format YYYYMMDD-HHMMSS).",
         field=None,
         render=lambda ctx: ctx.date_obs.astimezone(UTC).strftime("%Y%m%d-%H%M%S"),
     ),
@@ -525,6 +539,8 @@ _FIELDS_WITHOUT_A_TAG: Final = frozenset({
     "subframe_y",
     "pixel_size_y_um",
     "sensor_name",
+    "sensor_type",
+    "sensor_metadata_checked",
     "camera_offset",
     "max_adu",
     "readout_mode",

@@ -877,7 +877,7 @@ function applyDisplay(display: DisplayOptions): void {
       }),
     );
   }
-  if (display.celestialEquator) shapes.push(celestialEquatorShape());
+  if (display.celestialEquator) shapes.push(celestialEquatorShape(display.language));
   if (display.ecliptic) shapes.push(eclipticShape(Number.isFinite(currentView.fovDeg) ? currentView.fovDeg : null));
   if (display.altAzGrid && site !== null && instantValid) {
     shapes.push(
@@ -904,7 +904,7 @@ function applyDisplay(display: DisplayOptions): void {
   }
   if (display.meridian && site !== null && instantValid) {
     shapes.push(
-      ...meridianShapes({ latitudeDeg: site.latitudeDeg, longitudeDeg: site.longitudeDeg, instant }),
+      ...meridianShapes({ latitudeDeg: site.latitudeDeg, longitudeDeg: site.longitudeDeg, instant }, display.language),
     );
   }
   if (display.altitudeLimitDeg !== null && site !== null && instantValid) {

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (C) 2026 Miroslav Bakoš
 
+import { useLanguage } from "../../i18n/locale";
 import { Badge } from "../../components/Badge";
 import { nearestForecastPoint, useForecastQuery, type ForecastPoint } from "../../api/weather";
 import { useConnectionStore } from "../../store/connectionStore";
@@ -38,6 +39,7 @@ function windDirection(degrees: number | null | undefined): string {
 }
 
 export function WeatherWidget() {
+  const language = useLanguage();
   const location = useConnectionStore((s) => s.snapshot?.location ?? null);
   const forecast = useForecastQuery(location !== null);
   const tonight = useTonightQuery(location !== null);
@@ -52,7 +54,7 @@ export function WeatherWidget() {
   const data = forecast.data;
   const point = data === undefined ? null : nearestForecastPoint(data.points);
   const timezone = location.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const quality = describeNightQuality(tonight.data, tonight.isPending, tonight.isError);
+  const quality = describeNightQuality(tonight.data, tonight.isPending, tonight.isError, language);
   const hemisphere = location.latitude_deg < 0 ? "south" : "north";
   const trigger = (
     <>

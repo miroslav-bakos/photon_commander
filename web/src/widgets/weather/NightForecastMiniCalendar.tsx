@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (C) 2026 Miroslav Bakoš
 
+import { useLanguage } from "../../i18n/locale";
 import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { CloudSun } from "lucide-react";
@@ -15,6 +16,7 @@ function weekday(date: string): string {
 }
 
 export function NightForecastMiniCalendar({ points, timezone }: { points: ForecastPoint[]; timezone: string }) {
+  const language = useLanguage();
   const today = observingDate(new Date(), timezone);
   const dates = useMemo(
     () => [...forecastNightDates(points, timezone, today)].sort(),
@@ -35,7 +37,7 @@ export function NightForecastMiniCalendar({ points, timezone }: { points: Foreca
       <div className="grid grid-cols-7 gap-1">
         {dates.map((date, index) => {
           const prediction = predictions[index];
-          const quality = describeNightQuality(prediction?.data, prediction?.isPending ?? true, prediction?.isError ?? false);
+          const quality = describeNightQuality(prediction?.data, prediction?.isPending ?? true, prediction?.isError ?? false, language);
           const stale = prediction?.data?.weather?.stale_since != null;
           return (
             <div

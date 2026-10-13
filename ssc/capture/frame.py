@@ -120,6 +120,11 @@ class FrameMetadata:
     subframe_y: int | None = None
     pixel_size_y_um: float | None = None
     sensor_name: str | None = None
+    #: Measured ASCOM SensorType: 0=mono, 2=Bayer family (not its phase).
+    sensor_type: int | None = None
+    #: New SSC acquisitions attempted sensor/CFA reads. Distinguishes missing
+    #: provenance from legacy/imported mono frames with no such metadata.
+    sensor_metadata_checked: bool = False
     camera_offset: int | None = None
     max_adu: float | None = None
     readout_mode: int | None = None

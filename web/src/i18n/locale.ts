@@ -6,7 +6,11 @@ import messages from "./messages.json";
 export type Language = "en" | "sk" | "cs";
 export const LANGUAGES = { en: "English", sk: "Slovenčina", cs: "Čeština" } as const;
 const caseKeys = new Map(Object.keys(messages).map((key) => [key.toLowerCase(), key]));
-const templates = Object.entries(dictionaryTemplates());
+// Prefer a complete status over a shorter generic template which could
+// otherwise capture an English suffix (for example "Good … · stale").
+const templates = Object.entries(dictionaryTemplates()).sort(([left], [right]) =>
+  right.replace(/\{[a-zA-Z]+\}/g, "").length - left.replace(/\{[a-zA-Z]+\}/g, "").length,
+);
 function dictionaryTemplates(): Record<string, { pattern: RegExp; names: string[]; messages: readonly string[] }> {
   const result: Record<string, { pattern: RegExp; names: string[]; messages: readonly string[] }> = {};
   for (const [key, entry] of Object.entries(messages)) {

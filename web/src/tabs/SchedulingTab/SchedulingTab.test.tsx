@@ -13,6 +13,10 @@
  */
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
+import { LayoutRouteProvider } from "../../layout/LayoutContext";
+import { useLayoutStore } from "../../layout/layoutStore";
+import { setLanguage, translate } from "../../i18n/locale";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { PlanCompileResponse, PlanRecord } from "../../api/plans";
@@ -24,6 +28,8 @@ import { SchedulingTab } from "./SchedulingTab";
 import { useSchedulingUiStore } from "./schedulingUiStore";
 
 afterEach(cleanup);
+afterEach(() => { act(() => { setLanguage("en"); }); });
+afterEach(() => { useLayoutStore.getState().resetAll(); });
 
 const record: PlanRecord = {
   document: {
@@ -48,6 +54,9 @@ const record: PlanRecord = {
   updated_at: "2026-08-28T10:00:00Z",
   night_date: "2026-08-28",
 };
+
+const waitItem = record.document.items[0];
+if (waitItem === undefined) throw new Error("Missing wait fixture");
 
 const compiled: PlanCompileResponse = {
   schedule: {
@@ -162,6 +171,7 @@ const runningRun: RunState = {
 
 describe("SchedulingTab", () => {
   beforeEach(() => {
+    useSchedulingUiStore.setState({ editLocks: {} });
     useConnectionStore.getState().reset();
     useConnectionStore.setState({
       snapshot: testSnapshot({
@@ -170,6 +180,141 @@ describe("SchedulingTab", () => {
       }),
     });
     useSchedulingUiStore.getState().select("p1", "w1");
+  });
+
+  it("persists chronological order when a start is changed in the item editor", async () => {
+    const first = { ...waitItem, start: { kind: "absolute" as const, local_datetime: "2026-08-28T20:00:00", fold: 0 as const } };
+    const second = { ...first, id: "w2", start: { kind: "absolute" as const, local_datetime: "2026-08-28T21:00:00", fold: 0 as const } };
+    let saved: PlanRecord = { ...record, document: { ...record.document, items: [first, second] } };
+    let written = false;
+    stubFetch(() => { throw new Error("unexpected PUT fallback"); }, async (request) => {
+      const path = new URL(request.url).pathname;
+      if (path === "/api/plans/p1" && request.method === "GET") return json(saved, 200, path);
+      if (path === "/api/plans/p1" && request.method === "PUT") {
+        const body = await request.json() as { document: PlanRecord["document"] };
+        saved = { ...saved, document: body.document, revision: 2 };
+        written = true;
+        return json(saved, 200, path);
+      }
+      if (path === "/api/plans/p1/compile") return json({ ...compiled, schedule: { ...compiled.schedule,
+        items: [...compiled.schedule.items, { ...compiled.schedule.items[0], item_id: "w2", start_utc: "2026-08-28T20:00:00Z", end_utc: "2026-08-28T20:05:00Z" }],
+      } }, 200, path);
+      return null;
+    });
+    renderWithQueryClient(<SchedulingTab />);
+    const input = await screen.findByLabelText("Local date and time");
+    await screen.findByTestId("resolved-time");
+    fireEvent.change(input, { target: { value: "2026-08-28T22:00" } });
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => { expect(written).toBe(true); });
+    expect(saved.document.items.map((item) => item.id)).toEqual(["w2", "w1"]);
+  });
+
+  it.each(["running", "paused"] as const)("automatically locks a %s plan and enables edits only after Unlock", async (status) => {
+    useConnectionStore.setState({ snapshot: testSnapshot({ location: observingLocation,
+      plans: [{ id: "p1", name: record.document.name, revision: 1, updated_at: record.updated_at, night_date: record.night_date }], run: { ...runningRun, status } }) });
+    const put = vi.fn(() => json(record, 200, "/api/plans/p1"));
+    stubFetch(put);
+    const user = userEvent.setup();
+    renderWithQueryClient(<SchedulingTab />);
+    await screen.findByTestId("resolved-time");
+    expect(screen.getByRole("button", { name: "Unlock plan" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByLabelText("Duration (minutes)")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Reorder item 1" })).toBeDisabled();
+    expect(screen.getByRole("switch", { name: "Disable item 1" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Rename" })).toBeDisabled();
+    expect(screen.getByLabelText("Night of")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Stop" })).toBeEnabled();
+    fireEvent.change(screen.getByLabelText("Duration (minutes)"), { target: { value: "10" } });
+    expect(put).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Unlock plan" }));
+    expect(screen.getByLabelText("Duration (minutes)")).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Reorder item 1" })).toBeEnabled();
+    expect(screen.getByLabelText("Night of")).toBeEnabled();
+    expect(screen.getByTestId("block-move-handle")).toBeInTheDocument();
+    act(() => {
+      useConnectionStore.setState({ snapshot: testSnapshot({ location: observingLocation,
+        plans: [{ id: "p1", name: record.document.name, revision: 1, updated_at: record.updated_at, night_date: record.night_date }],
+        run: { ...runningRun, run_id: "run-2" } }) });
+    });
+    expect(screen.getByLabelText("Duration (minutes)")).toBeDisabled();
+    expect(screen.getByTestId("block-move-handle")).toHaveStyle({ cursor: "pointer" });
+    await user.click(screen.getByRole("button", { name: "Unlock plan" }));
+    await user.click(screen.getByRole("button", { name: "Lock plan" }));
+    expect(screen.getByLabelText("Duration (minutes)")).toBeDisabled();
+    expect(put).not.toHaveBeenCalled();
+  });
+
+  it("blocks pointer moves and keyboard reorder while locked and saves reorder after Unlock", async () => {
+    const twoItems = { ...record, document: { ...record.document,
+      items: [waitItem, { ...waitItem, id: "w2" }] } };
+    let writtenIds: string[] | null = null;
+    stubFetch(() => { throw new Error("unexpected PUT fallback"); }, async (request) => {
+      const path = new URL(request.url).pathname;
+      if (path === "/api/plans/p1" && request.method === "GET") return json(twoItems, 200, path);
+      if (path === "/api/plans/p1" && request.method === "PUT") {
+        const body = await request.json() as { document: { items: { id: string }[] } };
+        writtenIds = body.document.items.map((item) => item.id);
+        return json(twoItems, 200, path);
+      }
+      return null;
+    });
+    const user = userEvent.setup();
+    renderWithQueryClient(<SchedulingTab />);
+    await screen.findByTestId("resolved-time");
+    await user.click(screen.getByRole("button", { name: "Lock plan" }));
+    const handle = screen.getByTestId("block-move-handle");
+    fireEvent.pointerDown(handle, { clientX: 100, clientY: 10, button: 0, pointerId: 1 });
+    fireEvent.pointerMove(handle, { clientX: 200, clientY: 10, pointerId: 1 });
+    fireEvent.pointerUp(handle, { clientX: 200, clientY: 10, pointerId: 1 });
+    fireEvent.keyDown(screen.getByRole("button", { name: "Reorder item 1" }), { altKey: true, key: "ArrowDown" });
+    expect(writtenIds).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Unlock plan" }));
+    fireEvent.keyDown(screen.getByRole("button", { name: "Reorder item 1" }), { altKey: true, key: "ArrowDown" });
+    await waitFor(() => { expect(writtenIds).toEqual(["w2", "w1"]); });
+  });
+
+  it("locks an idle plan manually, protects a draft and relocks when execution begins", async () => {
+    stubFetch(() => json(record, 200, "/api/plans/p1"));
+    const user = userEvent.setup();
+    renderWithQueryClient(<SchedulingTab />);
+    await screen.findByTestId("resolved-time");
+    const duration = screen.getByLabelText("Duration (minutes)");
+    await user.clear(duration);
+    await user.type(duration, "10");
+    await user.tab();
+    await user.click(screen.getByRole("button", { name: "Lock plan" }));
+    expect(duration).toHaveValue(10);
+    expect(duration).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "Unlock plan" }));
+    expect(duration).toHaveValue(10);
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+    act(() => {
+      useConnectionStore.setState({ snapshot: testSnapshot({ location: observingLocation,
+        plans: [{ id: "p1", name: record.document.name, revision: 1, updated_at: record.updated_at, night_date: record.night_date }], run: runningRun }) });
+    });
+    expect(duration).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+  });
+
+  it("keeps a locked editor disabled after its card is moved to another panel", async () => {
+    useConnectionStore.setState({ snapshot: testSnapshot({ location: observingLocation,
+      plans: [{ id: "p1", name: record.document.name, revision: 1, updated_at: record.updated_at, night_date: record.night_date }], run: runningRun }) });
+    useLayoutStore.getState().placeCards("/scheduling", "primary", ["wait-operator-checkpoint"]);
+    stubFetch(() => json(record, 200, "/api/plans/p1"));
+    renderWithQueryClient(<MemoryRouter initialEntries={["/scheduling"]}>
+      <LayoutRouteProvider><SchedulingTab /></LayoutRouteProvider>
+    </MemoryRouter>);
+    await screen.findByTestId("resolved-time");
+    const duration = screen.getByLabelText("Duration (minutes)");
+    expect(duration.closest("[data-layout-card-id]")).toHaveAttribute("data-layout-panel", "primary");
+    expect(duration).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Delete item" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Stop" })).toBeEnabled();
+    await userEvent.click(screen.getByRole("button", { name: "Unlock plan" }));
+    expect(duration).toBeEnabled();
   });
 
   it("shows the missing-shutdown warning and the resolved start inline", async () => {
@@ -361,9 +506,11 @@ describe("SchedulingTab", () => {
     await waitFor(() => {
       expect(startBody).toEqual({ plan_id: "p1", night_date: "2026-08-28" });
     });
+    expect(screen.getByLabelText("Duration (minutes)")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Unlock plan" })).toBeEnabled();
   });
 
-  it("offers a confirmed fresh run when the selected plan has been interrupted", async () => {
+  it.each(["en", "sk", "cs"] as const)("offers a confirmed fresh run in %s when the selected plan has been interrupted", async (locale) => {
     const user = userEvent.setup();
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     let startBody: unknown = null;
@@ -391,10 +538,11 @@ describe("SchedulingTab", () => {
     renderWithQueryClient(<SchedulingTab />);
     const restart = await screen.findByRole("button", { name: "Restart plan" });
     await waitFor(() => expect(restart).toBeEnabled());
+    act(() => { setLanguage(locale); });
     await user.click(restart);
 
     expect(confirm).toHaveBeenCalledWith(
-      "Start a new run of Night of 2026-08-28 for 2026-08-28? The previous run will remain in its history.",
+      translate("Start a new run of Night of 2026-08-28 for 2026-08-28? The previous run will remain in its history.", locale),
     );
     await waitFor(() => {
       expect(startBody).toEqual({ plan_id: "p1", night_date: "2026-08-28" });
@@ -436,10 +584,14 @@ describe("SchedulingTab", () => {
 
     renderWithQueryClient(<SchedulingTab />);
     expect(await screen.findByText(/1\. Wait \/ operator checkpoint · waiting/)).toBeInTheDocument();
+    if (label === "Resume") await user.click(screen.getByRole("button", { name: "Unlock plan" }));
     await user.click(screen.getByRole("button", { name: label }));
     await waitFor(() => {
       expect(controlPath).toBe(expectedPath);
     });
+    if (label.startsWith("Resume")) {
+      expect(screen.getByLabelText("Duration (minutes)")).toBeDisabled();
+    }
   });
 
   it("shows the backend's actionable reason when a plan cannot start", async () => {
@@ -778,13 +930,14 @@ it("keeps the compiled preflight valid during a background refresh of the same r
 });
 
 
-it("permits active-plan night editing with an explicit next-start notice", async () => {
+it("permits active-plan night editing after explicit Unlock with a next-start notice", async () => {
   useConnectionStore.setState({ snapshot: testSnapshot({ location: observingLocation,
     plans: [{ id: "p1", name: record.document.name, revision: 1, updated_at: record.updated_at, night_date: record.night_date }], run: runningRun }) });
   useSchedulingUiStore.getState().select("p1", "w1");
   stubFetch(() => json(record, 200, "/api/plans/p1"));
   renderWithQueryClient(<SchedulingTab />);
   await screen.findByTestId("resolved-time");
+  await userEvent.click(screen.getByRole("button", { name: "Unlock plan" }));
   expect(screen.getByLabelText("Night of")).toBeEnabled();
   expect(screen.getByText(/Edits and night changes apply to the next start/)).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Start selected plan" })).toBeNull();

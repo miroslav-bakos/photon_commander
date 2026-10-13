@@ -13,11 +13,28 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { safeLocalStorage } from "../../store/safeStorage";
+import type { RunState } from "../../api/runs";
+
+interface EditLock { runId: string | null; locked: boolean }
+
+export function planEditRunId(planId: string | null, run: RunState | null): string | null {
+  return run?.plan_id === planId && (run.status === "running" || run.status === "paused") ? run.run_id : null;
+}
+
+export function isPlanEditLocked(planId: string | null, run: RunState | null, locks: Record<string, EditLock>): boolean {
+  if (planId === null) return false;
+  const runId = planEditRunId(planId, run);
+  const lock = locks[planId];
+  return lock?.runId === runId ? lock.locked : runId !== null;
+}
 
 interface SchedulingUiState {
   selectedPlanId: string | null;
   selectedItemId: string | null;
   selectedNightDate: string | null;
+  /** Editing permission is session-local; a fresh client must unlock an active run again. */
+  editLocks: Record<string, EditLock>;
+  setPlanEditLock: (planId: string, runId: string | null, locked: boolean) => void;
   selectPlan: (planId: string | null) => void;
   selectItem: (itemId: string | null) => void;
   selectNightDate: (nightDate: string | null) => void;
@@ -29,6 +46,10 @@ export const useSchedulingUiStore = create<SchedulingUiState>()(persist((set) =>
   selectedPlanId: null,
   selectedItemId: null,
   selectedNightDate: null,
+  editLocks: {},
+  setPlanEditLock: (planId, runId, locked) => {
+    set((state) => ({ editLocks: { ...state.editLocks, [planId]: { runId, locked } } }));
+  },
   selectPlan: (selectedPlanId) => {
     set({ selectedPlanId, selectedItemId: null, selectedNightDate: null });
   },
@@ -45,5 +66,5 @@ export const useSchedulingUiStore = create<SchedulingUiState>()(persist((set) =>
   name: "ssc.scheduling-ui.v1",
   version: 1,
   storage: createJSONStorage(safeLocalStorage),
-  partialize: ({ selectPlan: _selectPlan, selectItem: _selectItem, selectNightDate: _selectNightDate, select: _select, ...selection }) => selection,
+  partialize: ({ selectedPlanId, selectedItemId, selectedNightDate }) => ({ selectedPlanId, selectedItemId, selectedNightDate }),
 }));

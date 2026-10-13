@@ -178,6 +178,7 @@ def _camera(**kwargs: object) -> FakeCamera:
             "startx": 0,
             "starty": 0,
             "sensorname": "IMX585",
+            "sensortype": 2,
             "offset": 1108,
             "maxadu": 65535,
             "readoutmode": 0,
@@ -336,7 +337,14 @@ async def test_a_camera_not_yet_connected_is_connected_before_offsets_are_read(
 ) -> None:
     """DESIGN.md §9.5.2: disconnected, BayerOffsetX/Y answer a plausible,
     wrong 0/0 — so the camera must be connected before anything is read."""
-    camera = _camera(connected=False)
+    class ConnectionCheckingCamera(FakeCamera):
+        async def get(self, member: str, **params: object) -> object:
+            if member in {"bayeroffsetx", "bayeroffsety"}:
+                assert self.connected, "Bayer offsets must be read only after connection"
+            return await super().get(member, **params)
+
+    base = _camera()
+    camera = ConnectionCheckingCamera(frame=base.frame, properties=base.properties, connected=False)
 
     await capture_one_exposure(
         camera=camera,
@@ -354,7 +362,7 @@ async def test_a_camera_not_yet_connected_is_connected_before_offsets_are_read(
     )
 
     assert camera.connect_calls == 1
-    assert camera.get_calls.index("bayeroffsetx") > 0  # connect() ran first
+    assert "bayeroffsetx" in camera.get_calls
 
 
 async def test_image_transfer_cannot_starve_filter_and_sensor_metadata(monkeypatch) -> None:
@@ -937,3 +945,89 @@ async def test_dither_group_token_is_preserved_in_frame_metadata() -> None:
         context=replace(_context(), dither_group_id="sequence:3"),
         frame_type=FrameType.LIGHT, sleep=_no_sleep)
     assert frame.metadata.dither_group_id == "sequence:3"
+
+
+@pytest.mark.parametrize("missing_bayer", [False, True])
+async def test_autofocus_metadata_only_reads_bayer_and_preserves_unknown(missing_bayer) -> None:
+    camera = _camera(
+        not_implemented=frozenset({"bayeroffsetx", "bayeroffsety"}) if missing_bayer else frozenset()
+    )
+    telescope = _telescope(connected=False)
+    filterwheel = _filterwheel(connected=False)
+    frame, started = await drive_exposure(
+        camera=camera,
+        telescope=telescope,
+        filterwheel=filterwheel,
+        duration_s=2,
+        context=_context(),
+        frame_type=FrameType.LIGHT,
+        metadata_mode="autofocus",
+        sleep=_no_sleep,
+    )
+    assert camera.start_exposure_calls == [(2, True)]
+    assert camera.image_ready_calls > 0
+    assert set(camera.get_calls) <= {"imageready", "bayeroffsetx", "bayeroffsety"}
+    assert not telescope.get_calls and not filterwheel.get_calls
+    assert telescope.connect_calls == filterwheel.connect_calls == 0
+    assert frame.metadata.bayer_offset_x == (None if missing_bayer else 1)
+    assert frame.metadata.bayer_offset_y == (None if missing_bayer else 0)
+    assert frame.metadata.date_obs == started
+    assert frame.metadata.gain is None
+    np.testing.assert_array_equal(frame.pixels, camera.frame.array.T)
+
+
+async def test_capture_prioritizes_measured_cfa_and_filter_before_supplementary_reads() -> None:
+    completed: set[str] = set()
+    priority = {"bayeroffsetx", "bayeroffsety", "position", "names"}
+
+    class PriorityCamera(FakeCamera):
+        async def get(self, member: str, **params: object) -> object:
+            if member in {"bayeroffsetx", "bayeroffsety"}:
+                await asyncio.sleep(0)
+                completed.add(member)
+            elif member != "imageready":
+                assert completed == priority
+            return await super().get(member, **params)
+
+    class PriorityFilter(FakeDevice):
+        async def get(self, member: str, **params: object) -> object:
+            await asyncio.sleep(0)
+            completed.add(member)
+            return await super().get(member, **params)
+
+    base = _camera()
+    camera = PriorityCamera(frame=base.frame, properties=base.properties, connected=True)
+    filterwheel = PriorityFilter(properties=_filterwheel().properties, connected=True)
+    frame, _ = await drive_exposure(
+        camera=camera, telescope=None, filterwheel=filterwheel, duration_s=0,
+        context=_context(), frame_type=FrameType.LIGHT, sleep=_no_sleep,
+    )
+    assert frame.metadata.bayer_offset_x == 1
+    assert frame.metadata.bayer_offset_y == 0
+    assert frame.metadata.filter_name == "LP"
+
+
+@pytest.mark.parametrize("sensor_type", [None, 0, 2])
+async def test_capture_records_unknown_cfa_without_inventing_mono_or_filter(sensor_type) -> None:
+    from ssc.capture.fits import write_fits_bytes
+
+    missing = {"bayeroffsetx", "bayeroffsety"}
+    if sensor_type is None:
+        missing.add("sensortype")
+    camera = _camera(properties={"sensortype": sensor_type}, not_implemented=frozenset(missing))
+    filterwheel = _filterwheel(not_implemented=frozenset({"position"}))
+    frame, _ = await drive_exposure(
+        camera=camera, telescope=None, filterwheel=filterwheel, duration_s=0,
+        context=_context(), frame_type=FrameType.LIGHT, sleep=_no_sleep,
+    )
+    assert frame.metadata.sensor_type == sensor_type
+    assert frame.metadata.sensor_metadata_checked is True
+    assert frame.metadata.filter_name is None
+    header = read_fits_image(write_fits_bytes(frame.pixels, frame.metadata)).header
+    assert header["CFASTATE"] == ("mono" if sensor_type == 0 else "unknown")
+    assert "BAYERPAT" not in header
+    assert "FILTER" not in header
+    if sensor_type is None:
+        assert "SENSTYPE" not in header
+    else:
+        assert header["SENSTYPE"] == sensor_type

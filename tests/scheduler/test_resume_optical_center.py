@@ -30,6 +30,109 @@ from tests.scheduler.schedules import build_plan, build_schedule
 from tests.scheduler.test_crash_resume import REFERENCE_JOURNAL, RUN_ID, _resolved_calls_in_prefix
 
 
+@pytest.mark.parametrize("during_capture", [False, True])
+@pytest.mark.parametrize("interrupt_center", [False, True])
+async def test_sqlite_resume_recenters_before_interrupted_autofocus(
+    tmp_path: Path, during_capture: bool, interrupt_center: bool
+) -> None:
+    from tests.scheduler.fakes import FakeJournal
+    from tests.scheduler.schedules import BASE_UTC
+
+    base = build_plan()
+    plan = base.model_copy(update={"items": tuple(
+        item.model_copy(update={"autofocus_before": not during_capture,
+            "target": CatalogTargetSpec(name="M31", ra_j2000_h=0.711667, dec_j2000_deg=41.266667)})
+        if item.id == "goto" else item for item in base.items)})
+    schedule = build_schedule(plan)
+    initial = FakeJournal(RUN_ID)
+    clock = FakeClock(BASE_UTC)
+
+    class InterruptedFocus(FakeDeviceCommands):
+        focus_calls = 0
+
+        async def autofocus(self):
+            self.focus_calls += 1
+            if self.focus_calls == 2 and not during_capture:
+                raise RuntimeError("process interrupted during autofocus")
+            await super().autofocus()
+
+    device = InterruptedFocus()
+
+    class InterruptedCapture(FakeCapturePort):
+        async def focus_required(self):
+            return during_capture
+
+        async def autofocus(self):
+            raise RuntimeError("process interrupted during autofocus")
+
+    with pytest.raises(RuntimeError, match="process interrupted"):
+        await run(run_id=RUN_ID, schedule=schedule, plan=plan, journal=initial,
+                  device=device, events=FakeDeviceEvents(), clock=clock,
+                  controls=FakeControls(), capture=InterruptedCapture(device, clock=clock, cycle_s=600),
+                  gate_inputs=None, poll_interval_s=3600)
+    database = await open_database(tmp_path / 'focus-resume.sqlite3')
+    await migrate(database)
+    repository = RunRepository(database)
+    await repository.create(run_id=RUN_ID, plan=plan, plan_revision=1,
+                            schedule=schedule, started_at=initial.records[0].at)
+    for record in initial.records:
+        await repository.journal.append(record)
+    await database.aclose()
+    database = await open_database(tmp_path / 'focus-resume.sqlite3')
+    try:
+        repository = RunRepository(database)
+        saved = await repository.get(RUN_ID)
+        centered = False
+        focused = False
+
+        class ReconnectedDevice(FakeDeviceCommands):
+            async def autofocus(self):
+                nonlocal focused
+                assert centered, "autofocus restarted at unknown reconnected pointing"
+                focused = True
+                await super().autofocus()
+
+        fresh = ReconnectedDevice()
+
+        class ReconnectedCapture(FakeCapturePort):
+            async def center_target(self, **kwargs):
+                nonlocal centered
+                centered = True
+                await super().center_target(**kwargs)
+
+            async def expose_frame(self, **kwargs):
+                assert focused, "centering discarded the persisted autofocus intent"
+                await super().expose_frame(**kwargs)
+
+        if interrupt_center:
+            class InterruptedCenter(ReconnectedCapture):
+                async def center_target(self, **kwargs):
+                    raise RuntimeError("interrupted centering detour")
+
+            with pytest.raises(RuntimeError, match="interrupted centering detour"):
+                await run(run_id=RUN_ID, schedule=saved.schedule, plan=saved.plan,
+                          journal=repository.journal, device=fresh, events=FakeDeviceEvents(),
+                          clock=clock, controls=FakeControls(),
+                          capture=InterruptedCenter(fresh, clock=clock, cycle_s=600),
+                          gate_inputs=None, poll_interval_s=3600)
+            await database.aclose()
+            database = await open_database(tmp_path / 'focus-resume.sqlite3')
+            repository = RunRepository(database)
+
+        await run(run_id=RUN_ID, schedule=saved.schedule, plan=saved.plan,
+                  journal=repository.journal, device=fresh, events=FakeDeviceEvents(),
+                  clock=clock, controls=FakeControls(),
+                  capture=ReconnectedCapture(fresh, clock=clock, cycle_s=600),
+                  gate_inputs=None, poll_interval_s=3600)
+        records = (await repository.journal.read_all(RUN_ID))[len(initial.records):]
+        first = next(record for record in records if record.effect is not None)
+        assert first.effect.name is EffectName.CENTER_TARGET
+        assert first.effect.args["resume_field_verification"] is True
+        assert first.step == initial.records[-1].step
+    finally:
+        await database.aclose()
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("fail_once,stop", [(False,False), (True,False), (True,True)])
 @pytest.mark.parametrize("after_dither", [False, True])

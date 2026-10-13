@@ -2,7 +2,8 @@
 // Copyright (C) 2026 Miroslav Bakoš
 
 import type { ConditionsCategory, TonightResponse } from "../tonight/api";
-import { CONDITION_FACTOR_LABEL, factorImpact } from "../tonight/conditionFactors";
+import { CONDITION_FACTOR_LABEL, factorImpact, localizedFactorMeasurement } from "../tonight/conditionFactors";
+import { getLanguage, translate, type Language } from "../../i18n/locale";
 
 export const QUALITY_LABEL: Record<ConditionsCategory, string> = {
   excellent: "Excellent",
@@ -68,6 +69,7 @@ export function describeNightQuality(
   prediction: TonightResponse | undefined,
   pending: boolean,
   error: boolean,
+  locale: Language = getLanguage(),
 ) {
   if (pending) return { label: "Checking", tone: "neutral" as const, detail: "Calculating this night's prediction." };
   if (error || prediction === undefined) return { label: "Unavailable", tone: "neutral" as const, detail: "The night prediction could not be loaded." };
@@ -80,11 +82,11 @@ export function describeNightQuality(
   }
   const staleSince = prediction.weather?.stale_since;
   const factorDetail = prediction.conditions.factors
-    .map((factor) => `${CONDITION_FACTOR_LABEL[factor.name]}: ${factor.measurement}; ${factorImpact(factor)}`)
+    .map((factor) => `${translate(CONDITION_FACTOR_LABEL[factor.name], locale)}: ${localizedFactorMeasurement(factor, locale)}; ${translate(factorImpact(factor), locale)}`)
     .join(". ");
   return {
-    label: `${QUALITY_LABEL[prediction.conditions.category]} ${Math.round(prediction.conditions.score).toString()}${staleSince === null || staleSince === undefined ? "" : " · stale"}`,
+    label: translate(`${QUALITY_LABEL[prediction.conditions.category]} ${Math.round(prediction.conditions.score).toString()}${staleSince === null || staleSince === undefined ? "" : " · stale"}`, locale),
     tone: QUALITY_TONE[prediction.conditions.category],
-    detail: `${QUALITY_LABEL[prediction.conditions.category]} — ${Math.round(prediction.conditions.score).toString()}/100. ${prediction.conditions.reasons.join(". ")} Score breakdown: ${factorDetail}.${staleSince === null || staleSince === undefined ? "" : ` Forecast is stale since ${new Date(staleSince).toLocaleString()}.`}`,
+    detail: translate(`${QUALITY_LABEL[prediction.conditions.category]} — ${Math.round(prediction.conditions.score).toString()}/100. ${prediction.conditions.reasons.map((reason) => translate(reason, locale)).join(". ")} Score breakdown: ${factorDetail}.${staleSince === null || staleSince === undefined ? "" : ` Forecast is stale since ${new Date(staleSince).toLocaleString()}.`}`, locale),
   };
 }

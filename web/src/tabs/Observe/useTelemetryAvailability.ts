@@ -18,7 +18,9 @@ export function useTelemetryAvailability(mount: MountState | null | undefined) {
     : snapshot.link.status === "degraded" || snapshot.devices?.stale === true ? "Unknown"
     : null;
   const polled = mount?.polled_at == null ? NaN : Date.parse(mount.polled_at);
+  // Client clock skew and time spent acquiring a sample must not override
+  // the server's freshness decision. `now` is only for displayed durations.
   const mountUnavailable = unavailable ?? (mount == null ? "Unknown"
-    : mount.stale || !Number.isFinite(polled) || now - polled > 5000 ? "Stale" : null);
+    : mount.stale || !Number.isFinite(polled) ? "Stale" : null);
   return { unavailable, mountUnavailable, now, connected: status === "open" && snapshot != null };
 }

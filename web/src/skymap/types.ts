@@ -320,6 +320,8 @@ export interface CutoutLayerPiece {
  * grid and the meridian; when either is `null` the frame reports the
  * dependent lines unavailable rather than using the wall clock or 0/0. */
 export interface DisplayOptions {
+  /** Presentation-only captions; unsent by older hosts means English. */
+  language?: "en" | "sk" | "cs";
   /** Hold the view on a fixed RA/Dec as the instant changes, instead of
    * holding a fixed alt/az.
    *

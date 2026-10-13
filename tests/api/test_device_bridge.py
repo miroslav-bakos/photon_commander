@@ -423,6 +423,121 @@ def test_device_state_with_an_unverified_or_unknown_firmware_never_claims_verifi
 
 # --------------------------------------------------------------------------- #
 # AlpacaDeviceGateway: polling turned back into an edge-triggered stream
+# Freshness transitions are server events even when the poll itself stalls.
+
+
+async def test_gateway_publishes_staleness_once_and_recovers_without_retimestamping() -> None:
+    gateway = AlpacaDeviceGateway(FakeClient(FakeTelescope()), tasks=_tasks())  # type: ignore[arg-type]
+    sink = RecordingSink()
+    gateway.attach(sink)
+    now = datetime.now(tz=UTC)
+    mount = MountState(polled_at=now, stale=False, tracking=True)
+    devices = AlpacaDevicesState(polled_at=now, stale=False, items=[])
+    gateway._publish_mount(mount)
+    gateway._publish_devices(devices)
+    gateway._publish_elapsed_staleness(now + timedelta(seconds=6))
+    gateway._publish_elapsed_staleness(now + timedelta(seconds=7))
+    assert len(sink.mounts) == len(sink.device_lists) == 2
+    assert sink.mounts[-1] == mount.model_copy(update={"stale": True})
+    assert sink.device_lists[-1] == devices.model_copy(update={"stale": True})
+    gateway._publish_mount(mount)
+    gateway._publish_devices(devices)
+    assert sink.mounts[-1] is not None and sink.mounts[-1].stale is False
+    assert sink.device_lists[-1] is not None and sink.device_lists[-1].stale is False
+
+
+async def test_slow_acquisition_is_never_published_as_fresh() -> None:
+    gateway = AlpacaDeviceGateway(FakeClient(FakeTelescope()), tasks=_tasks())  # type: ignore[arg-type]
+    sink = RecordingSink()
+    gateway.attach(sink)
+    acquired = datetime.now(tz=UTC) - timedelta(seconds=6)
+    gateway._publish_mount(MountState(polled_at=acquired, stale=False, tracking=True))
+    assert sink.mounts[-1] is not None
+    assert sink.mounts[-1].stale is True
+    assert sink.mounts[-1].polled_at == acquired
+
+
+async def test_unexpected_poll_exit_marks_retained_readings_stale(monkeypatch: pytest.MonkeyPatch) -> None:
+    gateway = AlpacaDeviceGateway(FakeClient(FakeTelescope()), tasks=_tasks())  # type: ignore[arg-type]
+    monkeypatch.setattr(gateway, "_POLL_INTERVAL_S", 0.001)
+    sink = RecordingSink()
+    gateway.attach(sink)
+    now = datetime.now(tz=UTC)
+    gateway._publish_mount(MountState(polled_at=now, stale=False, tracking=True))
+    gateway._publish_devices(AlpacaDevicesState(polled_at=now, stale=False, items=[]))
+
+    async def fail() -> bool:
+        raise RuntimeError("unexpected decoder failure")
+
+    monkeypatch.setattr(gateway, "_poll_once", fail)
+    with pytest.raises(RuntimeError, match="unexpected decoder"):
+        await gateway._poll_loop()
+    assert sink.mounts[-1] is not None and sink.mounts[-1].stale
+    assert sink.mounts[-1].polled_at == now
+    assert sink.device_lists[-1] is not None and sink.device_lists[-1].stale
+
+
+async def test_malformed_battery_is_contained_by_status_decode_guard() -> None:
+    telescope = FakeTelescope()
+    payload = dict(_status_payload(state="ready", device={
+        "host": "10.0.0.7", "control_port": 4701, "reachable": True,
+    }))
+    payload["battery"] = {"percent": "bad"}
+    telescope.queue_status(payload)
+    gateway = AlpacaDeviceGateway(FakeClient(telescope), tasks=_tasks())  # type: ignore[arg-type]
+    assert await gateway._poll_once() is True
+
+
+@pytest.mark.parametrize("failure", ["blocked", "transport"])
+async def test_freshness_watchdog_runs_during_failed_poll_and_stops_with_it(
+    monkeypatch: pytest.MonkeyPatch, failure: str,
+) -> None:
+    telescope = FakeTelescope()
+    telescope.status_error = AlpacaTransportError("unreachable")
+    gateway = AlpacaDeviceGateway(FakeClient(telescope), tasks=_tasks())  # type: ignore[arg-type]
+    monkeypatch.setattr(gateway, "_POLL_INTERVAL_S", 0.001)
+    current = datetime.now(tz=UTC)
+
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz: Any = None) -> datetime:
+            return current
+
+    monkeypatch.setattr(ssc_main, "datetime", Clock)
+    stale_seen = asyncio.Event()
+
+    class Sink(RecordingSink):
+        def on_mount(self, mount: MountState | None) -> None:
+            super().on_mount(mount)
+            if mount is not None and mount.stale:
+                stale_seen.set()
+
+    sink = Sink()
+    gateway.attach(sink)
+    gateway._publish_mount(MountState(polled_at=current, stale=False, tracking=True))
+    blocked = asyncio.Event()
+    original_poll = gateway._poll_once
+
+    async def poll() -> bool:
+        blocked.set()
+        if failure == "transport":
+            return await original_poll()
+        await asyncio.Event().wait()
+        return True
+
+    monkeypatch.setattr(gateway, "_poll_once", poll)
+    task = asyncio.create_task(gateway._poll_loop())
+    try:
+        await asyncio.wait_for(blocked.wait(), 1)
+        watchdogs = [t for t in asyncio.all_tasks() if t.get_name() == "alpaca-freshness"]
+        assert len(watchdogs) == 1
+        current += timedelta(seconds=6)
+        await asyncio.wait_for(stale_seen.wait(), 1)
+        assert sink.mounts[-1] is not None and sink.mounts[-1].tracking is True
+    finally:
+        task.cancel()
+        await task
+    assert all(t.done() for t in watchdogs)
 # --------------------------------------------------------------------------- #
 
 

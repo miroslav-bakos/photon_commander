@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (C) 2026 Miroslav Bakoš
 
+import { useLanguage } from "../../i18n/locale";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { CalendarDays, ChevronLeft, ChevronRight, CloudSun } from "lucide-react";
@@ -65,7 +66,7 @@ function NightQuality({ prediction, pending, error, placeAbove }: {
   error: boolean;
   placeAbove: boolean;
 }) {
-  const quality = describeNightQuality(prediction, pending, error);
+  const quality = describeNightQuality(prediction, pending, error, useLanguage());
   const conditions = prediction?.conditions;
   const staleSince = prediction?.weather?.stale_since;
   return (

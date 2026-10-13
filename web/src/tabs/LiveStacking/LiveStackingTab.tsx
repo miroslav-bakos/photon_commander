@@ -2,9 +2,11 @@
 // Copyright (C) 2026 Miroslav Bakoš
 
 import { ImagePreview } from "../../components/ImagePreview";
+import { usePreviewCardHeight } from "./usePreviewCardHeight";
 import {
   useRef,
   useState,
+  type CSSProperties,
   type Dispatch,
   type SetStateAction,
 } from "react";
@@ -115,6 +117,7 @@ function MasterSelect({
 }
 
 export function LiveStackingTab() {
+  const previewCardHeight = usePreviewCardHeight();
   const mastersQuery = useLiveStackMastersQuery();
   const statusQuery = useLiveStackQuery(true);
   const systemQuery = useSystemMetricsQuery();
@@ -150,7 +153,8 @@ export function LiveStackingTab() {
   const selectedBias = biasMaster === undefined ? status?.bias_master ?? null : biasMaster;
   const selectedFlat = flatMaster === undefined ? status?.flat_master ?? null : flatMaster;
   const selectedAutoSelectMasters = autoSelectMasters ?? status?.auto_select_masters ?? true;
-  const liveImage = `/api/capture/live-stack/image?v=${String(status?.sequence ?? 0)}-${String(status?.frame_count ?? 0)}&auto_crop=${String(autoCrop)}`;
+  const stackIdentity = `${status?.output_path ?? ""}:${String(status?.sequence ?? 0)}`;
+  const liveImage = `/api/capture/live-stack/image?stack=${encodeURIComponent(stackIdentity)}&v=${String(status?.frame_count ?? 0)}&auto_crop=${String(autoCrop)}`;
   const totalMemory = systemQuery.data?.metrics.memory.total_bytes;
   const automaticBinning = totalMemory === undefined ? undefined : totalMemory < 3 * 1024 ** 3 ? 2 : 1;
   const selectedBinning = binning ?? status?.binning ?? automaticBinning;
@@ -195,7 +199,8 @@ export function LiveStackingTab() {
           </span>
         }
         collapseKey="liveStack.preview"
-        className="mobile-preview-card lg:sticky lg:top-4"
+        className="mobile-preview-card live-stack-preview-card lg:sticky lg:top-4"
+        style={{ "--preview-card-height": previewCardHeight === undefined ? undefined : `${String(previewCardHeight)}px` } as CSSProperties}
       >
         {status !== null && (
           <div className="mb-3 text-right text-xs text-fg-muted">
@@ -204,7 +209,7 @@ export function LiveStackingTab() {
         )}
         {status?.frame_count !== undefined && status.frame_count > 0 ? (
           <LiveStackViewer
-            key={status.sequence}
+            key={stackIdentity}
             src={liveImage}
             alt={`Live stack ${String(status.sequence)}`}
             status={status}

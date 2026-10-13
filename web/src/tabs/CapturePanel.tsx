@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (C) 2026 Miroslav Bakoš
 
+import { translate, useLanguage } from "../i18n/locale";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { CaptureIcon, CaptureSetIcon, LoopIcon, StopIcon } from "../components/ActionIcons";
@@ -113,6 +114,7 @@ function captureStageLabel(stage: string | null | undefined): string {
  * because the mutation is still pending.
  */
 export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange, showFrameType = true }: { frameType?: FrameType; onFrameTypeChange?: (frameType: FrameType) => void; showFrameType?: boolean }) {
+  const language = useLanguage();
   const captureState = useCaptureState();
   const startExposure = useStartExposureMutation();
   const stopCaptureLoop = useStopCaptureLoopMutation();
@@ -188,8 +190,9 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
   const loopFrameCount = captureState?.loop_completed_frames ?? 0;
   // Read once and reused below (in-progress line, last-frame line) rather
   // than re-derived per usage — both describe the same `captureState`.
-  const captureStateFrameTypeLabel = frameTypeLabel(captureState?.frame_type);
-  const activityLabel = captureStageLabel(captureState?.stage);
+  const frameTypeDisplay = frameTypeLabel(captureState?.frame_type);
+  const captureStateFrameTypeLabel = frameTypeDisplay === null ? null : translate(frameTypeDisplay, language);
+  const activityLabel = translate(captureStageLabel(captureState?.stage), language);
   // Before the first snapshot arrives (`undefined`) folder configuration is
   // unknown, not "configured" — the form stays usable (a 409 will still say
   // exactly what is wrong, shown verbatim below) rather than guessing.
@@ -246,7 +249,7 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
 
   async function positionForFlatPanel(): Promise<void> {
     const confirmed = window.confirm(
-      "The mount will unpark and slew straight up to the zenith. Remove any loose phone or flat panel until motion finishes, and make sure the telescope and cables are clear. Continue?",
+      translate("The mount will unpark and slew straight up to the zenith. Remove any loose phone or flat panel until motion finishes, and make sure the telescope and cables are clear. Continue?"),
     );
     if (!confirmed) return;
     await slewZenith.mutateAsync({ unpark_if_needed: true });

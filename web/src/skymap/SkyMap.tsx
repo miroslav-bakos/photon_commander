@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (C) 2026 Miroslav Bakoš
+import { useLanguage } from "../i18n/locale";
 
 /**
  * The Planning tab's sky map. Owns the `<iframe>` (the engine boundary,
@@ -191,6 +192,7 @@ export function SkyMap({
   mountFovDeg?: MountFovDeg | null;
 }) {
   const frameHostRef = useRef<HTMLDivElement | null>(null);
+  const language = useLanguage();
   const [frameAttachment, setFrameAttachment] = useState<{ element: HTMLIFrameElement } | null>(null);
   const frameElement = frameAttachment?.element ?? null;
   const backendRef = useRef<SkyMapBackend | null>(null);
@@ -401,6 +403,7 @@ export function SkyMap({
   useEffect(() => {
     const hasSitedInstant = location !== null && instant !== null;
     const display: DisplayOptions = {
+      language,
       equatorialGrid: prefs.skyLines.equatorialGrid,
       altAzGrid: prefs.skyLines.altAzGrid && hasSitedInstant,
       ecliptic: prefs.skyLines.ecliptic,
@@ -432,6 +435,7 @@ export function SkyMap({
     // was wrongly waved through; `SkyMap.test.tsx` now asserts the update
     // path, not just the initial call, so a regression here fails a test.
   }, [
+    language,
     prefs.skyLines,
     prefs.altitudeLimitRing,
     prefs.skyLinesOpacity,

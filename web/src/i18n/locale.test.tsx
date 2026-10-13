@@ -18,6 +18,20 @@ function DraftForm() {
     <button title="Save">Save</button><p><>Every 5 frames</></p><span translate="no">Dark</span><code>Capture</code></>;
 }
 describe("presentation localization", () => {
+  it("localizes native Alpaca connection diagnostics while preserving probe evidence", () => {
+    const message = "connect failed: telescope.connected: [0x407] No usable native Alpaca surface is answering at 192.168.1.47:32323. Probe evidence: UDP 32227 did not answer within 3s, trying the standard Alpaca port 32323; no Alpaca server answered there (AlpacaTransportError: apiversions: All connection attempts failed), so the JSON-RPC control port is the only surface left to try. Check device service availability and the Alpaca Protocol setting. SSC did not try legacy JSON-RPC on 192.168.1.47:4701 because current Seestar firmware can leave that port open without answering commands.";
+    for (const locale of ["sk", "cs"] as const) {
+      const result = translate(message, locale);
+      expect(result).not.toContain("No usable native");
+      expect(result).not.toContain("Probe evidence");
+      expect(result).not.toContain("Check device service");
+      for (const evidence of ["0x407", "192.168.1.47:32323", "192.168.1.47:4701", "32227", "AlpacaTransportError: apiversions: All connection attempts failed"]) expect(result).toContain(evidence);
+    }
+    render(<LocalizedText value={message} />);
+    act(() => { setLanguage("sk"); });
+    expect(screen.getByText(/Pripojenie zlyhalo: telescope.connected/)).toBeInTheDocument();
+    expect(translate("connect failed: telescope.connected: unknown driver evidence", "sk")).toBe("connect failed: telescope.connected: unknown driver evidence");
+  });
   it("switches labels without remounting a draft or changing command values", () => {
     render(<DraftForm />);
     const input = screen.getByRole("textbox");
@@ -49,6 +63,14 @@ describe("presentation localization", () => {
     expect(translate("Saved in /data/$Capture/Dark.", "cs")).toBe("Uloženo v /data/$Capture/Dark.");
     expect(translate("Saved in /data/My  Frames/Dark.", "cs")).toBe("Uloženo v /data/My  Frames/Dark.");
     expect(translate("Backend failure: unexpected 9.1", "sk")).toBe("Backend failure: unexpected 9.1");
+  });
+  it("prefers full status templates and keeps captured names and numbers intact", () => {
+    expect(translate("Good 75 · stale", "sk")).toBe("Dobré 75 · neaktuálne");
+    const text = translate("Resize My  Frames height, currently 600 pixels", "cs");
+    expect(text).toContain("My  Frames");
+    expect(text).toContain("600");
+    expect(text).not.toContain("currently");
+    expect(translate("Start a new run of Capture / Dark for 2026-10-13? The previous run will remain in its history.", "sk")).toContain("Capture / Dark");
   });
   it("preserves technical names, paths, opt-outs and code", () => {
     act(() => { setLanguage("sk"); });

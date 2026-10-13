@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (C) 2026 Miroslav Bakoš
 
+import { translate } from "../../i18n/locale";
 import { useState, type ReactNode } from "react";
 import { PlateSolveIcon, PolarAlignmentIcon, StopIcon } from "../../components/ActionIcons";
 import { Badge } from "../../components/Badge";
@@ -227,7 +228,7 @@ function SettingsAndRun({
     if (mount?.at_park === true || mount?.at_home === true) {
       const position = mount.at_park === true ? "parked" : "at Home";
       const approved = window.confirm(
-        `The mount is ${position}. Polar alignment must open the arm and move the scope. Confirm that it is safe to move before continuing.`,
+        translate(`The mount is ${position}. Polar alignment must open the arm and move the scope. Confirm that it is safe to move before continuing.`),
       );
       if (!approved) return;
     }
@@ -261,7 +262,7 @@ function SettingsAndRun({
     if (mount?.at_park === true || mount?.at_home === true) {
       const position = mount.at_park === true ? "parked" : "at Home";
       const approved = window.confirm(
-        `The mount is ${position}. Recheck must move through ${String(requestedPointCount)} sky positions. Confirm that it is safe to move before continuing.`,
+        translate(`The mount is ${position}. Recheck must move through ${String(requestedPointCount)} sky positions. Confirm that it is safe to move before continuing.`),
       );
       if (!approved) return;
     }

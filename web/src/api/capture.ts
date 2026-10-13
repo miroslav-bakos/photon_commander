@@ -721,14 +721,18 @@ export async function browseLiveStackDirectories(path?: string): Promise<LiveSta
 export function useLiveStackQuery(enabled: boolean) {
   return useQuery({
     queryKey: ["capture", "live-stack", "status"] as const,
-    queryFn: async () =>
-      unwrap(
-        call("/api/capture/live-stack") as Promise<{
+    queryFn: async () => {
+      const result = await call("/api/capture/live-stack");
+      // This documented absence is an empty state, not a failed reading.
+      if (result.response.status === 404 && typeof result.error === "object" && result.error !== null && "detail" in result.error && result.error.detail === "no live stack has been started") return null;
+      return unwrap(
+        Promise.resolve(result) as Promise<{
           data?: LiveStackResponse;
           error?: unknown;
           response: Response;
         }>,
-      ),
+      );
+    },
     enabled,
     retry: false,
     refetchInterval: 5000,

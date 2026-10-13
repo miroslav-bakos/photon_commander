@@ -172,8 +172,17 @@ textarea {
   }
 }
 
-@media (min-width: 1024px), (min-width: 640px) and (pointer: fine) {
-  [data-layout-card-id="liveStack.preview"] .image-preview { height: calc(100dvh - 8rem); }
+.live-stack-preview-card:has(.image-preview) {
+  height: var(--preview-card-height, calc(100dvh - 10.25rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.live-stack-preview-card > :not(.image-preview) { flex-shrink: 0; }
+.live-stack-preview-card .image-preview {
+  height: auto;
+  min-height: 0;
+  flex: 1;
 }
 
 @media (min-width: 1024px), (min-width: 640px) and (pointer: fine) {
