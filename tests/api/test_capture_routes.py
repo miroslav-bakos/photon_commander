@@ -549,15 +549,32 @@ def test_running_calibration_count_can_be_shortened_between_frames(
     camera = _camera()
     camera.properties["lastexposureduration"] = EXPOSURE_MIN_S
     _, service = _install_capture_service(paired, camera=camera)
+    second_frame_entered = asyncio.Event()
+    release_second_frame = asyncio.Event()
+    transfers = 0
+
+    async def held_second_image() -> ImageBytesFrame:
+        nonlocal transfers
+        transfers += 1
+        if transfers == 2:
+            second_frame_entered.set()
+            await release_second_frame.wait()
+        return camera.frame
+
+    camera.image_array = held_second_image  # type: ignore[method-assign]
 
     response = paired.post(
         "/api/capture/calibration/start",
         json={"kind": "bias", "count": 100, "gain": 100, "generate_master": False},
     )
     assert response.status_code == 202, response.text
+    async def wait_for_second_frame() -> None:
+        await asyncio.wait_for(second_frame_entered.wait(), timeout=10)
+
+    paired.portal.call(wait_for_second_frame)  # type: ignore[attr-defined]
     running = _wait_for(
         paired,
-        lambda section: section["calibration"]["completed_frames"] >= 1,
+        lambda section: section["calibration"]["completed_frames"] == 1,
     )
     completed = running["calibration"]["completed_frames"]
 
@@ -565,6 +582,7 @@ def test_running_calibration_count_can_be_shortened_between_frames(
         service.update_active_calibration_count, completed + 1
     )
     assert updated.calibration.requested_count == completed + 1
+    paired.portal.call(release_second_frame.set)  # type: ignore[attr-defined]
     final = _wait_for(paired, lambda section: section["in_progress"] is False)
     assert final["calibration"]["status"] == "completed"
     assert final["calibration"]["completed_frames"] == completed + 1
