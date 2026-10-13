@@ -33,7 +33,7 @@
  * re-renders that block alone, not every item on the strip (the render
  * budget below is timed against exactly this).
  */
-import { memo, useId, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { memo, useCallback, useId, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { CloudFog, CloudMoon, CloudRain, Cloudy, MoonStar, Wind, type LucideIcon } from "lucide-react";
 import type { CompiledItem, DurationEndSpec, PlanItem, Severity, TimeSpec } from "../../api/plans";
 import type { ForecastPoint } from "../../api/weather";
@@ -332,17 +332,17 @@ export const TimelineStrip = memo(function TimelineStrip({
   // user report, 2026-09-07: "the gantt chart still is like two separate
   // lines"). The shared Moon curve has no slot — it is the one shared-axis
   // element that legitimately spans the whole night.
-  const curvePoints = (samples: readonly AltitudeSample[], laneBox: LaneBox, slot?: Interval): string =>
+  const curvePoints = useCallback((samples: readonly AltitudeSample[], laneBox: LaneBox, slot?: Interval): string =>
     samples
-      .filter((s) => inRange(new Date(s.when).getTime()))
+      .filter((s) => new Date(s.when).getTime() >= range.startMs && new Date(s.when).getTime() <= range.endMs)
       .filter((s) => slot === undefined || (new Date(s.when).getTime() >= slot.startMs && new Date(s.when).getTime() <= slot.endMs))
       .map((s) => {
-        const a = along(new Date(s.when).getTime());
+        const a = axis.toPx(new Date(s.when).getTime());
         const l = laneBox[1] - (Math.max(0, Math.min(90, s.altitude_deg)) / 90) * (laneBox[1] - laneBox[0]);
-        const [x, y] = point(a, l);
+        const [x, y] = horizontal ? [a, l] : [l, a];
         return `${x.toFixed(1)},${y.toFixed(1)}`;
       })
-      .join(" ");
+      .join(" "), [axis, range.startMs, range.endMs, horizontal]);
 
   const weatherY = horizontal ? 31 : 0;
   const resolvedWeatherSlots = useMemo(() => weatherSlots(weather?.points ?? [], range), [weather, range]);
