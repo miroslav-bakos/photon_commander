@@ -125,6 +125,7 @@ class DeviceSettings(SettingsModel):
 
 
 class AppearanceSettings(SettingsModel):
+    workflow_guide_visible: bool = True
     theme: str = "dark"
     font_scale: str = "normal"
     accent: str = "blue"

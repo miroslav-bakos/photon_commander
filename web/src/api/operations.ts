@@ -14,7 +14,7 @@ export function useLatestOperation(kind: string): OperationState | undefined {
   });
 }
 
-function createCommandKey(): string {
+export function createCommandKey(): string {
   const cryptoApi = globalThis.crypto;
   if (typeof cryptoApi.randomUUID === "function") return cryptoApi.randomUUID();
 

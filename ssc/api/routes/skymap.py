@@ -24,6 +24,7 @@ from fastapi import (
     Header,
     HTTPException,
     Query,
+    Request,
     Response,
     UploadFile,
     status,
@@ -33,6 +34,11 @@ from pydantic import BaseModel
 
 from ssc.api.deps import ControlDep, ServicesDep, SessionDep, rate_limit
 from ssc.api.operation_service import OperationBusyError, OperationContext
+from ssc.api.reference_image import (
+    MAX_REFERENCE_BYTES,
+    reference_image_suffix,
+    solve_reference_image,
+)
 from ssc.api.schemas import (
     CacheClearResponse,
     CutoutJobResponse,
@@ -535,3 +541,66 @@ async def import_cache(
 
 
 __all__ = ["router"]
+
+
+@router.post("/solve-reference", status_code=status.HTTP_202_ACCEPTED,
+             response_model=OperationState,
+             dependencies=[Depends(rate_limit("skymap"))])
+async def solve_reference(request: Request, services: ServicesDep, session: ControlDep,
+                          idempotency_key: str | None = Header(default=None, alias="Idempotency-Key")) -> OperationState:
+    """Authenticated raw image body; no multipart parsing before authorization.
+
+    The result only supplies planning coordinates. No exposure, calibration,
+    camera FOV publication, sync or slew is performed.
+    """
+    del session
+    kind = "skymap_reference_solve"
+    if idempotency_key is not None:
+        existing = next((item for item in services.operations.items
+                         if item.kind == kind and item.idempotency_key == idempotency_key), None)
+        if existing is not None:
+            return existing
+    slot = services.reference_image_slot
+    if slot.locked() or services.operations.active(kind) is not None:
+        raise HTTPException(status_code=409, detail="A reference image is already being solved.")
+    await slot.acquire()
+    transferred = False
+    try:
+        parts: list[bytes] = []
+        size = 0
+        async for chunk in request.stream():
+            size += len(chunk)
+            if size > MAX_REFERENCE_BYTES:
+                raise HTTPException(status_code=413, detail="Reference image is larger than 64 MiB.")
+            parts.append(chunk)
+        content = b"".join(parts)
+        try:
+            reference_image_suffix(content)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+        async def work(context: OperationContext) -> dict[str, object]:
+            try:
+                return await solve_work(context)
+            finally:
+                slot.release()
+
+        async def solve_work(context: OperationContext) -> dict[str, object]:
+            context.progress(message="Plate solving reference image")
+            result = await solve_reference_image(content, services.settings, services.config.data_dir)
+            return {"ra_j2000_h": float(result.coord.ra_h),
+                    "dec_j2000_deg": float(result.coord.dec_deg),
+                    "rotation_deg": result.rotation_deg,
+                    "pixel_scale_arcsec": result.pixel_scale_arcsec,
+                    "solver": result.solver, "solver_version": result.solver_version}
+        try:
+            accepted = services.operations.start(kind=kind, work=work,
+                                             message="Plate solving reference image",
+                                             idempotency_key=idempotency_key)
+            transferred = True
+            return accepted
+        except OperationBusyError as exc:
+            raise HTTPException(status_code=409, detail="A reference image is already being solved.") from exc
+    finally:
+        if not transferred:
+            slot.release()

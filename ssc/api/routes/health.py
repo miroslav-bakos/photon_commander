@@ -13,6 +13,10 @@ would otherwise keep to itself.
 
 from __future__ import annotations
 
+import sys
+from contextlib import suppress
+from pathlib import Path
+
 from fastapi import APIRouter, Request
 
 from ssc.api.deps import ServicesDep
@@ -28,7 +32,12 @@ async def health(request: Request, services: ServicesDep) -> HealthResponse:
     session = await services.auth.resolve(request.cookies.get(SESSION_COOKIE))
     if session is None:
         return HealthResponse(status="ok", schema_version=SNAPSHOT_SCHEMA_VERSION, desktop_instance=services.config.desktop_instance)
+    version = None
+    if getattr(sys, "frozen", False) or "__compiled__" in globals():
+        with suppress(OSError):
+            version = (Path(sys.executable).parent / "VERSION").read_text().strip() or None
     return HealthResponse(
+        version=version,
         status="ok",
         schema_version=SNAPSHOT_SCHEMA_VERSION,
         desktop_instance=services.config.desktop_instance,

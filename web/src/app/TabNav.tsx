@@ -272,7 +272,7 @@ export function TabNav({ docked = false }: { docked?: boolean }) {
   if (isMobile) return <MobileTabNav docked={docked} />;
 
   return (
-    <nav aria-label="Main" className="flex flex-nowrap">
+    <nav aria-label="Main" className="flex flex-nowrap border-0 shadow-none">
       {PRIMARY_TABS.map((tab) => (
         <TabLink
           key={tab.to}

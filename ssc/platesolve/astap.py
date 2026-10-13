@@ -71,6 +71,7 @@ from ssc.platesolve.base import (
     MalformedSolverOutputError,
     PlateSolveError,
     PlateSolveResult,
+    ReferencePlateSolveResult,
     SolveFailedError,
     SolveIssue,
     SolverAvailability,
@@ -418,9 +419,9 @@ def _read_ini(path: Path) -> dict[str, str]:
     return fields
 
 
-def _result_from_ini(
-    ini: Mapping[str, str], *, date_obs: datetime, solver_version: str | None
-) -> PlateSolveResult:
+def _reference_result_from_ini(
+    ini: Mapping[str, str], *, solver_version: str | None
+) -> ReferencePlateSolveResult:
     if ini.get("PLTSOLVD") != "T":
         raise MalformedSolverOutputError(
             SolveIssue.MALFORMED_OUTPUT,
@@ -452,9 +453,8 @@ def _result_from_ini(
             SolveIssue.MALFORMED_OUTPUT, f"astap_cli returned an invalid coordinate: {exc}"
         ) from exc
 
-    return PlateSolveResult(
+    return ReferencePlateSolveResult(
         coord=coord,
-        date_obs=date_obs,
         pixel_scale_arcsec=abs(cdelt2) * 3600.0,
         rotation_deg=crota2,
         solver="astap",
@@ -462,7 +462,17 @@ def _result_from_ini(
     )
 
 
-async def astap_solve(
+
+def _result_from_ini(
+    ini: Mapping[str, str], *, date_obs: datetime, solver_version: str | None
+) -> PlateSolveResult:
+    reference = _reference_result_from_ini(ini, solver_version=solver_version)
+    return PlateSolveResult(coord=reference.coord, date_obs=date_obs,
+                            pixel_scale_arcsec=reference.pixel_scale_arcsec,
+                            rotation_deg=reference.rotation_deg, solver=reference.solver,
+                            solver_version=reference.solver_version)
+
+async def _astap_solution(
     fits_path: Path,
     *,
     cli_path: Path | None = None,
@@ -471,7 +481,8 @@ async def astap_solve(
     position_hint: tuple[float, float] | None = None,
     field_height_deg: float | None = None,
     env: Mapping[str, str] | None = None,
-) -> PlateSolveResult:
+    blind: bool = False,
+) -> dict[str, str]:
     """Solve ``fits_path`` with ASTAP and return the position, or raise.
 
     ``cli_path``/``solver_version`` are normally the ones a prior
@@ -496,11 +507,13 @@ async def astap_solve(
             "ASTAP's command-line solver was not found; call astap_availability() first",
         )
 
-    date_obs = await asyncio.to_thread(_read_date_obs, fits_path)
-
     with tempfile.TemporaryDirectory(prefix="ssc-astap-") as tmp_dir:
         out_base = Path(tmp_dir) / "solve"
         args = [str(resolved_cli), "-f", str(fits_path), "-o", str(out_base)]
+        if blind:
+            args += ["-r", "180"]
+            if fits_path.suffix.lower() not in {".fits", ".fit", ".fts"} and field_height_deg is None:
+                args += ["-fov", "0"]
         if position_hint is not None:
             ra_h, dec_deg = position_hint
             if not (math.isfinite(ra_h) and math.isfinite(dec_deg) and 0 <= ra_h < 24 and -90 <= dec_deg <= 90):
@@ -553,7 +566,7 @@ async def astap_solve(
         ini = await asyncio.to_thread(_read_ini, out_base.with_suffix(".ini"))
 
         if exit_code == 0:
-            return _result_from_ini(ini, date_obs=date_obs, solver_version=solver_version)
+            return ini
 
         detail = ini.get("ERROR") or _ERROR_DETAIL_BY_EXIT_CODE.get(
             exit_code, f"astap_cli exited {exit_code}"
@@ -569,3 +582,37 @@ async def astap_solve(
             SolveIssue.INVOCATION_FAILED,
             f"astap_cli exited {exit_code}: {stderr.decode('utf-8', errors='replace')[:500] or detail}",
         )
+
+async def astap_solve(
+    fits_path: Path, *, cli_path: Path | None = None,
+    solver_version: str | None = None,
+    timeout_s: float = ASTAP_DEFAULT_SOLVE_TIMEOUT_S,
+    position_hint: tuple[float, float] | None = None,
+    field_height_deg: float | None = None,
+    env: Mapping[str, str] | None = None,
+) -> PlateSolveResult:
+    """Solve a capture FITS; its own exposure timestamp remains mandatory."""
+    resolved_env = env if env is not None else os.environ
+    resolved_cli = cli_path or await asyncio.to_thread(_resolve_cli, resolved_env)
+    if resolved_cli is None:
+        raise SolverUnavailableError(SolveIssue.SOLVER_NOT_FOUND,
+                                     "ASTAP's command-line solver was not found; call astap_availability() first")
+    date_obs = await asyncio.to_thread(_read_date_obs, fits_path)
+    ini = await _astap_solution(fits_path, cli_path=resolved_cli, solver_version=solver_version,
+                               timeout_s=timeout_s, position_hint=position_hint,
+                               field_height_deg=field_height_deg, env=resolved_env)
+    return _result_from_ini(ini, date_obs=date_obs, solver_version=solver_version)
+
+
+async def astap_solve_reference(
+    image_path: Path, *, env: Mapping[str, str] | None = None,
+    timeout_s: float = 120.0, solver_version: str | None = None,
+) -> ReferencePlateSolveResult:
+    """Solve uploaded framing imagery without inventing an exposure timestamp.
+
+    ASTAP's official manual documents JPEG/PNG/FITS input, -r 180 blind search
+    and -fov 0 automatic image-height search. This result is never a camera
+    calibration or mount measurement; it cannot carry capture provenance.
+    """
+    ini = await _astap_solution(image_path, env=env, timeout_s=timeout_s, blind=True)
+    return _reference_result_from_ini(ini, solver_version=solver_version)

@@ -167,3 +167,14 @@ class PlateSolveResult:
     #: a prior :class:`SolverAvailability` check — not re-probed per solve
     #: (architecture policy invariant 7: a value is read once, or it is absent).
     solver_version: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class ReferencePlateSolveResult:
+    """A reference picture's J2000 center, without claimed capture provenance."""
+
+    coord: EquatorialCoord
+    pixel_scale_arcsec: float
+    rotation_deg: float
+    solver: str
+    solver_version: str | None

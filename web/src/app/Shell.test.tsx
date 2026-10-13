@@ -37,7 +37,10 @@ describe("Shell", () => {
   });
 
   it("keeps desktop Settings and Help after Forecast without a fullscreen header action", () => {
+    vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
     render(<Shell><p>Page contents</p></Shell>);
+    expect(screen.getByRole("banner").style.borderBottomWidth).toBe("0px");
+    expect(screen.getByRole("banner").style.boxShadow).toBe("none");
     const headerText = screen.getByRole("banner").textContent ?? "";
 
     expect(headerText.indexOf("Forecast")).toBeLessThan(headerText.indexOf("Utilities"));
@@ -61,6 +64,8 @@ describe("Shell", () => {
     const { unmount } = render(<Shell><p>Page contents</p></Shell>);
 
     const mobileHeader = screen.getByRole("banner");
+    expect(mobileHeader.style.borderBottom).toBe("");
+    expect(mobileHeader.style.boxShadow).toBe("");
     const mobileWorkflow = screen.getByRole("navigation", { name: "Current workflow" });
     const connectionsFooter = screen.getByTestId("connections-footer");
     expect(mobileHeader).not.toContainElement(mobileWorkflow);

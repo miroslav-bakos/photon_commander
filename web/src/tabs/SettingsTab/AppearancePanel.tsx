@@ -112,6 +112,12 @@ export function AppearancePanel() {
           </p>
         )}
       </div>
+      <label className="mt-4 flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={appearance.workflow_guide_visible !== false}
+          disabled={setAppearance.isPending}
+          onChange={(event) => { setAppearance.mutate({ ...appearance, workflow_guide_visible: event.currentTarget.checked }); }} />
+        Show observing workflow guide
+      </label>
       <div className="mt-4 border-t border-border pt-3">
         <label className="flex min-h-11 items-center gap-2 text-sm text-fg">
           <input
@@ -146,6 +152,7 @@ export function AppearancePanel() {
           Hidden automatically in red-light mode. Panels remain opaque for readability.
         </p>
       </div>
+      {setAppearance.isError && <p role="alert" className="mt-3 text-sm text-danger">Could not save appearance settings.</p>}
     </Card>
   );
 }

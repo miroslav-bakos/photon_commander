@@ -11,6 +11,7 @@ a fake gateway and an in-memory database.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -66,6 +67,7 @@ class Services:
     tasks: TaskRegistry
     object_info: ObjectInfoService
     operations: OperationService
+    reference_image_slot: asyncio.Lock = field(default_factory=asyncio.Lock)
     limiters: dict[str, RateLimiter] = field(default_factory=dict)
     #: Shuts down ssc-alpaca hosting (server + client). ``None`` when a test
     #: substituted its own gateway and no driver was ever hosted (architecture policy

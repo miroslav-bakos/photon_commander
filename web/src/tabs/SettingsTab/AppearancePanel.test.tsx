@@ -22,11 +22,12 @@ function json(body: unknown, status: number, url: string): Response {
   return response;
 }
 
-function settingsResponse(overrides: { theme?: string; font_scale?: string; accent?: string; background_enabled?: boolean; background_opacity_percent?: number } = {}) {
+function settingsResponse(overrides: { workflow_guide_visible?: boolean; theme?: string; font_scale?: string; accent?: string; background_enabled?: boolean; background_opacity_percent?: number } = {}) {
   return {
     location: { active: null, preferred_source: null, sources: {} },
     horizon: { active: false, points: null },
     appearance: {
+      ...(overrides.workflow_guide_visible === undefined ? {} : { workflow_guide_visible: overrides.workflow_guide_visible }),
       theme: overrides.theme ?? "dark",
       font_scale: overrides.font_scale ?? "normal",
       accent: overrides.accent ?? "blue",
@@ -146,4 +147,17 @@ describe("AppearancePanel", () => {
     await waitFor(() => { expect(puts).toHaveLength(1); });
     expect(puts[0]?.body).toMatchObject({ background_enabled: true, background_opacity_percent: 15 });
   });
+});
+
+
+it("restores the observing workflow guide through server appearance settings", async () => {
+  const puts = stubFetch();
+  renderWithQueryClient(<AppearancePanel />);
+  const checkbox = await screen.findByRole("checkbox", { name: "Show observing workflow guide" });
+  expect(checkbox).toBeChecked();
+  await userEvent.click(checkbox);
+  await waitFor(() => { expect(checkbox).not.toBeChecked(); });
+  await userEvent.click(checkbox);
+  await waitFor(() => { expect(checkbox).toBeChecked(); });
+  expect(puts.map((put) => (put.body as { workflow_guide_visible: boolean }).workflow_guide_visible)).toEqual([false, true]);
 });

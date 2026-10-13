@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (C) 2026 Miroslav Bakoš
 
+import { useQuery } from "@tanstack/react-query";
+import { timedApiFetch } from "../performance/diagnostics";
 import { translate, useLanguage } from "../i18n/locale";
 import { useEffect, useState } from "react";
 import { Battery, PictureInPicture2 } from "lucide-react";
@@ -58,6 +60,13 @@ import { FullscreenToggle } from "./FullscreenToggle";
  */
 export function ConnectionsFooter({ docked = false }: { docked?: boolean }) {
   const language = useLanguage();
+  const build = useQuery({ queryKey: ["running-build-version"], staleTime: 60_000,
+    queryFn: async (): Promise<{ version?: string | null }> => {
+      const response = await timedApiFetch(new Request(new URL("/api/health", window.location.origin)));
+      if (!response.ok) throw new Error("Version unavailable");
+      return response.json() as Promise<{ version?: string | null }>;
+    },
+  });
   const now = useNow(1000);
   const status = useConnectionStore((s) => s.status);
   const lastResync = useConnectionStore((s) => s.lastResync);
@@ -187,6 +196,7 @@ export function ConnectionsFooter({ docked = false }: { docked?: boolean }) {
         >
           <PictureInPicture2 aria-hidden="true" className="size-4" strokeWidth={1.8} />
         </button>
+        <span className="shrink-0 text-[10px] text-fg-muted" title="Running version">{build.data?.version ?? "—"}</span>
         <FullscreenToggle />
       </div>
     </div>

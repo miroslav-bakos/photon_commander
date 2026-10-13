@@ -446,6 +446,7 @@ class SettingsSummary(StateModel):
     #: environment override, if any, already resolved in — see
     #: ``ssc.settings.store.SettingsStore.effective_auth_required``.
     auth_required: bool = False
+    workflow_guide_visible: bool = True
     theme: str = "dark"
     font_scale: str = "normal"
     accent: str = "blue"

@@ -59,6 +59,8 @@ import { SessionControls } from "./SessionControls";
 import { SessionStartField } from "./SessionStartField";
 import { TimeScrubber } from "./TimeScrubber";
 import { TargetPicker } from "./TargetPicker";
+import { targetFromCoordinates } from "./types";
+import { ReferenceImageFraming } from "./ReferenceImageFraming";
 import { nightWindowForAnchor, nightWindowForInstant, resolveEventStart } from "./twilight";
 import { VisibilityPanel } from "./VisibilityPanel";
 
@@ -680,6 +682,10 @@ export function PlanningTab() {
             target={target}
             onTargetChange={handleTargetChange}
             instant={startTime}
+          />
+          <ReferenceImageFraming
+            framingKey={target === null ? "none" : targetCoordinateKey(target.raH, target.decDeg)}
+            onSolved={(raH, decDeg) => { handleTargetChange(targetFromCoordinates(raH, decDeg)); }}
           />
           <NightSummaryPanel
             night={twilightNight.data}

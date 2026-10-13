@@ -265,6 +265,7 @@ class SettingsStore:
             configured_secret_names=sorted(self._secrets.names),
             control_pin_set=self._security.control_pin_set,
             auth_required=self.effective_auth_required,
+            workflow_guide_visible=self._appearance.workflow_guide_visible,
             theme=self._appearance.theme,
             font_scale=self._appearance.font_scale,
             accent=self._appearance.accent,

@@ -3892,6 +3892,7 @@ export interface components {
         };
         /** AppearanceRequest */
         AppearanceRequest: {
+            workflow_guide_visible?: boolean;
             /**
              * Theme
              * @default dark
@@ -3920,6 +3921,7 @@ export interface components {
         };
         /** AppearanceSettings */
         AppearanceSettings: {
+            workflow_guide_visible?: boolean;
             /**
              * Theme
              * @default dark
@@ -7139,6 +7141,7 @@ export interface components {
          *     home-directory layout has no business answering an anonymous ``curl``.
          */
         HealthResponse: {
+            version?: string | null;
             /** Status */
             status: string;
             /** Schema Version */
@@ -10433,6 +10436,7 @@ export interface components {
          * @description The non-secret settings a client renders. Never contains a key or a PIN.
          */
         SettingsSummary: {
+            workflow_guide_visible?: boolean;
             /** @default null */
             location_source_preference: components["schemas"]["LocationSource"] | null;
             /**

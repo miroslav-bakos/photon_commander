@@ -144,6 +144,7 @@ class HealthResponse(Response):
     seq: int | None = None
     database: str | None = None
     device_gateway: str | None = None
+    version: str | None = None
 
 
 class ApplicationRestartRequest(Request):
@@ -478,6 +479,7 @@ class LocationResponse(Response):
 
 
 class AppearanceRequest(Request):
+    workflow_guide_visible: bool = True
     #: ``auto`` is a *choice*, not a display value: the client resolves it to
     #: ``dark`` or ``red`` itself, from the site's own sunset/sunrise
     #: (``GET/POST /api/astro/night``, no target required) — this store never

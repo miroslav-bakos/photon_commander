@@ -19,6 +19,8 @@ import { useMountCenterProgressQuery } from "../api/mount";
 import { useLayoutStore } from "../layout/layoutStore";
 import { useStreamPipStore } from "../store/streamPipStore";
 
+vi.mock("@tanstack/react-query", () => ({ useQuery: () => ({ data: { version: "0.0.3-test" } }) }));
+
 vi.mock("../api/filterwheel", () => ({
   useFilterWheelQuery: vi.fn(),
   isFilterWheelDisconnected: (state: {
@@ -504,4 +506,10 @@ describe("footer battery power", () => {
     expect(entry.querySelector("svg")).toHaveClass(colour);
     expect(entry.title).toContain(label);
   });
+});
+
+
+it("shows the running build metadata version", () => {
+  render(<ConnectionsFooter />);
+  expect(screen.getByTitle("Running version")).toHaveTextContent("0.0.3-test");
 });

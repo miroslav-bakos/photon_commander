@@ -500,6 +500,7 @@ def test_configuration_export_round_trips_without_secrets_or_security(
     bundle = exported.json()
     assert bundle["schema_version"] == 1
     assert bundle["settings"]["appearance"] == {
+        "workflow_guide_visible": True,
         "theme": "red",
         "font_scale": "large",
         "accent": "amber",
@@ -755,3 +756,15 @@ def test_configuration_import_replaces_unavailable_capture_path(paired, monkeypa
     assert str(pictures) in operation["result"]["warnings"][0]
     assert paired.get("/api/settings/configuration/export").json()["settings"]["capture"]["folder"] == str(pictures)
     assert pictures.is_dir()
+
+
+def test_workflow_guide_visibility_is_authoritative_and_persistent(paired: TestClient) -> None:
+    assert paired.get("/api/settings").json()["appearance"]["workflow_guide_visible"] is True
+    for visible in (False, True):
+        current = paired.get("/api/settings").json()["appearance"]
+        response = paired.put("/api/settings/appearance", json={**current, "workflow_guide_visible": visible})
+        assert response.status_code == 200
+        assert response.json()["workflow_guide_visible"] is visible
+        paired.portal.call(services_of(paired).settings.load)  # type: ignore[attr-defined]
+        assert paired.get("/api/settings").json()["appearance"]["workflow_guide_visible"] is visible
+        assert paired.get("/api/state").json()["snapshot"]["settings"]["workflow_guide_visible"] is visible

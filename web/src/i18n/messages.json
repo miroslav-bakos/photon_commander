@@ -10910,5 +10910,85 @@
   "connect failed: telescope.connected: [{code}] No usable native Alpaca surface is answering at {endpoint}. Probe evidence: UDP {udp} advertised AlpacaPort {port}; no Alpaca server answered there ({error}), so the JSON-RPC control port is the only surface left to try. Check device service availability and the Alpaca Protocol setting. SSC did not try legacy JSON-RPC on {legacy} because current Seestar firmware can leave that port open without answering commands.": [
     "Pripojenie zlyhalo: telescope.connected: [{code}] Na {endpoint} neodpovedá žiadne použiteľné natívne rozhranie Alpaca. Výsledok overenia: UDP {udp} oznámilo AlpacaPort {port}; žiadny server Alpaca tam neodpovedal ({error}), takže zostáva skúsiť iba riadiaci port JSON-RPC. Skontrolujte dostupnosť služby zariadenia a nastavenie Alpaca Protocol. SSC neskúsil staršie rozhranie JSON-RPC na {legacy}, pretože aktuálny firmvér Seestar môže ponechať tento port otvorený bez odpovedania na príkazy.",
     "Připojení selhalo: telescope.connected: [{code}] Na {endpoint} neodpovídá žádné použitelné nativní rozhraní Alpaca. Výsledek ověření: UDP {udp} oznámilo AlpacaPort {port}; žádný server Alpaca tam neodpověděl ({error}), takže zbývá zkusit pouze řídicí port JSON-RPC. Zkontrolujte dostupnost služby zařízení a nastavení Alpaca Protocol. SSC nezkusil starší rozhraní JSON-RPC na {legacy}, protože aktuální firmware Seestar může ponechat tento port otevřený bez odpovídání na příkazy."
+  ],
+  "Do not show again": [
+    "Viac nezobrazovať",
+    "Znovu nezobrazovat"
+  ],
+  "Show observing workflow guide": [
+    "Zobraziť sprievodcu pozorovaním",
+    "Zobrazit průvodce pozorováním"
+  ],
+  "Running version": [
+    "Spustená verzia",
+    "Spuštěná verze"
+  ],
+  "Frame from picture": [
+    "Rámovanie podľa snímky",
+    "Rámování podle snímku"
+  ],
+  "Upload FITS, PNG or JPEG to move the blue FOV to its plate-solved position.": [
+    "Nahraj FITS, PNG alebo JPEG a presuň modré FOV na polohu určenú plate solve.",
+    "Nahraj FITS, PNG nebo JPEG a přesuň modré FOV na polohu určenou plate solve."
+  ],
+  "Solving picture…": [
+    "Riešenie snímky…",
+    "Řešení snímku…"
+  ],
+  "Solve and place blue FOV": [
+    "Vyriešiť a umiestniť modré FOV",
+    "Vyřešit a umístit modré FOV"
+  ],
+  "Apply solved position": [
+    "Použiť vyriešenú polohu",
+    "Použít vyřešenou polohu"
+  ],
+  "Plate solving reference image": [
+    "Plate solve referenčnej snímky",
+    "Plate solve referenčního snímku"
+  ],
+  "Solved position applied.": [
+    "Vyriešená poloha bola použitá.",
+    "Vyřešená poloha byla použita."
+  ],
+  "Framing changed while solving. Apply the solved position when ready.": [
+    "Počas riešenia sa rámovanie zmenilo. Vyriešenú polohu môžeš použiť, keď budeš pripravený.",
+    "Během řešení se rámování změnilo. Vyřešenou polohu můžeš použít, až budeš připravený."
+  ],
+  "Could not solve the uploaded image.": [
+    "Nahranú snímku sa nepodarilo vyriešiť.",
+    "Nahraný snímek se nepodařilo vyřešit."
+  ],
+  "A reference image is already being solved.": [
+    "Referenčná snímka sa už rieši.",
+    "Referenční snímek se již řeší."
+  ],
+  "Reference image is larger than 64 MiB.": [
+    "Referenčná snímka je väčšia ako 64 MiB.",
+    "Referenční snímek je větší než 64 MiB."
+  ],
+  "Upload a valid FITS, PNG or JPEG image (at most 32 megapixels).": [
+    "Nahraj platnú snímku FITS, PNG alebo JPEG (najviac 32 megapixelov).",
+    "Nahraj platný snímek FITS, PNG nebo JPEG (nejvýše 32 megapixelů)."
+  ],
+  "The plate solver returned an invalid image solution.": [
+    "Plate solver vrátil neplatné riešenie snímky.",
+    "Plate solver vrátil neplatné řešení snímku."
+  ],
+  "ASTAP or its star database is unavailable. Check the plate solver settings.": [
+    "ASTAP alebo jeho katalóg hviezd nie je dostupný. Skontroluj nastavenia plate solvera.",
+    "ASTAP nebo jeho katalog hvězd není dostupný. Zkontroluj nastavení plate solveru."
+  ],
+  "Reference image solving timed out.": [
+    "Vypršal časový limit riešenia referenčnej snímky.",
+    "Vypršel časový limit řešení referenčního snímku."
+  ],
+  "No plate-solve solution was found for this image.": [
+    "Pre túto snímku sa nenašlo riešenie plate solve.",
+    "Pro tento snímek nebylo nalezeno řešení plate solve."
+  ],
+  "Could not save appearance settings.": [
+    "Nepodarilo sa uložiť nastavenia vzhľadu.",
+    "Nepodařilo se uložit nastavení vzhledu."
   ]
 }

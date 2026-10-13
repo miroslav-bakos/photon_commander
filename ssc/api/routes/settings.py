@@ -657,6 +657,7 @@ async def set_appearance(
     del session
     appearance = await services.settings.set_appearance(
         AppearanceSettings(
+            workflow_guide_visible=body.workflow_guide_visible,
             theme=body.theme,
             font_scale=body.font_scale,
             accent=body.accent,

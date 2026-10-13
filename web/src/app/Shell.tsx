@@ -51,7 +51,7 @@ export function Shell({ children }: { children: ReactNode }) {
           cutout, where the env() value is just 0. */}
       {/* Mobile navigation lives in the bottom dock; desktop navigation stays
           beside the brand. Keep the mobile header light and compact. */}
-      <header className="ssc-toolbar relative z-50 flex flex-nowrap items-center justify-between gap-1 overflow-visible border-b border-border bg-surface/35 px-2 pt-[calc(var(--spacing)*3+env(safe-area-inset-top))] pb-3 sm:px-4 md:gap-3 md:backdrop-blur-sm">
+      <header style={mobileHeader ? undefined : { borderBottom: 0, boxShadow: "none" }} className="ssc-toolbar relative z-50 flex flex-nowrap items-center justify-between gap-1 overflow-visible border-b border-border bg-surface/35 px-2 pt-[calc(var(--spacing)*3+env(safe-area-inset-top))] pb-3 sm:px-4 md:gap-3 md:backdrop-blur-sm">
         <div className="flex min-w-0 items-center md:gap-4">
           <h1 className="shrink-0">
             <button type="button" aria-label="Reload Photon Commander" title="Reload Photon Commander" className="flex size-11 items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-accent" onClick={() => { window.location.reload(); }}>
