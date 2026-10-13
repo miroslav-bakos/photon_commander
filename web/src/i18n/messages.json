@@ -10990,5 +10990,9 @@
   "Could not save appearance settings.": [
     "Nepodarilo sa uložiť nastavenia vzhľadu.",
     "Nepodařilo se uložit nastavení vzhledu."
+  ],
+  "Open release changelog": [
+    "Otvoriť prehľad zmien vydania",
+    "Otevřít přehled změn vydání"
   ]
 }

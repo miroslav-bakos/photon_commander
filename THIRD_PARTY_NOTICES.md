@@ -56,6 +56,11 @@ the notice remains included whether or not a native artifact contains it.
   Commander. No redistribution grant has been recorded; the layer is disabled. Credit: WHAM Sky Survey DR1 — Wisconsin H-Alpha Mapper,
   funded by the U.S. National Science Foundation. Source and acknowledgement:
   <https://www.astro.wisc.edu/research/research-areas/galactic-astronomy/wham/>.
+- `data/catalog/vdb.csv` and `data/catalog/ldn.csv` contain catalogue identifiers,
+  J2000 positions and classes from the HEASARC REFNEBULAE and LDN tables. Their
+  headers record upstream hashes, attribution, changes and the HEASARC open-data
+  use policy: https://heasarc.gsfc.nasa.gov/docs/heasarc/data_policy.html .
+  No source prose or survey imagery is bundled.
 - The Messier and Sharpless tables are factual/public-domain sources described
   in their own file headers.
 

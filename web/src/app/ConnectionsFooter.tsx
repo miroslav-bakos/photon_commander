@@ -67,6 +67,8 @@ export function ConnectionsFooter({ docked = false }: { docked?: boolean }) {
       return response.json() as Promise<{ version?: string | null }>;
     },
   });
+  const version = build.data?.version;
+  const releasedVersion = typeof version === "string" && /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(version);
   const now = useNow(1000);
   const status = useConnectionStore((s) => s.status);
   const lastResync = useConnectionStore((s) => s.lastResync);
@@ -196,7 +198,18 @@ export function ConnectionsFooter({ docked = false }: { docked?: boolean }) {
         >
           <PictureInPicture2 aria-hidden="true" className="size-4" strokeWidth={1.8} />
         </button>
-        <span className="shrink-0 text-[10px] text-fg-muted" title="Running version">{build.data?.version ?? "—"}</span>
+        {releasedVersion ? (
+          <a
+            className="shrink-0 rounded text-[10px] text-fg-muted hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+            title="Running version"
+            aria-label={translate("Open release changelog", language)}
+            href={`https://github.com/miroslav-bakos/photon_commander/releases/tag/v${version}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >{version}</a>
+        ) : (
+          <span className="shrink-0 text-[10px] text-fg-muted" title="Running version">{version ?? "—"}</span>
+        )}
         <FullscreenToggle />
       </div>
     </div>

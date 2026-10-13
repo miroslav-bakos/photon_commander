@@ -19,6 +19,8 @@ they carry different licences (THIRD_PARTY_NOTICES.md, "Bundled star catalogue")
 2. ``openngc.csv`` — NGC 1-7840 and IC 1-5386 derived from OpenNGC, which is
    CC BY-SA 4.0 and therefore lives in its own file.
 3. ``sharpless.csv`` — Sh2-1-313 from NASA HEASARC's ``hiiregion`` table.
+4. ``vdb.csv`` — VdB reflection-nebula positions from HEASARC ``refnebulae``.
+5. ``ldn.csv`` — named Lynds dark-nebula positions from HEASARC ``ldn``.
 
 Every object records the ``source`` credit line of the file it came from, read
 from that file's own header — the UI's credit line is driven by the data, never
@@ -207,6 +209,7 @@ def _canonical_designation(raw: str) -> str | None:
     ``"SH2-101"``. ``None`` if not a recognised catalogue designation shape at
     all (e.g. a common name)."""
     text = normalize_query(raw)
+    text = re.sub(r"^VAN\s+DEN\s+BERGH\s*", "VDB ", text)
     sharpless = _SHARPLESS_RE.match(text)
     if sharpless is not None:
         return f"SH2-{int(sharpless.group(1))}"
@@ -242,6 +245,8 @@ def default_catalog_paths() -> tuple[Path, ...]:
         directory / "objects.toml",
         directory / "openngc.csv",
         directory / "sharpless.csv",
+        directory / "vdb.csv",
+        directory / "ldn.csv",
     )
 
 
@@ -514,7 +519,7 @@ class TargetCatalog:
             return found
         raise UnknownTargetError(
             f"no bundled catalogue entry matches {query!r}. The offline catalogue covers the "
-            "Messier objects, NGC 1-7840, IC 1-5386 and Sharpless Sh2-1-313 plus their "
+            "Messier objects, NGC 1-7840, IC 1-5386, Sharpless Sh2-1-313, VdB and LDN plus their "
             "common names (data/catalog/) — it is not a full-sky resolver."
         )
 

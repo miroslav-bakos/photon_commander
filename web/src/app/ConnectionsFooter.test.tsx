@@ -19,7 +19,8 @@ import { useMountCenterProgressQuery } from "../api/mount";
 import { useLayoutStore } from "../layout/layoutStore";
 import { useStreamPipStore } from "../store/streamPipStore";
 
-vi.mock("@tanstack/react-query", () => ({ useQuery: () => ({ data: { version: "0.0.3-test" } }) }));
+const runningBuild = vi.hoisted((): { version: string | null | undefined } => ({ version: "0.0.3-test" }));
+vi.mock("@tanstack/react-query", () => ({ useQuery: () => ({ data: { version: runningBuild.version } }) }));
 
 vi.mock("../api/filterwheel", () => ({
   useFilterWheelQuery: vi.fn(),
@@ -46,6 +47,7 @@ vi.mock("./FullscreenToggle", () => ({
 afterEach(cleanup);
 
 beforeEach(() => {
+  runningBuild.version = "0.0.3-test";
   useLayoutStore.setState({ unlocked: false, saved: { version: 1, tabs: {} } });
   useStreamPipStore.setState({ enabled: false });
   vi.mocked(useFilterWheelQuery).mockReturnValue({ data: undefined } as ReturnType<typeof useFilterWheelQuery>);
@@ -55,6 +57,31 @@ beforeEach(() => {
   vi.mocked(useLiveStackQuery).mockReturnValue({ data: undefined } as ReturnType<typeof useLiveStackQuery>);
   vi.mocked(useLiveStackRtspQuery).mockReturnValue({ data: undefined } as ReturnType<typeof useLiveStackRtspQuery>);
   vi.mocked(useHeaterQuery).mockReturnValue({ data: undefined } as ReturnType<typeof useHeaterQuery>);
+});
+
+describe("ConnectionsFooter release changelog", () => {
+  it("links a released version safely with a keyboard focus indicator", () => {
+    runningBuild.version = "0.2.3";
+    render(<ConnectionsFooter />);
+    const link = screen.getByRole("link", { name: "Open release changelog" });
+    expect(link).toHaveAttribute("href", "https://github.com/miroslav-bakos/photon_commander/releases/tag/v0.2.3");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    expect(link).toHaveAttribute("title", "Running version");
+    expect(link).toHaveTextContent("0.2.3");
+    link.focus();
+    expect(link).toHaveFocus();
+    expect(link).toHaveClass("focus-visible:outline-focus-ring");
+  });
+
+  it.each([undefined, null, "unknown", "dev", "0.2.3-dev", "0.2.3+local", "01.2.3"])(
+    "keeps unavailable or unreleased version %s as plain text", (version) => {
+      runningBuild.version = version;
+      render(<ConnectionsFooter />);
+      expect(screen.getByTitle("Running version")).toHaveTextContent(version ?? "—");
+      expect(screen.queryByRole("link", { name: "Open release changelog" })).not.toBeInTheDocument();
+    },
+  );
 });
 
 function setDevices(devices: DevicesState | null): void {

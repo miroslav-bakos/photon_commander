@@ -41,7 +41,7 @@ def test_default_catalog_paths_are_core_then_openngc_then_sharpless() -> None:
     """Precedence order is part of the contract: the public-domain core owns
     every object it describes; the CC BY-SA file only adds."""
     paths = default_catalog_paths()
-    assert [p.name for p in paths] == ["objects.toml", "openngc.csv", "sharpless.csv"]
+    assert [p.name for p in paths] == ["objects.toml", "openngc.csv", "sharpless.csv", "vdb.csv", "ldn.csv"]
     for path in paths:
         assert path.is_file()
 
@@ -61,11 +61,13 @@ def test_core_file_is_messier_only_and_does_not_cite_wikipedia() -> None:
 
 def test_every_source_file_declares_its_own_credit_line(catalog) -> None:
     """The credit shown in the UI comes from the data file, never from code."""
-    assert len(catalog.sources) == 3
-    core, openngc, sharpless = catalog.sources
+    assert len(catalog.sources) == 5
+    core, openngc, sharpless, vdb, ldn = catalog.sources
     assert "HEASARC" in core
     assert "OpenNGC" in openngc and "CC BY-SA 4.0" in openngc
     assert "Sharpless" in sharpless and "HEASARC" in sharpless
+    assert "VdB" in vdb and "HEASARC" in vdb
+    assert "Lynds" in ldn and "HEASARC" in ldn
     assert {obj.source for obj in catalog.objects} == set(catalog.sources)
 
 
@@ -429,8 +431,12 @@ def test_derived_csv_files_carry_their_licence_header(path) -> None:
         assert key in head, f"{path.name} is missing {key}"
     if path.name == "openngc.csv":
         assert "CC-BY-SA-4.0" in head and "mattiaverga/OpenNGC" in head
-    else:
+    elif path.name == "sharpless.csv":
         assert "public-domain" in head and "heasarc" in head.lower()
+    else:
+        assert "HEASARC open-data" in head
+        assert "heasarc/data_policy.html" in head
+        assert "upstream_tdat_sha256" in head
 
 
 def test_no_duplicate_designations_within_any_csv_file() -> None:
@@ -632,3 +638,26 @@ def test_within_cone_refuses_rather_than_clamps_out_of_range_arguments(catalog) 
     # And the ceiling itself is accepted, so "refuses above" cannot silently
     # become "refuses at".
     catalog.within_cone(10.0, 41.0, MAX_CONE_RADIUS_DEG, MAX_CONE_LIMIT)
+
+
+@pytest.mark.parametrize("query,ra,dec,kind",[
+    ("vdb142",324.17083333,57.50111111,ObjectType.REFLECTION_NEBULA),
+    ("Van den Bergh 141",319.10833333,68.26027778,ObjectType.REFLECTION_NEBULA),
+    ("LDN 1235",333.7283,73.4161,ObjectType.DARK_NEBULA),
+    ("ldn1622",88.6503,2.0081,ObjectType.DARK_NEBULA),
+])
+def test_nebula_catalogues_resolve_real_j2000_positions(catalog,query,ra,dec,kind):
+    obj=catalog.resolve(query)
+    assert obj.ra_j2000_deg == pytest.approx(ra)
+    assert obj.dec_j2000_deg == pytest.approx(dec)
+    assert obj.object_type == kind
+    assert obj.size_major_arcmin is None and obj.magnitude is None
+    assert "HEASARC" in obj.source
+    assert obj in catalog.suggest(query)
+
+def test_vdb_components_and_unnamed_ldn_are_not_invented(catalog):
+    assert catalog.resolve("VdB 64a") != catalog.resolve("VdB 64b")
+    assert catalog.resolve("VDB 1a-d") is catalog.resolve("VdB 1")
+    with pytest.raises(UnknownTargetError):catalog.resolve("NN")
+    assert sum(o.source==catalog.sources[3] for o in catalog.objects)==163
+    assert sum(o.source==catalog.sources[4] for o in catalog.objects)==1787
