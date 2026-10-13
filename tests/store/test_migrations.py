@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import shutil
 import sqlite3
 from pathlib import Path
@@ -285,3 +286,77 @@ async def test_0016_dates_existing_named_plans_for_the_calendar(
     )
     assert row is not None
     assert row["night_date"] == "2026-09-24"
+
+
+@pytest.mark.parametrize("historical", [False, True], ids=["public", "private-history"])
+async def test_documentation_only_migration_lineages_upgrade_without_rewriting_markers(
+    tmp_path: Path, historical: bool,
+) -> None:
+    initial = tmp_path / "initial"
+    initial.mkdir()
+    for path in sorted(MIGRATIONS_DIR.glob("*.sql")):
+        version = int(path.name[:4])
+        if version > 8:
+            continue
+        sql = path.read_text()
+        if historical and version in {5, 6, 8}:
+            assert "THIRD_PARTY_NOTICES.md" in sql
+            sql = sql.replace("THIRD_PARTY_NOTICES.md", "docs/COMPLIANCE.md")
+        (initial / path.name).write_text(sql)
+    database_path = tmp_path / "upgrade.sqlite3"
+    db = await open_database(database_path)
+    try:
+        assert await migrate(db, directory=initial) == 8
+        await db.execute("CREATE TABLE user_evidence (value TEXT NOT NULL)")
+        await db.execute("INSERT INTO user_evidence VALUES ('preserved')")
+        markers = [tuple(row) for row in await db.fetch_all(
+            "SELECT * FROM schema_migrations ORDER BY version")]
+    finally:
+        await db.aclose()
+    db = await open_database(database_path)
+    try:
+        assert await migrate(db) == len(load_migrations())
+        assert await migrate(db) == len(load_migrations())
+        assert [tuple(row) for row in await db.fetch_all(
+            "SELECT * FROM schema_migrations WHERE version <= 8 ORDER BY version")] == markers
+        assert (await db.fetch_one("SELECT value FROM user_evidence"))[0] == "preserved"
+        assert (await db.fetch_one("PRAGMA integrity_check"))[0] == "ok"
+    finally:
+        await db.aclose()
+
+
+@pytest.mark.parametrize("version", [5, 6, 8])
+async def test_historical_marker_does_not_authorize_changed_current_sql(
+    database: Database, tmp_path: Path, version: int,
+) -> None:
+    await migrate(database)
+    migrations = load_migrations()
+    migration = migrations[version - 1]
+    historical = migration.sql.replace("THIRD_PARTY_NOTICES.md", "docs/COMPLIANCE.md")
+    assert historical != migration.sql
+    historical_digest = hashlib.sha256(historical.encode()).hexdigest()
+    await database.execute("UPDATE schema_migrations SET checksum = ? WHERE version = ?",
+                           (historical_digest, version))
+    directory = tmp_path / "altered"
+    shutil.copytree(MIGRATIONS_DIR, directory)
+    path = next(directory.glob(f"{version:04d}_*.sql"))
+    path.write_text(path.read_text() + "\nCREATE TABLE unauthorized_change (id INTEGER);\n")
+    with pytest.raises(MigrationError, match="has changed since it was applied"):
+        await migrate(database, directory=directory)
+    assert await database.fetch_one(
+        "SELECT name FROM sqlite_master WHERE name = 'unauthorized_change'") is None
+    assert (await database.fetch_one(
+        "SELECT checksum FROM schema_migrations WHERE version = ?", (version,)))[0] == historical_digest
+
+
+@pytest.mark.parametrize("version", [5, 6, 8])
+async def test_documentation_alias_rejects_unknown_recorded_digest(
+    database: Database, version: int,
+) -> None:
+    await migrate(database)
+    await database.execute("UPDATE schema_migrations SET checksum = ? WHERE version = ?",
+                           ("0" * 64, version))
+    with pytest.raises(MigrationError, match="has changed since it was applied"):
+        await migrate(database)
+    assert (await database.fetch_one(
+        "SELECT checksum FROM schema_migrations WHERE version = ?", (version,)))[0] == "0" * 64

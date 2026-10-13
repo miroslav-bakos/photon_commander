@@ -14,6 +14,9 @@ Rules this module enforces rather than documents:
 * A database whose version is *ahead* of the shipped migrations is refused
   rather than downgraded. Downgrade is a restore-from-backup operation.
 * Nothing here drops or rewrites a column. Forward-only, never destructive.
+* Three exact historical checksums remain valid after public documentation
+  references changed in SQL comments. Both payload hashes are pinned; arbitrary
+  edits remain errors and existing database markers are never rewritten.
 """
 
 from __future__ import annotations
@@ -36,6 +39,18 @@ _log = logging.getLogger(__name__)
 
 MIGRATIONS_DIR: Final = Path(__file__).parent / "migrations"
 _FILENAME = re.compile(r"^(?P<version>\d{4})_(?P<name>[a-z0-9_]+)\.sql$")
+
+# Public-source sanitization changed only docs/COMPLIANCE.md references in
+# comments. These exact shipped byte pairs have identical executable SQL.
+# Keying on the current checksum prevents this exception accepting later edits.
+_HISTORICAL_COMMENT_CHECKSUMS: Final = {
+    (5, "cutouts", "0d192bb156206b9fb74418b915246738523efdc8547fe8da49b8749d755b9f34"):
+        "fc6ab6f428d998e7b129cb10edac14f58f07907477ba1e7d661003c80fbbb679",
+    (6, "bulk_cutouts", "e4dd65677e6b113d02d6bbee02266a3b1a85e251432f129ee51323f51d815f02"):
+        "a5e9fb1ce2b850da969c24f4b37ace18cee7aca63519d0f602106812df9674cd",
+    (8, "object_info", "246abcb279f1b9483fb3e8e4b404364f2ea5b88ab6ebedc8ee44680dbc0e1783"):
+        "7f86028e6a3b918ae46495219dcb62ab0eee4e41a30abe3d42f8511577ee2852",
+}
 
 _BOOTSTRAP = """
 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -114,7 +129,10 @@ async def migrate(database: Database, *, directory: Path = MIGRATIONS_DIR) -> in
 
     for migration in migrations:
         recorded = applied.get(migration.version)
-        if recorded is not None and recorded != migration.checksum:
+        historical = _HISTORICAL_COMMENT_CHECKSUMS.get(
+            (migration.version, migration.name, migration.checksum)
+        )
+        if recorded is not None and recorded != migration.checksum and recorded != historical:
             raise MigrationError(
                 f"migration {migration.version:04d}_{migration.name} has changed since "
                 "it was applied. Migrations are immutable once shipped — add a new one."

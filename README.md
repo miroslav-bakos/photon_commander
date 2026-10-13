@@ -79,8 +79,8 @@ has one complete free version.
 ## Release status
 
 The source is available for review and development. The
-[0.0.2 Raspberry Pi 5 prerelease](https://github.com/miroslav-bakos/photon_commander/releases/tag/v0.0.2)
-provides an unsigned ARM64 Debian package with Pi5 regression evidence.
+[0.0.3 Raspberry Pi 5 prerelease](https://github.com/miroslav-bakos/photon_commander/releases/tag/v0.0.3)
+provides an unsigned ARM64 Debian package with Pi5 regression and retained-database upgrade evidence.
 Attended observing and device-recovery checks remain open; this is not a
 validated observing release.
 Survey data permissions are separate from the source-code licence.
@@ -88,7 +88,7 @@ Survey data permissions are separate from the source-code licence.
 ## Platforms
 
 Photon is designed for **Raspberry Pi, Windows, Linux and macOS**, with desktop
-and mobile browsers as clients. Release 0.0.2 targets Raspberry Pi 5 ARM64.
+and mobile browsers as clients. Release 0.0.3 targets Raspberry Pi 5 ARM64.
 Windows package validation remains in progress. Linux
 desktop and macOS users can work from source using the instructions below.
 Native macOS packages and macOS runtime validation are not yet available.
