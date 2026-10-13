@@ -35,6 +35,7 @@ from ssc.scheduler.executor import (
     JournalRecord,
     RecordKind,
     RunStatus,
+    reduce,
     run,
 )
 from tests.scheduler.fakes import (
@@ -155,6 +156,27 @@ class TestReferenceRunSanity:
         assert _resolved_calls_in_prefix(REFERENCE_JOURNAL) == REFERENCE_CALLS
 
 
+def _assert_durable_effects_and_verification(records: list[JournalRecord]) -> None:
+    issued: dict[tuple[str | None, int | None, int], EffectCall] = {}
+    for index, record in enumerate(records):
+        if record.effect is None:
+            continue
+        key = (record.item_id, record.panel_index, record.attempt)
+        if record.effect_outcome is None:
+            # A restart may replace an unresolved issue with verification at
+            # the same attempt; resolution must match the latest durable issue.
+            issued[key] = record.effect
+        else:
+            assert key in issued
+            assert record.effect == issued[key]
+        if record.effect.args.get("resume_field_verification"):
+            assert record.effect.name is EffectName.CENTER_TARGET
+            previous = reduce(records[:index]).items[record.item_id]
+            assert record.step == previous.step
+            assert record.status is None or record.status is previous.status
+            assert record.held is None or record.held == previous.held
+
+
 @pytest.mark.parametrize("k", range(0, len(REFERENCE_JOURNAL) + 1))
 async def test_crash_at_every_transition_resumes_identically(k: int) -> None:
     prefix = REFERENCE_JOURNAL[:k]
@@ -163,6 +185,8 @@ async def test_crash_at_every_transition_resumes_identically(k: int) -> None:
     device.seed(_resolved_calls_in_prefix(prefix))
 
     await _drive(journal, device, start_at=prefix[-1].at if prefix else START_AT)
+
+    _assert_durable_effects_and_verification(journal.records)
 
     # Restart adds only same-target, non-advancing optical verification.
     verification = [record for record in journal.records if record.effect is not None
@@ -253,3 +277,31 @@ def test_the_fixture_really_targets_a_body() -> None:
     assert isinstance(goto.target, BodyTargetSpec)  # type: ignore[union-attr]
     assert goto.target.body is BodyId.MOON  # type: ignore[union-attr]
     assert goto.ra_j2000_h is None  # type: ignore[union-attr]
+
+
+def test_durable_effect_check_rejects_wrong_issued_coordinates() -> None:
+    records = list(REFERENCE_JOURNAL)
+    index = next(i for i, record in enumerate(records)
+                 if record.effect is not None and record.effect.name is EffectName.SLEW_TO
+                 and record.effect_outcome is None)
+    effect = records[index].effect
+    assert effect is not None
+    records[index] = replace(records[index], effect=replace(
+        effect, args={**effect.args, "ra_j2000_h": -99.0}))
+    with pytest.raises(AssertionError):
+        _assert_durable_effects_and_verification(records)
+
+
+def test_verification_check_rejects_advancing_the_owned_step() -> None:
+    prefix = REFERENCE_JOURNAL[:26]
+    previous = reduce(prefix).items["goto-moon"]
+    owned = next(record.effect for record in REFERENCE_JOURNAL
+                 if record.item_id == "goto-moon" and record.effect is not None
+                 and record.effect.name is EffectName.CENTER_TARGET)
+    assert owned is not None
+    verification = replace(prefix[-1], effect=replace(
+        owned, args={**owned.args, "resume_field_verification": True}),
+        effect_outcome=None, step=previous.step + 1, attempt=previous.attempt + 1,
+        status=None, held=None)
+    with pytest.raises(AssertionError):
+        _assert_durable_effects_and_verification([*prefix, verification])
