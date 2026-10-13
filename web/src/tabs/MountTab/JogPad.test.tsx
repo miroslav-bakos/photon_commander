@@ -29,10 +29,11 @@ function stubMoveAxis(): MoveAxisCall[] {
   const calls: MoveAxisCall[] = [];
   vi.stubGlobal(
     "fetch",
-    vi.fn().mockImplementation((input: string, init?: RequestInit) => {
-      const pathname = new URL(input, "http://localhost").pathname;
-      if (init?.method === "POST" && pathname === "/api/mount/move-axis") {
-        calls.push(JSON.parse(init.body as string) as MoveAxisCall);
+    vi.fn().mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const request = input instanceof Request ? input : new Request(new URL(String(input), "http://localhost"), init);
+      const pathname = new URL(request.url).pathname;
+      if (request.method === "POST" && pathname === "/api/mount/move-axis") {
+        calls.push(JSON.parse(await request.clone().text()) as MoveAxisCall);
         return Promise.resolve(new Response(null, { status: 204 }));
       }
       return Promise.resolve(new Response(JSON.stringify({ detail: "unexpected" }), { status: 500 }));

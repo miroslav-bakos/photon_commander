@@ -114,7 +114,7 @@ describe("ArchiveTab", () => {
     fireEvent.click(screen.getByRole("button", { name: "Download a ZIP" }));
 
     await waitFor(() => { expect(requests).toContainEqual({ path: "/api/capture/archive/selection-zip", body: { keys: ["preview.png"], directories: ["M31"] } }); });
-    expect(click).toHaveBeenCalledOnce();
+    await waitFor(() => { expect(click).toHaveBeenCalledOnce(); });
     expect(createObjectUrl).toHaveBeenCalledOnce();
     expect(revokeObjectUrl).toHaveBeenCalledWith("blob:archive-selection");
     expect(screen.queryByText("Download folder ZIP")).not.toBeInTheDocument();

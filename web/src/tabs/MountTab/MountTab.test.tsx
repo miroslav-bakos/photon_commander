@@ -135,7 +135,7 @@ describe("MountTab", () => {
 
     const grid = screen.getByLabelText("Equipment controls");
     expect(grid).toHaveClass("grid-cols-1", "md:grid-cols-2", "xl:grid-cols-4");
-    for (const label of ["POINTING", "JOG", "TRACKING", "PARK / HOME", "Focuser", "Filter wheel", "Dew heater", "Dithering"]) {
+    for (const label of ["Pointing", "Jog", "Tracking", "Park / home", "Focuser", "Filter wheel", "Dew heater", "Dithering"]) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
     expect(screen.queryByText("Slew / sync")).not.toBeInTheDocument();

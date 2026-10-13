@@ -8,13 +8,13 @@ import tokensCss from "./tokens.css?raw";
 
 describe("editable control height", () => {
   it("keeps field-style controls at the standard responsive button heights", () => {
-    expect(appCss).toMatch(/input:not\([\s\S]*select:not\(\[multiple\]\)\s*{[\s\S]*height: 44px;[\s\S]*padding-block: 0;/);
+    expect(appCss).toMatch(/input:not\([\s\S]*select:not\(\[multiple\]\)\s*{[\s\S]*height: 36px;[\s\S]*padding-block: 0;/);
     expect(appCss).toMatch(/data-font-scale="small"[\s\S]*height: 33px;[\s\S]*min-height: 33px;/);
-    expect(appCss).toMatch(/data-font-scale="large"[\s\S]*height: 49\.5px;[\s\S]*min-height: 49\.5px;/);
+    expect(appCss).toMatch(/data-font-scale="large"[\s\S]*height: 40px;[\s\S]*min-height: 40px;/);
   });
 
   it("keeps multiline and multiple-selection controls flexible", () => {
-    expect(appCss).toMatch(/select\[multiple\],[\s\S]*textarea\s*{\s*min-height: 44px;/);
+    expect(appCss).toMatch(/select\[multiple\],[\s\S]*textarea\s*{\s*min-height: 36px;/);
     expect(appCss).toMatch(/data-font-scale="small"[\s\S]*select\[multiple\],[\s\S]*textarea\s*{\s*min-height: 33px;/);
   });
 

@@ -46,7 +46,7 @@ describe("HelpTab", () => {
 
     expect(screen.getByRole("heading", { name: "YouTube privacy and stream keys" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "When plate solving fails" })).not.toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("1 article");
+    expect(screen.getByText("1 article")).toHaveAttribute("role", "status");
 
     await user.click(screen.getByRole("button", { name: "Streaming" }));
     expect(screen.getByRole("tabpanel", { name: "Manual" })).toBeInTheDocument();
