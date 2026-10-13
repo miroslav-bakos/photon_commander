@@ -111,7 +111,9 @@ async def test_hung_version_probe_is_unsupported_version_not_a_hang(fake_astap) 
 
 async def test_recognised_binary_without_database_is_database_unavailable(fake_astap) -> None:  # type: ignore[no-untyped-def]
     binary = fake_astap(_GOOD_BANNER_SCRIPT)
-    availability = await astap.astap_availability(env={"SSC_ASTAP_CLI": str(binary)})
+    availability = await astap.astap_availability(
+        env={"SSC_ASTAP_CLI": str(binary), "SSC_ASTAP_DATA_DIR": str(binary.parent)}
+    )
     assert availability.available is False
     assert availability.issue is SolveIssue.DATABASE_UNAVAILABLE
     assert availability.version == "CLI-0.9.581-stack"
