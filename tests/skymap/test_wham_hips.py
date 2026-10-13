@@ -1,18 +1,14 @@
-"""The bundled WHAM H-alpha HiPS: the committed directory the tile proxy
-serves, and the build script's geometry (``scripts/build-wham-hips.py``).
+"""Public WHAM distribution boundary and independent build-script numerics.
 
-The directory is a build artefact committed to the repository; these tests
-read it as the proxy would (no network, no rebuild) and check the script's
-helpers against skyfield, which is independent of the script's own matrix.
+Survey pixels are excluded until redistribution permission is recorded. Geometry
+and stretch helpers remain testable with synthetic inputs, without survey data.
 """
 
 from __future__ import annotations
 
 import importlib.util
 import math
-import struct
 import sys
-import zlib
 from pathlib import Path
 from types import ModuleType
 
@@ -27,25 +23,6 @@ from ssc.skymap.surveys import WHAM_HALPHA
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "build-wham-hips.py"
-WHAM_DIR = default_bundled_hips_dir() / WHAM_HALPHA.local_dir  # type: ignore[operator]
-
-#: What ``SkymapService`` / the WWT frame need from ``properties``.
-REQUIRED_PROPERTIES = {
-    "hips_order",
-    "hips_tile_width",
-    "hips_tile_format",
-    "hips_frame",
-    "obs_title",
-    "obs_copyright",
-    "obs_copyright_url",
-    "hips_creator",
-    "hips_release_date",
-}
-CREDIT = (
-    "WHAM Sky Survey DR1 — Wisconsin H-Alpha Mapper, funded by the U.S. National Science Foundation"
-)
-
-
 @pytest.fixture(scope="module")
 def script() -> ModuleType:
     spec = importlib.util.spec_from_file_location("build_wham_hips", SCRIPT)
@@ -56,39 +33,20 @@ def script() -> ModuleType:
     return module
 
 
-# -- the committed directory ----------------------------------------------------- #
+# -- public distribution boundary ------------------------------------------------ #
 
 
-def test_properties_has_what_the_proxy_and_the_frame_need() -> None:
-    text = (WHAM_DIR / "properties").read_text(encoding="utf-8")
-    props = hips.parse_properties(text)
-    missing = REQUIRED_PROPERTIES - props.raw.keys()
-    assert not missing, f"properties lacks {sorted(missing)}"
-    assert props.hips_order == WHAM_HALPHA.max_order
-    assert props.hips_tile_width == 512
-    assert props.hips_tile_format == ("png",)
-    assert props.hips_frame == "equatorial"
-    assert props.raw["obs_copyright"] == CREDIT
-    assert props.raw["obs_copyright_url"] == WHAM_HALPHA.credit_url
-    assert props.raw["hips_creator"] == "SSC build script"
-    assert props.raw["ssc_source_version"] == "161116"
-    assert props.raw["ssc_source_date"] == "2017-09-12"
-    assert props.raw["ssc_source_sha256"] == (
-        "7dd5f076e16a99627eb3f4e1f543134321691e8ce2ef0daf826b7e9f18b48c20"
-    )
+def test_wham_is_disabled_without_recorded_distribution_rights() -> None:
+    assert WHAM_HALPHA.enabled is False
+    assert WHAM_HALPHA.bundle_allowed is False
+    assert WHAM_HALPHA.production_cleared is False
+    assert WHAM_HALPHA.local_dir is None
+    assert WHAM_HALPHA.pending_clearance
 
 
-def test_every_tile_up_to_max_order_exists_as_a_png() -> None:
-    for order in range(WHAM_HALPHA.max_order + 1):
-        for npix in range(hips.tiles_in_order(order)):
-            path = WHAM_DIR / hips.tile_path(order, npix, WHAM_HALPHA.tile_format)
-            assert path.is_file(), path
-            assert path.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n", path
-
-
-def test_the_pack_is_small_enough_to_commit() -> None:
-    total = sum(p.stat().st_size for p in WHAM_DIR.rglob("*") if p.is_file())
-    assert total <= 10_000_000, f"{total} bytes"
+def test_public_tree_contains_no_bundled_wham_pixels() -> None:
+    for wham_dir in (ROOT / "data" / "hips" / "wham", default_bundled_hips_dir() / "wham"):
+        assert not any(path.is_file() for path in wham_dir.rglob("*")), wham_dir
 
 
 # -- the script's geometry ------------------------------------------------------- #
@@ -143,54 +101,10 @@ def test_matrix_agrees_with_skyfields_galactic_frame(script: ModuleType) -> None
     assert np.abs(script.equatorial_to_galactic_matrix() - galactic_frame._matrix).max() < 1e-6
 
 
-# -- the tiles' content --------------------------------------------------------------- #
+# -- synthetic stretch ----------------------------------------------------------- #
 
 
-def _decode_palette_png(data: bytes) -> tuple[np.ndarray, np.ndarray]:
-    """(pixel indices, alpha per index) of an 8-bit palette PNG with tRNS."""
-    assert data[:8] == b"\x89PNG\r\n\x1a\n"
-    chunks: dict[bytes, bytes] = {}
-    pos = 8
-    while pos < len(data):
-        length = struct.unpack(">I", data[pos : pos + 4])[0]
-        kind = data[pos + 4 : pos + 8]
-        chunks[kind] = chunks.get(kind, b"") + data[pos + 8 : pos + 8 + length]
-        pos += 12 + length
-    width, height, depth, colour = struct.unpack(">IIBB", chunks[b"IHDR"][:10])
-    assert (depth, colour) == (8, 3)
-    rows = np.frombuffer(zlib.decompress(chunks[b"IDAT"]), dtype=np.uint8).reshape(
-        height, width + 1
-    )
-    filters = rows[:, 0]
-    pixels = rows[:, 1:].astype(np.int16)
-    for y in range(height):
-        if filters[y] == 1:
-            pixels[y] = np.cumsum(pixels[y]) & 0xFF
-        elif filters[y] == 2 and y > 0:
-            pixels[y] = (pixels[y] + pixels[y - 1]) & 0xFF
-        else:
-            assert filters[y] in (0, 2)
-    alpha = np.frombuffer(chunks[b"tRNS"], dtype=np.uint8)
-    assert len(alpha) == 256 and len(chunks[b"PLTE"]) == 768
-    return pixels.astype(np.uint8), alpha
-
-
-def _mean_alpha(order: int, npix: int) -> float:
-    pixels, alpha = _decode_palette_png(
-        (WHAM_DIR / hips.tile_path(order, npix, "png")).read_bytes()
-    )
-    assert pixels.shape == (512, 512)
-    return float(alpha[pixels].mean())
-
-
-def test_galactic_plane_tile_glows_more_than_a_polar_tile(script: ModuleType) -> None:
-    gc_ra, gc_dec = script.galactic_to_equatorial(0.0, 0.0)
-    ngp_ra, ngp_dec = script.galactic_to_equatorial(0.0, 90.0)
-    order = WHAM_HALPHA.max_order
-    plane = _mean_alpha(order, hips.ang2pix(gc_ra, gc_dec, order))
-    pole = _mean_alpha(order, hips.ang2pix(ngp_ra, ngp_dec, order))
-    assert plane > 2 * pole, (plane, pole)
-    assert pole > 0, "the faint high-latitude sky is not fully transparent"
+def test_stretch_is_transparent_below_floor_and_monotonic(script: ModuleType) -> None:
     assert alpha_is_transparent_below_floor(script)
 
 
