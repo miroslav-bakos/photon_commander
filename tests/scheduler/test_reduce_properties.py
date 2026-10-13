@@ -38,6 +38,9 @@ from tests.scheduler.fakes import (
 
 _BASE = datetime(2026, 3, 1, 21, 0, tzinfo=UTC)
 _NOW = datetime(2026, 3, 1, tzinfo=UTC)
+# Exercise multiple recovery attempts without simulating an eight-hour night:
+# every-prefix folds intentionally revisit all durable records quadratically.
+_RECOVERY_WINDOW = timedelta(minutes=3)
 
 _ITEM_FACTORIES = {
     EffectName.SET_EXPOSURE: lambda item_id, start: SetExposureItem(
@@ -83,8 +86,8 @@ def _schedule_for(plan: Plan) -> CompiledSchedule:
     night = NightWindow(
         date="2026-03-01",
         tz="UTC",
-        window_start_utc=_BASE - timedelta(hours=8),
-        window_end_utc=_BASE + timedelta(hours=8),
+        window_start_utc=_BASE - _RECOVERY_WINDOW,
+        window_end_utc=_BASE + _RECOVERY_WINDOW,
         dark_start_utc=None,
         dark_end_utc=None,
         solar_events=(),
@@ -144,3 +147,19 @@ def test_reduce_is_deterministic_and_total_over_every_prefix(plan_and_failures: 
     # Totality: folding the whole journal, and every prefix of it, never raises —
     # already implied by the loop above completing, asserted explicitly for clarity.
     reduce(journal)
+
+
+def test_short_fixture_still_exercises_failed_effects_and_recovery() -> None:
+    item = _ITEM_FACTORIES[EffectName.SET_GAIN](
+        "item0", AbsoluteTimeSpec(local_datetime=_BASE.replace(tzinfo=None)))
+    plan = Plan(id="recovery-coverage", name="recovery coverage", created_at=_NOW,
+                updated_at=_NOW, items=(item,))
+    journal = _drive_to_journal(plan, {EffectName.SET_GAIN: DeviceCommandError("simulated failure")})
+    failures = [record for record in journal if record.effect is not None
+                and record.effect.name is EffectName.SET_GAIN
+                and record.effect_outcome is not None
+                and record.effect_outcome.value == "failed"]
+    assert len(failures) >= 2
+    assert any(record.retry_at is not None for record in failures)
+    assert journal[-1].at >= _BASE + _RECOVERY_WINDOW
+    assert journal[-1].run_status is not None

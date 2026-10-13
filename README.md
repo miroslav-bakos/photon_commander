@@ -78,16 +78,18 @@ has one complete free version.
 
 ## Release status
 
-The source is available for review and development. Release 0.0.1 packages are
-still being validated and are not published here. Plan compilation and
-connection-recovery checks remain open; this is not a validated observing release.
+The source is available for review and development. The
+[0.0.2 Raspberry Pi 5 prerelease](https://github.com/miroslav-bakos/photon_commander/releases/tag/v0.0.2)
+provides an unsigned ARM64 Debian package with Pi5 regression evidence.
+Attended observing and device-recovery checks remain open; this is not a
+validated observing release.
 Survey data permissions are separate from the source-code licence.
 
 ## Platforms
 
 Photon is designed for **Raspberry Pi, Windows, Linux and macOS**, with desktop
-and mobile browsers as clients. The current 0.0.1 package targets are Windows
-x64 and Raspberry Pi 5 ARM64; their release validation is in progress. Linux
+and mobile browsers as clients. Release 0.0.2 targets Raspberry Pi 5 ARM64.
+Windows package validation remains in progress. Linux
 desktop and macOS users can work from source using the instructions below.
 Native macOS packages and macOS runtime validation are not yet available.
 
@@ -189,7 +191,8 @@ Copyright (C) 2026 Miroslav Bakoš. See [LICENSE](LICENSE) for GPLv3 terms.
 Required library licence texts and matching weak-copyleft source archives are
 preserved under `packaging/third-party-licenses/` and
 `packaging/third-party-sources/`. Astronomy datasets retain their own notices.
-This repository publishes source code; validated binary releases are still pending.
+This repository publishes corresponding source code and an unsigned Raspberry
+Pi 5 package-validation prerelease. Other native package validation remains pending.
 
 ## Optional background
 
