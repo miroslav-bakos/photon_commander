@@ -926,6 +926,42 @@ async def test_devices_poll_enumerates_from_configureddevices_with_tristate_conn
     assert devices.polled_at is not None
 
 
+@pytest.mark.parametrize("elapsed_s, stale", [(1, False), (6, True)])
+async def test_devices_poll_retains_acquisition_time_when_batch_expires(
+    monkeypatch: pytest.MonkeyPatch, elapsed_s: int, stale: bool,
+) -> None:
+    acquired = datetime(2026, 10, 13, 12, 0, tzinfo=UTC)
+    current = acquired
+
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz: Any = None) -> datetime:
+            return current
+
+    class DelayedClient(FakeClient):
+        async def configured_devices(self) -> list[Mapping[str, Any]]:
+            nonlocal current
+            result = await super().configured_devices()
+            current += timedelta(seconds=elapsed_s)
+            return result
+
+    monkeypatch.setattr(ssc_main, "datetime", Clock)
+    client = DelayedClient(FakeTelescope())
+    client.configured_devices_result = [_configured("Dew heater", "Switch", 0)]
+    client.add_sub_device("switch", 0, FakeSubDevice(connected=True))
+    gateway = AlpacaDeviceGateway(client, tasks=_tasks())  # type: ignore[arg-type]
+    sink = RecordingSink()
+    gateway.attach(sink)
+
+    await gateway._poll_devices()
+
+    sample = sink.device_lists[-1]
+    assert sample is not None
+    assert sample.items[0].connected is True
+    assert sample.polled_at == acquired
+    assert sample.stale is stale
+
+
 async def test_devices_poll_reads_primary_camera_sensor_temperature() -> None:
     telescope = FakeTelescope()
     telescope.queue_status(_status_payload(state="ready"))

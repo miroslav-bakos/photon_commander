@@ -1,9 +1,34 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (C) 2026 Miroslav Bakoš
 
+import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Radio } from "lucide-react";
 import { useCaptureState } from "../api/capture";
 import { useConnectionStore } from "../store/connectionStore";
+
+// Keep a recovery warning steady across short fresh/stale gaps. This is only
+// presentation: authoritative stale flags and command guards remain unchanged.
+function useTelemetryRecovery(initiallyStale: boolean): boolean {
+  const [recovering, setRecovering] = useState(initiallyStale);
+  const lastFreshSample = useRef<number | null>(null);
+  useEffect(() => useConnectionStore.subscribe((state) => {
+    const devices = state.snapshot?.devices;
+    if (devices?.stale === true) {
+      lastFreshSample.current = null;
+      setRecovering(true);
+      return;
+    }
+    if (devices?.stale !== false || devices.polled_at == null) return;
+    const sample = Date.parse(devices.polled_at);
+    if (!Number.isFinite(sample) || sample === lastFreshSample.current) return;
+    const previous = lastFreshSample.current;
+    if (previous !== null && sample > previous && sample - previous <= 5000) {
+      setRecovering(false);
+    }
+    lastFreshSample.current = sample;
+  }), []);
+  return recovering;
+}
 
 function titleCase(value: string): string {
   return value.length === 0 ? value : `${value[0]?.toUpperCase() ?? ""}${value.slice(1).replaceAll("_", " ")}`;
@@ -17,19 +42,21 @@ export function GlobalOperationBanner() {
   const link = snapshot?.link;
   const rigOffline = link?.control_connected !== true;
   const telemetryStale = devices?.stale === true;
+  const telemetryRecovering = useTelemetryRecovery(telemetryStale);
+  const waitingForTelemetry = telemetryStale || telemetryRecovering;
   // Native Alpaca uses polling; link health decides whether this is a problem.
   const eventsUnavailable = link?.status === "degraded";
 
-  if (status !== "open" || rigOffline || telemetryStale || eventsUnavailable) {
+  if (status !== "open" || rigOffline || waitingForTelemetry || eventsUnavailable) {
     const detail = status !== "open"
       ? status === "connecting" ? "Connecting to Photon Commander…" : "Live connection lost. Controls will return after reconnection."
       : rigOffline ? "Rig offline. Connect the telescope to resume observing."
-      : telemetryStale ? "Rig telemetry is stale. Waiting for a fresh device check."
-      : link?.reason || "Rig control is connected, but the event connection is unavailable. Live device updates may be delayed.";
+      : waitingForTelemetry ? "Device readings are unavailable or intermittent. Waiting for consistently fresh updates."
+      : link.reason ?? "Rig control is connected, but the event connection is unavailable. Live device updates may be delayed.";
     const summary = status !== "open"
       ? status === "connecting" ? "Connecting to Photon Commander…" : "Live connection lost"
       : rigOffline ? "Rig offline"
-        : telemetryStale ? "Rig telemetry is stale" : "Live device updates delayed";
+        : waitingForTelemetry ? "Waiting for current device readings" : "Live device updates delayed";
     return (
       <details role="alert" className="border-b border-warning bg-warning/10 text-xs text-warning">
         <summary className="flex min-h-11 cursor-pointer items-center gap-2 px-3 sm:min-h-9 sm:px-4">

@@ -419,7 +419,7 @@ function CenteringProgressOverlay({
                     complete
                       ? "border-success bg-success"
                       : active
-                        ? "border-accent bg-accent animate-pulse"
+                        ? "border-accent bg-accent"
                         : "border-border-strong bg-surface"
                   }`}
                 />

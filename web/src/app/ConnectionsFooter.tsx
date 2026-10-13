@@ -283,7 +283,7 @@ function FooterActivityEntry({
         aria-valuetext={count ?? "In progress"}
       >
         <span
-          className={`block h-full rounded-full bg-accent ${progress === null ? "w-1/2 animate-pulse" : ""}`}
+          className={`block h-full rounded-full bg-accent ${progress === null ? "w-1/2" : ""}`}
           style={progress === null ? undefined : { width: `${String(progress)}%` }}
         />
       </span>
@@ -619,10 +619,9 @@ type StatusIconKind =
   | "temperature"
   | "resync";
 
-/** Shape is the primary state signal; colour and optional motion reinforce it. */
+/** Shape is the primary state signal; colour reinforces it. */
 function StatusIcon({
   kind,
-  active = false,
   progressPct,
 }: {
   kind: StatusIconKind;
@@ -638,7 +637,6 @@ function StatusIcon({
     strokeLinejoin: "round" as const,
     "aria-hidden": true,
   };
-  const motion = active ? "motion-safe:animate-pulse" : "";
   let glyph;
   switch (kind) {
     case "slewing":
@@ -694,7 +692,7 @@ function StatusIcon({
   const circumference = 62.83;
   const progressOffset = progressPct === undefined ? circumference : circumference * (1 - progressPct / 100);
   return (
-    <svg {...common} className={`size-4 shrink-0 ${motion}`} data-status-icon={kind}>
+    <svg {...common} className="size-4 shrink-0" data-status-icon={kind}>
       {glyph}
       {progressPct !== undefined && (
         <circle

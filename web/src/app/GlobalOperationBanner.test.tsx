@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (C) 2026 Miroslav Bakoš
 
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { testSnapshot } from "../test/fixtures";
 import { useConnectionStore } from "../store/connectionStore";
@@ -64,7 +64,7 @@ describe("GlobalOperationBanner", () => {
     snapshot.devices = { items: [], stale: true, polled_at: null };
     useConnectionStore.setState({ status: "open", snapshot });
     render(<GlobalOperationBanner />);
-    expect(screen.getByRole("alert")).toHaveTextContent("telemetry is stale");
+    expect(screen.getByRole("alert")).toHaveTextContent("Waiting for current device readings");
     expect(screen.getByRole("alert")).not.toHaveTextContent("Rig offline");
   });
 
@@ -95,5 +95,44 @@ describe("GlobalOperationBanner", () => {
     render(<GlobalOperationBanner />);
     expect(screen.getByRole("alert")).toHaveTextContent("event connection is unavailable");
     expect(screen.getByRole("alert")).not.toHaveTextContent("Rig offline");
+  });
+});
+
+
+describe("steady telemetry recovery", () => {
+  const update = (stale: boolean, timestamp: string, offline = false) => {
+    const snapshot = testSnapshot();
+    snapshot.link = { ...readyLink, control_connected: !offline };
+    snapshot.devices = { items: [], stale, polled_at: timestamp };
+    act(() => { useConnectionStore.setState({ status: "open", snapshot }); });
+  };
+  it("retains the same warning across stale/fresh oscillation and clears after consecutive fresh samples", () => {
+    update(true, "2026-10-13T16:00:00Z"); render(<GlobalOperationBanner />);
+    const alert = screen.getByRole("alert");
+    update(false, "2026-10-13T16:00:01Z");
+    expect(screen.getByRole("alert")).toBe(alert);
+    update(true, "2026-10-13T16:00:01Z");
+    update(false, "2026-10-13T16:00:07Z");
+    expect(screen.getByRole("alert")).toBe(alert);
+    update(false, "2026-10-13T16:00:08Z");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+  it("does not count repeated snapshots or widely separated readings as recovery", () => {
+    update(true, "2026-10-13T16:00:00Z"); render(<GlobalOperationBanner />);
+    update(false, "2026-10-13T16:00:01Z");
+    update(false, "2026-10-13T16:00:01Z");
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    update(false, "2026-10-13T16:00:10Z");
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    update(false, "2026-10-13T16:00:11Z");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+  it("shows new stale readings immediately and offline overrides recovery", () => {
+    update(false, "2026-10-13T16:00:00Z"); render(<GlobalOperationBanner />);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    update(true, "2026-10-13T16:00:00Z");
+    expect(screen.getByRole("alert")).toHaveTextContent("Waiting for current device readings");
+    update(false, "2026-10-13T16:00:01Z", true);
+    expect(screen.getByRole("alert")).toHaveTextContent("Rig offline");
   });
 });

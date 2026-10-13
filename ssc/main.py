@@ -1304,6 +1304,9 @@ class AlpacaDeviceGateway:
         ``stale`` needs ``polled_at`` to keep advancing, not only the moments
         it resyncs a whole snapshot.
         """
+        # Retain acquisition start: a slow batch must not make earlier
+        # device readings appear current merely because its final read finished.
+        polled_at = datetime.now(tz=UTC)
         try:
             configured = await asyncio.wait_for(
                 self._client.configured_devices(), timeout=self._DEVICE_READ_TIMEOUT_S
@@ -1317,7 +1320,7 @@ class AlpacaDeviceGateway:
             if item is not None:
                 items.append(item)
         self._publish_devices(
-            AlpacaDevicesState(polled_at=datetime.now(tz=UTC), stale=False, items=items)
+            AlpacaDevicesState(polled_at=polled_at, stale=False, items=items)
         )
         await self._poll_camera_fov(items)
 

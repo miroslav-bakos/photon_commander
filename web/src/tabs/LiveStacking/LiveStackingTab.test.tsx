@@ -158,7 +158,7 @@ describe("LiveStackingTab", () => {
     expect(screen.getByLabelText("Flat master")).toHaveValue("");
     expect(screen.getByLabelText("Dark master")).toBeDisabled();
     const activeIndicator = screen.getByRole("status", { name: "Live stacking active" });
-    expect(activeIndicator).toHaveClass("animate-pulse", "bg-dot-bad");
+    expect(activeIndicator).toHaveClass("bg-dot-bad");
     expect(activeIndicator).toHaveStyle({ animationDuration: "650ms" });
     expect(activeIndicator.parentElement).toHaveTextContent("Live stack");
     expect(screen.getByText("Calibrating, registering, and integrating new-light.fit…")).toBeInTheDocument();

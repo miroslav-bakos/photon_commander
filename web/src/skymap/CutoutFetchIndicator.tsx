@@ -48,18 +48,14 @@ export function CutoutFetchIndicator({ rows }: { rows: readonly CutoutSourceRow[
         aria-live="polite"
         className="pointer-events-none absolute bottom-28 right-2 flex items-center gap-1.5 text-[10px] text-fg-muted"
       >
-        <span aria-hidden="true" className="h-2 w-2 flex-shrink-0 animate-pulse rounded-full bg-dot-unknown" />
+        <span aria-hidden="true" className="h-2 w-2 flex-shrink-0 rounded-full bg-dot-unknown" />
         <span>
           {summary.status === "queued" ? "Queued: " : "Fetching "}
           {summary.label}
           {summary.extraCount > 0 ? ` +${String(summary.extraCount)} more` : ""}…
         </span>
-        {/* Indeterminate, not a percentage — see the module doc comment for
-         * why a determinate fraction is not available yet. `animate-pulse`
-         * (the same built-in the imagery-loading indicator above already
-         * uses) reads as "still working" without claiming a completion
-         * amount that does not exist. */}
-        <span aria-hidden="true" className="h-1 w-8 flex-shrink-0 animate-pulse rounded-full bg-dot-unknown" />
+        {/* Static activity marker: no completion fraction is available. */}
+        <span aria-hidden="true" className="h-1 w-8 flex-shrink-0 rounded-full bg-dot-unknown" />
       </div>
     );
   }

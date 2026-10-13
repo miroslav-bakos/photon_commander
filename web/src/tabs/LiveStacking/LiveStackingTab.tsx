@@ -193,7 +193,7 @@ export function LiveStackingTab() {
             <span
               role="status"
               aria-label={status?.active === true ? "Live stacking active" : "Live stacking inactive"}
-              className={`h-2.5 w-2.5 shrink-0 rounded-full ${status?.active === true ? "animate-pulse bg-dot-bad" : "bg-dot-unknown"}`}
+              className={`h-2.5 w-2.5 shrink-0 rounded-full ${status?.active === true ? "bg-dot-bad" : "bg-dot-unknown"}`}
               style={status?.active === true ? { animationDuration: "650ms" } : undefined}
             />
           </span>

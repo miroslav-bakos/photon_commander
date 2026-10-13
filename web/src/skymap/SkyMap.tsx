@@ -853,13 +853,11 @@ export function SkyMap({
         // component's own first attempt): credits resolve as soon as a
         // layer is *selected*, near-instantly, well before any pixel
         // exists, so that version of this indicator never actually showed
-        // during a real 10-20s unWISE fetch (reported live). `animate-pulse`
-        // (Tailwind's built-in opacity fade), not a hard on/off blink:
-        // readable as "still loading" without the flicker a literal blink
-        // would put on screen the whole time imagery loads.
+        // during a real 10-20s unWISE fetch (reported live). Keep the
+        // loading message static so activity does not blink.
         <span
           aria-live="polite"
-          className="pointer-events-none absolute bottom-10 right-2 animate-pulse text-[10px] text-fg-muted"
+          className="pointer-events-none absolute bottom-10 right-2 text-[10px] text-fg-muted"
         >
           Loading sky survey imagery…
         </span>
