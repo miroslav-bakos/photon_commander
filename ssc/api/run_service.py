@@ -54,6 +54,8 @@ from ssc.api.schemas import (
 from ssc.api.tasks import TaskRegistry
 from ssc.api.weather_service import WeatherService
 from ssc.astro.comets import load_comet_catalog
+from ssc.plan.models import Severity
+from ssc.plan.validate import validate_plan
 from ssc.scheduler import CompiledSchedule
 from ssc.scheduler.executor import (
     DEFAULT_POLL_INTERVAL_S,
@@ -472,6 +474,9 @@ class RunService:
         self._active: RunRecord | None = None
         self._last_lifecycle: RunLifecycle | None = None
         self._publishing_journal: PublishingJournal | None = None
+        self._resume_lock = asyncio.Lock()
+        self._stop_generation = 0
+        self._stop_requested_run_id: str | None = None
 
     def set_calibration_count_updater(self, updater: Callable[[int], Awaitable[object]]) -> None:
         self._calibration_count_updater = updater
@@ -573,6 +578,10 @@ class RunService:
     async def start(self, plan_id: str, *, night_date: date | None = None) -> RunState:
         """Compile, persist, launch. Raises :class:`RunActiveError` if a run is
         executing, plus everything ``compile_plan_document`` raises."""
+        async with self._resume_lock:
+            return await self._start(plan_id, night_date=night_date)
+
+    async def _start(self, plan_id: str, *, night_date: date | None = None) -> RunState:
         if (self._dawn_safety_enabled and self._dawn_task is not None
                 and not self._dawn_task.done() and (self._dawn_run_id in self._dawn_stopped
                     or any(self._clock.now() >= dawn_safety_deadline(pending.schedule)
@@ -610,6 +619,10 @@ class RunService:
 
     async def resume_interrupted(self, run_id: str) -> RunState:
         """Carry an ``interrupted`` run on from its journal, at the user's request."""
+        async with self._resume_lock:
+            return await self._resume_interrupted(run_id)
+
+    async def _resume_interrupted(self, run_id: str) -> RunState:
         if (self._dawn_safety_enabled and self._dawn_task is not None
                 and not self._dawn_task.done() and (self._dawn_run_id in self._dawn_stopped
                     or any(self._clock.now() >= dawn_safety_deadline(pending.schedule)
@@ -628,9 +641,67 @@ class RunService:
                 f"run {run_id} is {record.status.value}, not interrupted; only an interrupted "
                 "run can be resumed"
             )
+        record = await self._refresh_resume_snapshot(record, location)
+        self._check_resume_deadline(record)
+        current = reduce(await self._runs.journal.read_all(run_id))
+        if current.run_status is RunStatus.PAUSED:
+            # Explicit interruption recovery also lifts a durable pre-crash Pause.
+            await apply_control_command(self._runs.journal, self._clock, run_id,
+                current, record.schedule, ControlCommand(kind=ControlKind.RESUME,
+                    reason="interrupted run resumed by operator"))
         await self._runs.set_status(run_id, RunLifecycle.RUNNING)
         record = await self._runs.get(run_id)
         return await self._launch(record, device, events, location)
+
+    async def _refresh_resume_snapshot(
+        self, record: RunRecord, location: LocationState, *, stop_generation: int | None = None,
+    ) -> RunRecord:
+        """Adopt only untouched work, preserving the durable execution prefix.
+
+        The original night anchors ASAP/relative starts. The selected editor
+        night cannot move an existing run to another observing night.
+        """
+        self._check_resume_deadline(record)
+        latest = await self._plans.get(record.plan.id)
+        schedule = await asyncio.to_thread(compile_plan_document,
+            astro=self._astro, document=latest.document, location=location,
+            night_date=date.fromisoformat(str(record.schedule.night.date)),
+            now=self._clock.now(),
+            profile_id=self._settings.device.hardware_profile_id,
+        )
+        if (await self._plans.get(record.plan.id)).revision != latest.revision:
+            raise RunNotResumableError("saved plan changed while preparing resume; retry Resume")
+        if stop_generation is not None and self._stop_generation != stop_generation:
+            raise RunNotResumableError("Stop took priority while preparing resume")
+        records = await self._runs.journal.read_all(record.run_id)
+        state = reduce(records)
+        if state.ended or state.run_status is RunStatus.STOPPED:
+            raise RunNotResumableError("stopped or ended runs require a new start")
+        touched = {entry.item_id for entry in records if entry.item_id is not None}
+        prefix = max((index + 1 for index, item in enumerate(record.plan.items)
+                      if item.id in touched), default=0)
+        if (latest.document.items[:prefix] != record.plan.items[:prefix]
+                or schedule.items[:prefix] != record.schedule.items[:prefix]
+                or schedule.night != record.schedule.night):
+            raise RunNotResumableError(
+                "saved plan changes completed or started work, its order, or observing conditions; "
+                "restore that work before resuming, or start a new run"
+            )
+        protected_ids = {item.id for item in record.plan.items[:prefix]}
+        errors = [diagnostic for diagnostic in validate_plan(latest.document)
+                  if diagnostic.severity is Severity.ERROR and (
+                      diagnostic.item_id not in protected_ids or diagnostic.code == "duplicate_id")]
+        errors.extend(diagnostic for item in schedule.items[prefix:] if item.enabled
+                      for diagnostic in item.diagnostics if diagnostic.severity is Severity.ERROR)
+        if errors:
+            raise RunNotResumableError(
+                "saved remaining work cannot be compiled: " + "; ".join(
+                    diagnostic.message for diagnostic in errors))
+        if stop_generation is not None and self._stop_generation != stop_generation:
+            raise RunNotResumableError("Stop took priority while preparing resume")
+        self._check_resume_deadline(record)
+        return await self._runs.update_plan_snapshot(record.run_id,
+            plan=latest.document, plan_revision=latest.revision, schedule=schedule)
 
     async def _launch(
         self,
@@ -641,6 +712,7 @@ class RunService:
     ) -> RunState:
         self._check_dawn_cutoff(record)
         self._controls = ControlQueue()
+        self._stop_requested_run_id = None
         self._clock = WallClock(wake=self._controls.wait)
         self._active = record
         self._last_lifecycle = RunLifecycle.RUNNING
@@ -680,6 +752,11 @@ class RunService:
         if self._dawn_safety_enabled and (record.run_id in self._dawn_stopped
                 or self._clock.now() >= dawn_safety_deadline(record.schedule)):
             raise RunNightExpiredError("dawn safety cutoff reached or dawn boundary unknown; science cannot resume")
+
+    def _check_resume_deadline(self, record: RunRecord) -> None:
+        self._check_dawn_cutoff(record)
+        if self._clock.now() >= record.schedule.night.window_end_utc:
+            raise RunNightExpiredError("the original observing night has ended; start a new run")
 
     async def _safety_record(self, record: RunRecord, stage: str, reason: str) -> None:
         await self._runs.journal.append(JournalRecord(
@@ -942,8 +1019,31 @@ class RunService:
         if active is None or active.run_id != run_id:
             raise RunNotActiveError(f"run {run_id} is not executing")
         command = ControlCommand(kind=kind, item_id=item_id, reason=reason)
+        if kind is ControlKind.STOP:
+            self._stop_generation += 1
+            self._stop_requested_run_id = run_id
         if kind is ControlKind.RESUME:
-            self._check_dawn_cutoff(active)
+            async with self._resume_lock:
+                if self._stop_requested_run_id == run_id:
+                    raise RunNotResumableError("Stop has already been requested; start a new run")
+                generation = self._stop_generation
+                current = reduce(await self._runs.journal.read_all(run_id))
+                if current.run_status is not RunStatus.PAUSED:
+                    raise RunNotResumableError("only a paused active run can resume")
+                updated = await self._refresh_resume_snapshot(active, self._require_location(),
+                    stop_generation=generation)
+                if self.active is None or self._stop_generation != generation:
+                    # Stop can arrive while SQLite commits the proposed snapshot.
+                    # Restore the old checkpoint before refusing its activation.
+                    await self._runs.update_plan_snapshot(run_id, plan=active.plan,
+                        plan_revision=active.plan_revision, schedule=active.schedule)
+                    raise RunNotResumableError("Stop took priority while preparing resume")
+                self._check_resume_deadline(updated)
+                self._active = active = updated
+                if self._publishing_journal is not None:
+                    self._publishing_journal.replace_record(updated)
+                self._controls.push(command)
+                return await self._section(updated)
         if (kind is ControlKind.STOP and (self._supervisor_recovering
                 or self._operation_recovery_active()
                 or (self._state.snapshot.capture is not None

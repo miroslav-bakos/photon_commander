@@ -982,7 +982,7 @@ it("keeps the compiled preflight valid during a background refresh of the same r
 });
 
 
-it("permits active-plan night editing after explicit Unlock with a next-start notice", async () => {
+it("permits active-plan night editing after explicit Unlock with a resume-recompile notice", async () => {
   useConnectionStore.setState({ snapshot: testSnapshot({ location: observingLocation,
     plans: [{ id: "p1", name: record.document.name, revision: 1, updated_at: record.updated_at, night_date: record.night_date }], run: runningRun }) });
   useSchedulingUiStore.getState().select("p1", "w1");
@@ -991,6 +991,6 @@ it("permits active-plan night editing after explicit Unlock with a next-start no
   await screen.findByTestId("resolved-time");
   await userEvent.click(screen.getByRole("button", { name: "Unlock plan" }));
   expect(screen.getByLabelText("Night of")).toBeEnabled();
-  expect(screen.getByText(/Edits and night changes apply to the next start/)).toBeInTheDocument();
+  expect(screen.getByText(/Resume checks saved changes to unstarted items/)).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Start selected plan" })).toBeNull();
 });

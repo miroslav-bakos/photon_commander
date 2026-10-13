@@ -570,7 +570,9 @@ def test_a_second_start_while_one_is_executing_is_a_409(ready: TestClient) -> No
     assert _current(ready)["run_id"] == first["run_id"]  # type: ignore[index]
 
 
-def test_controls_change_the_snapshot(ready: TestClient) -> None:
+def test_controls_change_the_snapshot(ready: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    from ssc.api.device_commands import WallClock
+    monkeypatch.setattr(WallClock, "now", lambda self: datetime(2026, 8, 28, 22, tzinfo=UTC))
     _create(ready, _waiting_plan())
     run = _start(ready, "waiting")
     run_id = run["run_id"]
@@ -671,18 +673,14 @@ def test_an_unfinished_run_is_surfaced_as_interrupted_and_resumable(
         _set_location(client, timezone="Europe/London")
 
         resumed = client.post("/api/runs/left-behind/resume-interrupted")
-        assert resumed.status_code == 200, resumed.text
-        assert resumed.json()["run"]["status"] == "running"
-        # The fixture schedule is in the past and the driver is unaddressed, so
-        # unavailable operations are logged and expired windows settle without terminal failure — the journal grew
-        # from where it was left, it was not restarted.
-        done = _wait_for(client, lambda r: r["status"] == "completed")
-        assert done["journal_length"] > 1
+        # Historical nights cannot silently become tonight on restart.
+        assert resumed.status_code == 409, resumed.text
+        assert "night has ended" in resumed.text
+        done = _current(client)
+        assert done["status"] == "interrupted"
+        assert done["journal_length"] == 1
         journal = client.get("/api/runs/left-behind").json()["journal"]
         assert [e["kind"] for e in journal].count("run_started") == 1
-        assert _items(done)["startup"]["status"] == "done"
-        assert any("no device address is configured" in entry["reason"] for entry in journal)
-        # Resumed once; a second resume is refused.
         assert client.post("/api/runs/left-behind/resume-interrupted").status_code == 409
 
 
@@ -829,3 +827,186 @@ def test_run_stop_does_not_cancel_manual_batch_during_calibration_preparation(re
     finally:
         ready.portal.call(release.set)
     _wait_for(ready, lambda r: r["status"] == "stopped")
+
+
+@pytest.mark.parametrize("mode,edit", [
+    (mode, edit) for mode in ("paused", "interrupted")
+    for edit in ("tail", "started", "expired", "invalid", "save_race")
+] + [("paused", "stop"), ("paused", "stop_compile"), ("paused", "stop_before")])
+def test_resume_recompiles_saved_revision_with_durable_prefix(
+    ready: TestClient, monkeypatch: pytest.MonkeyPatch, mode: str, edit: str,
+) -> None:
+    """Real SQLite + compiler: adopt tonight's untouched tail, retain progress."""
+    from datetime import date
+    from types import SimpleNamespace
+
+    from ssc.api.plans_service import compile_plan_document
+    from ssc.api.run_service import PublishingJournal, RunNightExpiredError, RunNotResumableError
+    from ssc.plan import parse_plan
+    from ssc.plan.models import AbsoluteTimeSpec, CaptureCalibrationItem
+    from ssc.scheduler.executor import ControlKind, EffectCall, EffectName, ItemStatus, RunStatus
+    from ssc.state.models import RunLifecycle
+
+    async def exercise():
+        services = services_of(ready)
+        service = services.runs
+        now = datetime(2035, 8, 28, 22, tzinfo=UTC)
+        service._clock = SimpleNamespace(now=lambda: now + timedelta(minutes=2))
+        document = parse_plan(_waiting_plan())
+        await service._plans.create(document)
+        location = service._require_location()
+        schedule = compile_plan_document(astro=service._astro, document=document,
+            location=location, night_date=date(2035, 8, 28), now=now,
+            profile_id=service._settings.device.hardware_profile_id)
+        record = await service._runs.create(run_id="saved-revision", plan=document,
+            plan_revision=1, schedule=schedule, started_at=now)
+        await service._runs.journal.append(JournalRecord(at=now, run_id=record.run_id,
+            kind=RecordKind.RUN_STARTED))
+        await service._runs.journal.append(JournalRecord(at=now, run_id=record.run_id,
+            kind=RecordKind.ITEM_TRANSITION, item_id="startup", status=ItemStatus.DONE))
+        await service._runs.journal.append(JournalRecord(at=now, run_id=record.run_id,
+            kind=RecordKind.ITEM_TRANSITION, item_id="shutdown", status=ItemStatus.RUNNING,
+            effect=EffectCall(name=EffectName.SHUTDOWN)))
+        await service._runs.journal.append(JournalRecord(at=now, run_id=record.run_id,
+            kind=RecordKind.CONTROL, control=ControlKind.PAUSE, run_status=RunStatus.PAUSED))
+        changed = document.model_copy(update={"items": (*document.items,
+            CaptureCalibrationItem(id="tonight-dark-tail", start=document.items[-1].start,
+                                   count=50, exposure_sec=30),)})
+        if edit == "invalid":
+            changed = changed.model_copy(update={"items": (*changed.items[:-1],
+                changed.items[-1].model_copy(update={"start": AbsoluteTimeSpec(
+                    local_datetime=datetime(2035, 3, 25, 1, 30, tzinfo=UTC).replace(tzinfo=None))}),)})
+        if edit == "started":
+            changed = changed.model_copy(update={"items": (
+                document.items[0].model_copy(update={"enabled": False}), *changed.items[1:])})
+        await service._plans.update(document.id, changed, expected_revision=1)
+        before = await service._runs.journal.read_all(record.run_id)
+        if edit == "expired":
+            service._clock = SimpleNamespace(now=lambda: schedule.night.window_end_utc)
+        captured = []
+        async def launch(updated, *_args):
+            captured.append(updated)
+            return await service._section(updated)
+        monkeypatch.setattr(service, "_launch", launch)
+        if mode == "paused":
+            service._active = record
+            service._task = asyncio.get_running_loop().create_future()
+            service._publishing_journal = PublishingJournal(service, record)
+            if edit == "stop":
+                original_update = service._runs.update_plan_snapshot
+                async def update_with_stop(*args, **kwargs):
+                    if kwargs["plan_revision"] == 2:
+                        await service.control(record.run_id, ControlKind.STOP)
+                    return await original_update(*args, **kwargs)
+                monkeypatch.setattr(service._runs, "update_plan_snapshot", update_with_stop)
+            if edit == "stop_before":
+                await service.control(record.run_id, ControlKind.STOP)
+            if edit == "stop_compile":
+                original_to_thread = asyncio.to_thread
+                async def compile_with_stop(function, *args, **kwargs):
+                    result = await original_to_thread(function, *args, **kwargs)
+                    if function is compile_plan_document:
+                        await service.control(record.run_id, ControlKind.STOP)
+                    return result
+                monkeypatch.setattr(asyncio, "to_thread", compile_with_stop)
+            async def action():
+                return await service.control(record.run_id, ControlKind.RESUME)
+        else:
+            await service._runs.set_status(record.run_id, RunLifecycle.INTERRUPTED)
+            async def action():
+                return await service.resume_interrupted(record.run_id)
+        if edit == "save_race":
+            original_to_thread = asyncio.to_thread
+            async def compile_with_save(function, *args, **kwargs):
+                result = await original_to_thread(function, *args, **kwargs)
+                if function is compile_plan_document:
+                    await service._plans.update(document.id,
+                        changed.model_copy(update={"name": "saved during compilation"}),
+                        expected_revision=2)
+                return result
+            monkeypatch.setattr(asyncio, "to_thread", compile_with_save)
+        try:
+            if edit != "tail":
+                with pytest.raises(RunNightExpiredError if edit == "expired" else RunNotResumableError):
+                    await action()
+                assert (await service._runs.get(record.run_id)).plan_revision == 1
+                if edit in {"stop", "stop_compile", "stop_before"}:
+                    assert service._active.plan_revision == 1
+                    if edit == "stop_before":
+                        response = await asyncio.to_thread(ready.post,
+                            f"/api/runs/{record.run_id}/resume")
+                        assert response.status_code == 409, response.text
+                        assert "Stop has already been requested" in response.text
+                    assert (await service._controls.poll()).kind is ControlKind.STOP
+                    assert await service._controls.poll() is None
+            else:
+                await action()
+                updated = await service._runs.get(record.run_id)
+                assert updated.plan_revision == 2
+                assert updated.schedule.night.date == schedule.night.date
+                assert updated.schedule.compiled_at == now + timedelta(minutes=2)
+                assert updated.schedule.items[0] == schedule.items[0]
+                assert updated.schedule.items[-1].item_id == "tonight-dark-tail"
+                assert updated.plan.items[-1].id == "tonight-dark-tail"
+                assert (service._active if mode == "paused" else captured[0]).plan_revision == 2
+                if mode == "paused":
+                    assert service._publishing_journal._record.plan_revision == 2
+            after = await service._runs.journal.read_all(record.run_id)
+            if mode == "interrupted" and edit == "tail":
+                assert after[:-1] == before
+                assert after[-1].control is ControlKind.RESUME
+                assert after[-1].run_status is RunStatus.RUNNING
+            else:
+                assert after == before
+        finally:
+            if mode == "paused":
+                service._task.cancel()
+                service._task = None
+                service._active = None
+    ready.portal.call(exercise)
+
+
+def test_stopped_run_requires_new_start_compiling_latest_saved_tail(
+    ready: TestClient, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from datetime import date
+    from types import SimpleNamespace
+
+    from ssc.api.run_service import RunNotResumableError
+    from ssc.plan import parse_plan
+    from ssc.plan.models import CaptureCalibrationItem
+    from ssc.scheduler.executor import RunStatus
+    from ssc.state.models import RunLifecycle
+
+    async def exercise():
+        service = services_of(ready).runs
+        now = datetime(2035, 8, 28, 22, tzinfo=UTC)
+        service._clock = SimpleNamespace(now=lambda: now)
+        document = parse_plan(_waiting_plan())
+        await service._plans.create(document)
+        launched = []
+        async def launch(record, *_args):
+            launched.append(record)
+            return await service._section(record)
+        monkeypatch.setattr(service, "_launch", launch)
+        await service.start(document.id, night_date=date(2035, 8, 28))
+        previous = launched[-1]
+        await service._runs.journal.append(JournalRecord(at=now, run_id=previous.run_id,
+            kind=RecordKind.RUN_ENDED, run_status=RunStatus.STOPPED))
+        await service._runs.set_status(previous.run_id, RunLifecycle.STOPPED)
+        old_journal = await service._runs.journal.read_all(previous.run_id)
+        changed = document.model_copy(update={"items": (*document.items,
+            CaptureCalibrationItem(id="tonight-dark-tail", start=document.items[-1].start,
+                                   count=50, exposure_sec=30),)})
+        await service._plans.update(document.id, changed, expected_revision=1)
+        with pytest.raises(RunNotResumableError):
+            await service.resume_interrupted(previous.run_id)
+        await service.start(document.id, night_date=date(2035, 8, 28))
+        restarted = launched[-1]
+        assert restarted.run_id != previous.run_id
+        assert restarted.plan_revision == 2
+        assert len(restarted.schedule.items) == 3
+        assert restarted.schedule.items[-1].item_id == "tonight-dark-tail"
+        assert await service._runs.journal.read_all(previous.run_id) == old_journal
+        assert (await service._runs.get(previous.run_id)).plan_revision == 1
+    ready.portal.call(exercise)

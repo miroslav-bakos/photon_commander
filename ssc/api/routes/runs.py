@@ -174,8 +174,13 @@ async def _control(
 ) -> RunResponse:
     try:
         run = await services.runs.control(run_id, kind, item_id=item_id, reason=reason)
-    except RunNotActiveError as exc:
+    except (RunNotActiveError, RunNotResumableError, RunNightExpiredError,
+            RunLocationUnsetError, PlanTimezoneUnknownError) as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    except PlanNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except (AstroUnavailableError, RunDeviceUnavailableError) as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
     return RunResponse(run=run)
 
 
@@ -232,11 +237,12 @@ async def resume_interrupted_run(
     del session
     try:
         run = await services.runs.resume_interrupted(run_id)
-    except RunNotFoundError as exc:
+    except (RunNotFoundError, PlanNotFoundError) as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
-    except (RunActiveError, RunNotResumableError, RunLocationUnsetError) as exc:
+    except (RunActiveError, RunNotResumableError, RunLocationUnsetError,
+            RunNightExpiredError, PlanTimezoneUnknownError) as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
-    except RunDeviceUnavailableError as exc:
+    except (RunDeviceUnavailableError, AstroUnavailableError) as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)
         ) from exc

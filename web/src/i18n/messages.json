@@ -4775,9 +4775,9 @@
     "Plán sa zmenil inde a bol znovu načítaný. Ak zmenu stále chceš, zopakuj ju.",
     "Plán se změnil jinde a byl znovu načten. Pokud změnu stále chceš, zopakuj ji."
   ],
-  "This plan is running from its saved execution snapshot. Edits and night changes apply to the next start.": [
-    "Plán beží z uloženej snímky vykonávania. Úpravy a zmeny noci sa použijú pri ďalšom spustení.",
-    "Plán běží z uloženého snímku provádění. Úpravy a změny noci se použijí při dalším spuštění."
+  "This run keeps its current night. Resume checks saved changes to unstarted items; night changes apply at the next start.": [
+    "Beh si zachová aktuálnu noc. Obnovenie preverí uložené zmeny nezačatých položiek; zmena noci sa použije pri ďalšom spustení.",
+    "Běh si zachová aktuální noc. Obnovení prověří uložené změny nezahájených položek; změna noci se použije při dalším spuštění."
   ],
   "This target's altitude and the Moon's altitude across the session, over twilight-shaded background bands, with astronomical dusk/dawn and moonrise/moonset marked. Hover or drag to read the values at a given time.": [
     "Výška objektu a Mesiaca počas relácie na pozadí pásov súmraku. Označený je astronomický súmrak, úsvit a východ i západ Mesiaca. Ukázaním alebo ťahaním zobraz hodnoty v danom čase.",
@@ -11002,5 +11002,37 @@
   "Device readings are unavailable or intermittent. Waiting for consistently fresh updates.": [
     "Údaje zariadenia nie sú dostupné alebo prichádzajú nepravidelne. Čaká sa na pravidelné aktuálne údaje.",
     "Údaje zařízení nejsou dostupné nebo přicházejí nepravidelně. Čeká se na pravidelné aktuální údaje."
+  ],
+  "the original observing night has ended; start a new run": [
+    "Pôvodná pozorovacia noc sa skončila; spusti nový beh.",
+    "Původní pozorovací noc skončila; spusť nový běh."
+  ],
+  "stopped or ended runs require a new start": [
+    "Zastavený alebo ukončený beh treba spustiť nanovo.",
+    "Zastavený nebo ukončený běh je třeba spustit znovu."
+  ],
+  "saved plan changes completed or started work, its order, or observing conditions; restore that work before resuming, or start a new run": [
+    "Uložený plán mení dokončené alebo začaté položky, ich poradie alebo pozorovacie podmienky. Pred obnovením tieto zmeny vráť alebo spusti nový beh.",
+    "Uložený plán mění dokončené nebo zahájené položky, jejich pořadí nebo pozorovací podmínky. Před obnovením tyto změny vrať nebo spusť nový běh."
+  ],
+  "saved remaining work cannot be compiled: {detail}": [
+    "Uložené zostávajúce položky nemožno prekompilovať: {detail}",
+    "Uložené zbývající položky nelze znovu zkompilovat: {detail}"
+  ],
+  "only a paused active run can resume": [
+    "Obnoviť možno iba pozastavený aktívny beh.",
+    "Obnovit lze pouze pozastavený aktivní běh."
+  ],
+  "Stop took priority while preparing resume": [
+    "Počas prípravy obnovenia dostal prednosť príkaz Stop.",
+    "Během přípravy obnovení dostal přednost příkaz Stop."
+  ],
+  "Stop has already been requested; start a new run": [
+    "Príkaz Stop už bol zadaný; spusti nový beh.",
+    "Příkaz Stop již byl zadán; spusť nový běh."
+  ],
+  "saved plan changed while preparing resume; retry Resume": [
+    "Počas prípravy obnovenia sa uložený plán zmenil; zopakuj obnovenie.",
+    "Během přípravy obnovení se uložený plán změnil; zopakuj obnovení."
   ]
 }

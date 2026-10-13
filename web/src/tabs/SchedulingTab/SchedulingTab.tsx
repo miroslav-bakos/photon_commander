@@ -368,7 +368,7 @@ export function SchedulingTab() {
         <div className="flex flex-col gap-4">
           {activePlanRun && (
             <p role="status" className="text-sm text-fg-muted">
-              This plan is running from its saved execution snapshot. Edits and night changes apply to the next start.
+              This run keeps its current night. Resume checks saved changes to unstarted items; night changes apply at the next start.
             </p>
           )}
           <PlanPicker
