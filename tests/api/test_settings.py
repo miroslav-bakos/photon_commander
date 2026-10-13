@@ -343,7 +343,9 @@ def test_date_tag_is_offered_and_accepted_for_capture_and_calibration_paths(
     assert tags.status_code == 200
     date_tag = next(tag for tag in tags.json()["tags"] if tag["name"] == "DATE")
     assert date_tag["example"] == "20261228"
-    assert "UTC" in date_tag["description"]
+    assert "site's timezone" in date_tag["description"]
+    utc_tag = next(tag for tag in tags.json()["tags"] if tag["name"] == "DATEUTC")
+    assert "UTC" in utc_tag["description"]
 
     folder = paired.put(
         "/api/settings/capture-folder-template",
