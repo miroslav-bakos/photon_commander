@@ -91,7 +91,7 @@ def effect_calls(effect: EffectCall) -> list[tuple[EffectName, dict]]:
         return [(EffectName.STOP_LIVE_STACK, {})]
     if effect.name is EffectName.CENTER_TARGET:
         return [(effect.name, {key: value for key, value in effect.args.items()
-                              if key != "resume_field_verification"})]
+                              if key not in {"resume_field_verification", "resume_autofocus_during_capture"}})]
     if effect.name is EffectName.EXPOSE_FRAME:
         args = dict(effect.args)
         # The dispatcher only forwards recenter settings when enabled.
