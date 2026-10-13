@@ -8,9 +8,10 @@ Mirrors ``ssc.store.runs``'s durability discipline: the row is written
 "acted on" is "the FITS bytes are written" — :meth:`CaptureRepository.begin_frame`
 inserts a ``'writing'`` row first; only after the file has been fsynced and
 renamed into its final path does :meth:`CaptureRepository.complete_frame` flip
-it to ``'complete'``. A row still ``'writing'`` after a restart describes a
-frame a killed process never finished; :meth:`CaptureRepository.discard_frame`
-is the recovery path, not a general delete.
+it to ``'complete'``. A row still ``'writing'`` after a restart requires
+capture-layer validation: its final rename may have succeeded before the
+completion update. :meth:`CaptureRepository.discard_frame` removes a missing
+file placeholder, not an unverified final file.
 
 Session grouping is deliberately not a column here — DESIGN.md §9.5.4 wants
 it derived purely from ``object``/``date_obs`` on read
@@ -152,7 +153,7 @@ class CaptureRepository:
         to trust it from the moment the row exists.
         """
         moment = (now or datetime.now(tz=UTC)).astimezone(UTC)
-        await self._database.execute(
+        return await self._database.execute_insert(
             "INSERT INTO capture_frame (path, object, filter, frame_type, date_obs, "
             "exposure_s, gain, ccd_temp_c, width, height, run_id, block_id, status, "
             "created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'writing', ?)",
@@ -172,9 +173,6 @@ class CaptureRepository:
                 moment.isoformat(),
             ),
         )
-        row = await self._database.fetch_one("SELECT last_insert_rowid() AS id")
-        assert row is not None, "INSERT without a following last_insert_rowid()"
-        return int(row["id"])
 
     async def complete_frame(self, frame_id: int) -> None:
         """Mark a frame's FITS bytes as fsynced and in their final place."""

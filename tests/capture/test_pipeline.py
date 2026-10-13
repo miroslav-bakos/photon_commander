@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -315,7 +316,7 @@ async def test_a_process_killed_between_begin_and_complete_leaves_a_writing_row(
     assert await repo.list_complete() == []
 
 
-async def test_reconcile_discards_writing_rows_and_their_partial_files(
+async def test_reconcile_preserves_invalid_finals_and_reports_failure(
     repo: CaptureRepository, tmp_path: Path
 ) -> None:
     partial_path = tmp_path / "partial.fits"
@@ -344,10 +345,87 @@ async def test_reconcile_discards_writing_rows_and_their_partial_files(
         tz=UTC,
     )
 
-    removed = await reconcile_incomplete(repo)
+    with pytest.raises(RuntimeError, match=r"recovery.*preserved"):
+        await reconcile_incomplete(repo)
 
-    assert removed == [partial_path]
-    assert not partial_path.exists()
-    assert await repo.list_writing() == []
+    assert partial_path.read_bytes() == b"not a complete fits file"
+    assert len(await repo.list_writing()) == 1
     complete = await repo.list_complete()
     assert [record.id for record in complete] == [good_id]
+
+
+async def test_reconcile_recovers_final_fits_after_crash_before_completion(
+    repo: CaptureRepository, tmp_path: Path,
+) -> None:
+    from ssc.capture.fits import write_fits_file
+    frame = _raw_frame()
+    path = tmp_path / "finished.fits"
+    frame_id = await repo.begin_frame(
+        path=path, date_obs=DATE_OBS, object_name="M42", filter_name="LP", frame_type="light",
+        exposure_s=30, gain=200, ccd_temp_c=20, width=4, height=4,
+    )
+    write_fits_file(path, frame.pixels, frame.metadata)
+    before = path.read_bytes()
+    assert await reconcile_incomplete(repo) == []
+    assert path.read_bytes() == before
+    assert (await repo.get_frame(frame_id)).status == "complete"
+
+
+@pytest.mark.parametrize("damage", ["truncated", "dimensions", "exposure", "frame_type", "missing_metadata"])
+async def test_reconcile_does_not_count_or_delete_unverified_final(
+    repo: CaptureRepository, tmp_path: Path, damage: str,
+) -> None:
+    from ssc.capture.fits import write_fits_file
+    frame = _raw_frame()
+    path = tmp_path / "uncertain.fits"
+    frame_id = await repo.begin_frame(
+        path=path, date_obs=DATE_OBS, object_name="M42", filter_name="LP", frame_type="light",
+        exposure_s=31 if damage == "exposure" else 30, gain=200, ccd_temp_c=20,
+        width=5 if damage == "dimensions" else 4, height=4,
+    )
+    write_fits_file(path, frame.pixels, frame.metadata)
+    content = path.read_bytes()
+    if damage == "truncated":
+        content = content[:2880]
+    elif damage == "frame_type":
+        content = content.replace(b"'light'", b"'dark '")
+    elif damage == "missing_metadata":
+        content = content.replace(b"EXPTIME ", b"UNKNOWN ")
+    path.write_bytes(content)
+    with pytest.raises(RuntimeError, match=r"recovery.*preserved"):
+        await reconcile_incomplete(repo)
+    assert path.read_bytes() == content
+    assert (await repo.get_frame(frame_id)).status == "writing"
+    assert await repo.list_complete() == []
+
+
+async def test_reconcile_discards_only_missing_final_placeholder(repo: CaptureRepository, tmp_path: Path) -> None:
+    path = tmp_path / "never-written.fits"
+    await repo.begin_frame(path=path, date_obs=DATE_OBS, object_name=None, filter_name=None,
+        frame_type="light", exposure_s=None, gain=None, ccd_temp_c=None, width=4, height=4)
+    assert await reconcile_incomplete(repo) == [path]
+    assert await repo.list_writing() == []
+
+
+async def test_reconcile_matches_unicode_catalogue_to_writer_ascii_headers(
+    repo: CaptureRepository, tmp_path: Path,
+) -> None:
+    from ssc.capture.fits import write_fits_file
+    frame = _raw_frame(object_name="Červená hmlovina \N{GREEK SMALL LETTER ALPHA}")
+    frame = replace(frame, metadata=replace(frame.metadata, filter_name="Úzkopásmový H\N{GREEK SMALL LETTER ALPHA}"))
+    path = tmp_path / "unicode-final.fits"
+    frame_id = await repo.begin_frame(
+        path=path, date_obs=DATE_OBS, object_name=frame.metadata.object_name,
+        filter_name=frame.metadata.filter_name, frame_type="light", exposure_s=30,
+        gain=200, ccd_temp_c=20, width=4, height=4,
+    )
+    write_fits_file(path, frame.pixels, frame.metadata)
+    before = path.read_bytes()
+    assert read_fits_image(before).header["OBJECT"] == "Cervena hmlovina alpha"
+    assert read_fits_image(before).header["FILTER"] == "Uzkopasmovy Halpha"
+    assert await reconcile_incomplete(repo) == []
+    recovered = await repo.get_frame(frame_id)
+    assert recovered.status == "complete"
+    assert recovered.object_name == "Červená hmlovina \N{GREEK SMALL LETTER ALPHA}"
+    assert recovered.filter_name == "Úzkopásmový H\N{GREEK SMALL LETTER ALPHA}"
+    assert path.read_bytes() == before

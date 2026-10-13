@@ -59,6 +59,15 @@ class Database:
         await self._connection.execute(sql, params)
         await self._connection.commit()
 
+    async def execute_insert(self, sql: str, params: SqlParams = ()) -> int:
+        """Commit an insert and return its own cursor ID, immune to other writers."""
+        async with self._connection.execute(sql, params) as cursor:
+            inserted_id = cursor.lastrowid
+        if inserted_id is None:
+            raise StoreError("INSERT did not return a row ID")
+        await self._connection.commit()
+        return inserted_id
+
     async def executescript(self, script: str) -> None:
         await self._connection.executescript(script)
         await self._connection.commit()

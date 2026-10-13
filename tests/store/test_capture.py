@@ -3,6 +3,7 @@ invariant 6)."""
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -234,3 +235,37 @@ async def test_stack_evidence_survives_replay_and_intentional_raw_removal(repo, 
     summary = await repo.run_summary("night")
     assert summary.saved_frames == 0
     assert summary.rejected_frames == 1
+
+
+async def test_begin_frame_keeps_its_insert_id_when_another_table_inserts(
+    repo: CaptureRepository, migrated: Database, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    await migrated.execute("CREATE TABLE competing_writer (id INTEGER PRIMARY KEY)")
+    await migrated.execute("INSERT INTO competing_writer (id) VALUES (40)")
+    inserted = asyncio.Event()
+    competing_done = asyncio.Event()
+    commit = migrated.raw.commit
+
+    async def interleaved_commit() -> None:
+        await commit()
+        inserted.set()
+        await competing_done.wait()
+
+    async def competing_insert() -> None:
+        await inserted.wait()
+        await migrated.raw.execute("INSERT INTO competing_writer DEFAULT VALUES")
+        await commit()
+        competing_done.set()
+
+    monkeypatch.setattr(migrated.raw, "commit", interleaved_commit)
+    writer = asyncio.create_task(competing_insert())
+    frame_id = await repo.begin_frame(
+        path=tmp_path / "own.fits", date_obs=DATE_OBS, object_name="M42", filter_name="LP",
+        frame_type="light", exposure_s=30, gain=200, ccd_temp_c=20, width=3840, height=2160,
+    )
+    await writer
+    own_row = await migrated.fetch_one("SELECT id FROM capture_frame WHERE path = ?", (str(tmp_path / "own.fits"),))
+    assert own_row is not None
+    assert frame_id == own_row["id"]
+    await repo.complete_frame(frame_id)
+    assert (await repo.get_frame(frame_id)).status == "complete"

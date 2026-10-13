@@ -1799,6 +1799,18 @@ async def build_services(
     # the archive's row data is replayed through ``TileCache``/
     # ``CutoutService`` rather than restored as raw SQL.
     schema_version = await migrate(handle)
+    capture_repo = CaptureRepository(handle)
+    # Recover durable final files before constructing the first snapshot.
+    # Unverified files remain untouched and prevent unsafe startup.
+    try:
+        await ensure_durable_commits(handle)
+        discarded = await reconcile_incomplete(capture_repo)
+    except Exception:
+        if database is None:
+            await handle.aclose()
+        raise
+    if discarded:
+        _log.warning("removed %d missing-file capture placeholders", len(discarded))
     # Durable-before-acted-on (architecture policy invariant 6) has to hold for the very
     # first run this process ever starts, not just the second one. `SqliteJournal`
     # used to switch the connection to `synchronous = FULL` lazily, on its own
@@ -1808,7 +1820,6 @@ async def build_services(
     # `synchronous = NORMAL` on a freshly launched process. Establishing it here,
     # once, before anything touches the database, closes that window instead of
     # relying on ordering between two call sites to happen to be safe.
-    await ensure_durable_commits(handle)
 
     settings = SettingsStore(handle, auth_required_override=config.auth_required)
     await settings.load()
@@ -2001,7 +2012,6 @@ async def build_services(
     # above, not ``run``'s "``None`` until something has happened" (see
     # ``CaptureState``'s own docstring). Reused, not rebuilt, once the driver
     # is resolved further down.
-    capture_repo = CaptureRepository(handle)
     last_frames = await capture_repo.list_recent(limit=1)
     capture_section = initial_capture_state(
         last=last_frames[0] if last_frames else None,
@@ -2256,20 +2266,6 @@ async def build_services(
     )
     # A run the previous process left unfinished is surfaced as interrupted,
     # with a resume action, before the first client can ask (DESIGN.md 4.2).
-    # A capture row a previous process left 'writing' never completed — its
-    # FITS bytes may or may not have reached disk, but either way it must
-    # never be presented as a captured frame (architecture policy invariant 6). Resolved
-    # here, before the first client can list the catalogue, exactly as the
-    # run-interruption sweep above resolves an unfinished run. Only 'writing'
-    # rows are touched, so this cannot change what ``capture_section`` above
-    # already read from the 'complete' ones.
-    discarded = await reconcile_incomplete(capture_repo)
-    if discarded:
-        _log.warning(
-            "discarded %d capture frame(s) left 'writing' by a previous process: %s",
-            len(discarded),
-            ", ".join(str(path) for path in discarded),
-        )
 
     dither_pixel_scale_arcsec: float | None = None
     if settings.device.hardware_profile_id is not None:

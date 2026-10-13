@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pytest
 
+from ssc.capture.pipeline import CaptureRecoveryError
 from ssc.main import create_app
 from ssc.settings.config import AppConfig
 from ssc.store.capture import CaptureRepository
@@ -54,31 +55,50 @@ async def _seed_writing_frame(config: AppConfig) -> Path:
     return partial_path
 
 
-async def test_a_capture_frame_left_writing_is_discarded_at_startup(
+async def test_an_unverified_final_is_preserved_and_blocks_startup(
     config: AppConfig, gateway: FakeGateway
 ) -> None:
     partial_path = await _seed_writing_frame(config)
-    assert partial_path.exists()
-
+    original = partial_path.read_bytes()
     app = create_app(config, gateway=gateway)
-    with TestClient(app, client=CLIENT_ADDRESS) as client:
-        assert client.post("/api/auth/pair", json={"token": pairing_token(client)}).status_code == 200
-        # Reached at all proves the lifespan ran to completion with the
-        # seeded 'writing' row already in place — the reconciliation this
-        # asserts happened *during* ssc.main's own startup, not via a second,
-        # separate call this test makes itself.
-        assert client.get("/api/state").status_code == 200
-
-    # The partial file is gone once the app has started — not merely once
-    # something later gets around to asking for it.
-    assert not partial_path.exists()
-
+    with pytest.raises(CaptureRecoveryError), TestClient(app, client=CLIENT_ADDRESS):
+        pass
+    assert partial_path.read_bytes() == original
     database = await open_database(config.database_path)
     try:
         writing = await CaptureRepository(database).list_writing()
     finally:
         await database.aclose()
-    assert writing == []
+    assert len(writing) == 1
+    assert writing[0].path == partial_path
+
+
+async def test_a_durable_final_is_recovered_before_startup_completes(
+    config: AppConfig, gateway: FakeGateway
+) -> None:
+    from dataclasses import replace
+
+    from ssc.capture.fits import write_fits_file
+    from tests.capture.test_pipeline import _raw_frame
+
+    final_path = await _seed_writing_frame(config)
+    frame = _raw_frame()
+    write_fits_file(final_path, frame.pixels, replace(frame.metadata, date_obs=DATE_OBS))
+    original = final_path.read_bytes()
+    app = create_app(config, gateway=gateway)
+    with TestClient(app, client=CLIENT_ADDRESS) as client:
+        assert client.post("/api/auth/pair", json={"token": pairing_token(client)}).status_code == 200
+        snapshot = client.get("/api/state").json()["snapshot"]
+    assert final_path.read_bytes() == original
+    database = await open_database(config.database_path)
+    try:
+        repo = CaptureRepository(database)
+        complete = await repo.list_complete()
+        assert await repo.list_writing() == []
+    finally:
+        await database.aclose()
+    assert len(complete) == 1
+    assert snapshot["capture"]["last_frame_id"] is None  # preview remains session-local
 
 
 async def test_a_complete_capture_frame_survives_startup(

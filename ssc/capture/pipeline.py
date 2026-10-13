@@ -9,12 +9,10 @@ Two entry points:
   inserted as ``'writing'`` *before* any FITS byte reaches disk (CLAUDE.md
   invariant 6); only once the file has been fsynced and renamed into place
   is the row marked ``'complete'``.
-* :func:`reconcile_incomplete` — the resume path. A single
-  ``StartExposure``/``ImageArray`` cycle has no partial state worth
-  resuming, so a row still ``'writing'`` when the process starts describes a
-  frame a previous run never finished; the only correct recovery is to
-  discard the row and whatever bytes made it to disk, never to present it
-  as captured.
+* :func:`reconcile_incomplete` — recover a structurally valid final FITS
+  matching its catalogue row after a crash between rename and completion.
+  Unverified final files are preserved and reported; only missing-file
+  placeholders are discarded.
 
 Neither function talks to a device — ``frame`` arrives already decoded and
 already read (``ssc.capture.frame.RawFrame``); this module only ever writes
@@ -24,11 +22,14 @@ what it is handed.
 from __future__ import annotations
 
 import asyncio
+import math
+import os
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from ssc.capture.fits import FitsWriteError, write_fits_file
+from ssc.capture.fits import FitsWriteError, _fits_ascii, write_fits_file
+from ssc.capture.fits_rows import FitsRowSource
 from ssc.capture.frame import FrameType, RawFrame
 from ssc.capture.pathtemplate import (
     DEFAULT_CAPTURE_FILENAME_TEMPLATE,
@@ -36,7 +37,7 @@ from ssc.capture.pathtemplate import (
     render_capture_filename,
     render_capture_path,
 )
-from ssc.store.capture import CaptureRepository
+from ssc.store.capture import CaptureFrameRecord, CaptureRepository
 
 _UTC_TZ = ZoneInfo("UTC")
 
@@ -174,17 +175,74 @@ async def capture_frame(
     return frame_id
 
 
+class CaptureRecoveryError(RuntimeError):
+    """Unverified final files were retained for explicit recovery."""
+
+
+def _validate_and_sync_final(record: CaptureFrameRecord) -> None:
+    source = FitsRowSource.open(record.path)
+    if source.header.get("SIMPLE") is not True:
+        raise ValueError("not a standard primary FITS image")
+    if source.shape != (record.height, record.width):
+        raise ValueError("FITS dimensions disagree with the capture catalogue")
+    payload_end = source.data_start + record.height * record.width * source.dtype.itemsize
+    expected_size = ((payload_end + 2879) // 2880) * 2880
+    if record.path.stat().st_size != expected_size:
+        raise ValueError("FITS payload or padding is incomplete or unexpected")
+    expected = {
+        "IMAGETYP": record.frame_type,
+        "EXPTIME": record.exposure_s,
+        "GAIN": record.gain,
+        "CCD-TEMP": record.ccd_temp_c,
+        "OBJECT": record.object_name,
+        "FILTER": record.filter_name,
+    }
+    for key, value in expected.items():
+        if value is None:
+            continue
+        actual = source.header.get(key)
+        if isinstance(value, (int, float)):
+            matches = isinstance(actual, (int, float)) and math.isclose(actual, value, rel_tol=1e-9, abs_tol=1e-6)
+        else:
+            # Catalogue strings retain Unicode; FITS cards use the writer's
+            # ASCII transliteration, and the header reader trims padding.
+            matches = actual == _fits_ascii(value).strip()
+        if not matches:
+            raise ValueError(f"FITS {key} is absent or disagrees with the capture catalogue")
+    # Re-establish durability before counting a file whose process died between
+    # its atomic rename and the database completion update.
+    with record.path.open("rb") as stream:
+        os.fsync(stream.fileno())
+    if os.name != "nt":
+        directory = os.open(record.path.parent, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+
+
 async def reconcile_incomplete(repo: CaptureRepository) -> list[Path]:
-    """Discard every row left ``'writing'`` by a previous, killed process,
-    removing whatever partial file exists at its path. Returns the paths
-    removed, for the caller to log.
+    """Recover verified finals; discard only placeholders with no final file.
+
+    Unknown, malformed or mismatched final files and their writing rows remain
+    untouched. Startup fails explicitly so they cannot be silently deleted or
+    presented as completed captures.
     """
     removed: list[Path] = []
+    unresolved: list[str] = []
     for record in await repo.list_writing():
-        path = await repo.discard_frame(record.id)
-        path.unlink(missing_ok=True)
-        removed.append(path)
+        if not record.path.exists():
+            removed.append(await repo.discard_frame(record.id))
+            continue
+        try:
+            await asyncio.to_thread(_validate_and_sync_final, record)
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            unresolved.append(f"frame {record.id}: {exc}")
+            continue
+        await repo.complete_frame(record.id)
+    if unresolved:
+        raise CaptureRecoveryError("Capture recovery preserved unverified final files: " + "; ".join(unresolved))
     return removed
 
 
-__all__ = ["capture_frame", "frame_filename", "reconcile_incomplete"]
+__all__ = ["CaptureRecoveryError", "capture_frame", "frame_filename", "reconcile_incomplete"]
