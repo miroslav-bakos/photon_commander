@@ -16,10 +16,13 @@ from ssc.api.diagnostics import BugReport, DiagnosticEvent
 
 @pytest.fixture
 def receiver(tmp_path):
+    source_path = Path('packaging/report-receiver/report.php')
+    if not source_path.is_file():
+        pytest.skip('External report-receiver source is not included in this checkout')
     php = os.environ.get('SSC_TEST_PHP') or shutil.which('php')
     if not php:
         pytest.skip('PHP runtime not installed; set SSC_TEST_PHP for receiver validation')
-    source = Path('packaging/report-receiver/report.php').read_text()
+    source = source_path.read_text()
     harness = '''
 namespace PhotonReceiverTest;
 function sys_get_temp_dir(): string { return __DIR__; }
