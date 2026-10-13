@@ -46,7 +46,7 @@ export function PersistentPlanningTab() {
         aria-hidden={!isPlanning}
       >
         <LayoutRouteProvider tab="/planning">
-          <PlanningTab />
+          <PlanningTab active={isPlanning} />
         </LayoutRouteProvider>
       </div>
     </div>

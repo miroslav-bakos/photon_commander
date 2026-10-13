@@ -24,6 +24,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Lock, LockOpen } from "lucide-react";
 import { ApiError } from "../../api/client";
 import { samePlanContent } from "./saveRecovery";
+import { useNow } from "../MountTab/useNow";
 import { observingDate } from "../../widgets/weather/nightConditions";
 import { useAstroProfilesQuery } from "../../api/astro";
 import {
@@ -75,6 +76,8 @@ export function SchedulingTab() {
   const siteTimeZone = useConnectionStore((s) => s.snapshot?.location?.timezone ?? undefined);
   const run = useConnectionStore((s) => s.snapshot?.run ?? null);
   const selectedNightDate = useSchedulingUiStore((s) => s.selectedNightDate);
+  const selectedNightAt = useSchedulingUiStore((s) => s.selectedNightAt);
+  const now = useNow(30_000);
   // The REST list only matters before the first snapshot (or on a server
   // whose snapshot predates `plans`); once the WS has spoken, it wins.
   const plansQuery = usePlansQuery();
@@ -101,7 +104,15 @@ export function SchedulingTab() {
     }
   }, [summary, record, queryClient]);
 
-  const nightDate = selectedNightDate ?? summary?.night_date ?? null;
+  // A saved plan date is history, not the default for a new observing session.
+  // Active runs retain their journalled night even after midnight or reload.
+  const runningNight = run?.plan_id === planId && (run.status === "running" || run.status === "paused")
+    ? run.night_date : null;
+  const today = observingDate(new Date(now), siteTimeZone ?? "UTC");
+  const explicitNight = selectedNightDate !== null && (selectedNightDate >= today
+    || (selectedNightAt !== null && observingDate(new Date(selectedNightAt), siteTimeZone ?? "UTC") === today))
+    ? selectedNightDate : null;
+  const nightDate = runningNight ?? explicitNight ?? today;
   const compile = useCompilePlan(planId, nightDate, record?.revision ?? null);
   const compiledById = useMemo(() => {
     const map = new Map<string, CompiledItem>();
@@ -418,18 +429,14 @@ export function SchedulingTab() {
               label="Night of"
               type="date"
               disabled={cannotChangeNight}
-              value={nightDate ?? compile.data?.schedule.night.date ?? ""}
-              hint={
-                nightDate === null
-                  ? "The server's own tonight — no date is sent until you choose one."
-                  : "Changing the night reuses this plan, preserving local clock times."
-              }
+              value={nightDate}
+              hint="Changing the night reuses this plan, preserving local clock times."
               onChange={(e) => {
                 const next = e.target.value;
                 if (next) applySelectedNight(next);
               }}
             />
-            {nightDate !== null && (
+            {(
               <Button
                 disabled={cannotChangeNight}
                 onClick={() => { applySelectedNight(observingDate(new Date(), siteTimeZone ?? compile.data?.schedule.night.tz ?? "UTC")); }}
@@ -439,11 +446,8 @@ export function SchedulingTab() {
             )}
             <Button
               variant="primary"
-              disabled={cannotChangeNight || (nightDate ?? compile.data?.schedule.night.date) == null}
-              onClick={() => {
-                const selectedNight = nightDate ?? compile.data?.schedule.night.date;
-                if (selectedNight != null) applySelectedNight(selectedNight);
-              }}
+              disabled={cannotChangeNight}
+              onClick={() => { applySelectedNight(nightDate); }}
             >
               {applyNight.isPending ? "Applying plan…" : "Use plan for selected night"}
             </Button>

@@ -31,7 +31,9 @@ export function isPlanEditLocked(planId: string | null, run: RunState | null, lo
 interface SchedulingUiState {
   selectedPlanId: string | null;
   selectedItemId: string | null;
+  /** Explicit choice for this browser session; old saved dates never become defaults. */
   selectedNightDate: string | null;
+  selectedNightAt: number | null;
   /** Editing permission is session-local; a fresh client must unlock an active run again. */
   editLocks: Record<string, EditLock>;
   setPlanEditLock: (planId: string, runId: string | null, locked: boolean) => void;
@@ -46,25 +48,31 @@ export const useSchedulingUiStore = create<SchedulingUiState>()(persist((set) =>
   selectedPlanId: null,
   selectedItemId: null,
   selectedNightDate: null,
+  selectedNightAt: null,
   editLocks: {},
   setPlanEditLock: (planId, runId, locked) => {
     set((state) => ({ editLocks: { ...state.editLocks, [planId]: { runId, locked } } }));
   },
   selectPlan: (selectedPlanId) => {
-    set({ selectedPlanId, selectedItemId: null, selectedNightDate: null });
+    set({ selectedPlanId, selectedItemId: null, selectedNightDate: null, selectedNightAt: null });
   },
   selectItem: (selectedItemId) => {
     set({ selectedItemId });
   },
   selectNightDate: (selectedNightDate) => {
-    set({ selectedNightDate });
+    set({ selectedNightDate, selectedNightAt: selectedNightDate === null ? null : Date.now() });
   },
   select: (selectedPlanId, selectedItemId, selectedNightDate = null) => {
-    set({ selectedPlanId, selectedItemId, selectedNightDate });
+    set({ selectedPlanId, selectedItemId, selectedNightDate, selectedNightAt: selectedNightDate === null ? null : Date.now() });
   },
 }), {
   name: "ssc.scheduling-ui.v1",
   version: 1,
   storage: createJSONStorage(safeLocalStorage),
-  partialize: ({ selectedPlanId, selectedItemId, selectedNightDate }) => ({ selectedPlanId, selectedItemId, selectedNightDate }),
+  partialize: ({ selectedPlanId, selectedItemId }) => ({ selectedPlanId, selectedItemId }),
+  merge: (persisted, current) => {
+    const selection = persisted as Partial<SchedulingUiState> | undefined;
+    return { ...current, selectedPlanId: selection?.selectedPlanId ?? null,
+      selectedItemId: selection?.selectedItemId ?? null };
+  },
 }));

@@ -476,3 +476,28 @@ def test_from_intent_on_an_unknown_plan_is_a_404(paired: TestClient) -> None:
         json={"intent": {"ra_j2000_h": 6.5317, "dec_j2000_deg": 4.9407}},
     )
     assert response.status_code == 404
+
+
+@requires_ephemeris
+def test_new_item_in_saved_old_night_recompiles_on_explicit_current_night(paired: TestClient) -> None:
+    """Execute supplies tonight without rewriting the persisted historical plan."""
+    _set_location(paired, latitude=48.15, longitude=17.11, timezone="Europe/Bratislava")
+    document = _plan_document("current-night-regression", "Plan for 2026-10-11")
+    document["items"] = []
+    created = paired.post("/api/plans", json={"document": document, "night_date": "2026-10-11"})
+    assert created.status_code == 201, created.text
+    stored = paired.get("/api/plans/current-night-regression").json()
+    stored["document"]["items"].append({"kind": "wait", "id": "manual-tonight",
+        "start": {"kind": "event", "event": "astronomical_dusk", "offset_min": 0},
+        "end": {"kind": "duration", "minutes": 5}})
+    saved = paired.put("/api/plans/current-night-regression", json={
+        "document": stored["document"], "expected_revision": stored["revision"]})
+    assert saved.status_code == 200, saved.text
+    assert paired.get("/api/plans/current-night-regression").json()["document"]["items"][0]["id"] == "manual-tonight"
+    old = paired.post("/api/plans/current-night-regression/compile", json={"night_date": "2026-10-11"})
+    current = paired.post("/api/plans/current-night-regression/compile", json={"night_date": "2026-10-13"})
+    assert old.status_code == current.status_code == 200, current.text
+    assert current.json()["schedule"]["night"]["date"] == "2026-10-13"
+    assert old.json()["schedule"]["items"][0]["start_utc"] != current.json()["schedule"]["items"][0]["start_utc"]
+    assert current.json()["schedule"]["items"][0]["start_utc"].startswith("2026-10-13")
+    assert paired.get("/api/plans/current-night-regression").json()["night_date"] == "2026-10-11"

@@ -24,6 +24,7 @@ import type { RunState } from "../../api/runs";
 import { useConnectionStore } from "../../store/connectionStore";
 import { testSnapshot } from "../../test/fixtures";
 import { renderWithQueryClient } from "../../test/queryClient";
+import { safeLocalStorage } from "../../store/safeStorage";
 import { SchedulingTab } from "./SchedulingTab";
 import { useSchedulingUiStore } from "./schedulingUiStore";
 
@@ -180,6 +181,54 @@ describe("SchedulingTab", () => {
       }),
     });
     useSchedulingUiStore.getState().select("p1", "w1");
+  });
+
+  it("defaults an old saved plan to the current site date after restoring browser selection", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-13T22:30:00Z"));
+    useConnectionStore.setState({ snapshot: testSnapshot({ location: { ...observingLocation, timezone: "Europe/Bratislava" },
+      plans: [{ id: "p1", name: record.document.name, revision: 1, updated_at: record.updated_at, night_date: record.night_date }] }) });
+    await safeLocalStorage().setItem("ssc.scheduling-ui.v1", JSON.stringify({ version: 1, state: { selectedPlanId: "p1", selectedItemId: "w1", selectedNightDate: "2026-10-11" } }));
+    await useSchedulingUiStore.persist.rehydrate();
+    let requestedNight: unknown;
+    stubFetch(() => json(record, 200, "/api/plans/p1"), async request => {
+      if (new URL(request.url).pathname !== "/api/plans/p1/compile") return null;
+      requestedNight = (await request.json() as { night_date: string }).night_date;
+      return json({ ...compiled, schedule: { ...compiled.schedule, night: { ...compiled.schedule.night, date: "2026-10-14" } } }, 200, request.url);
+    });
+    try {
+      renderWithQueryClient(<SchedulingTab />);
+      await waitFor(() => { expect(requestedNight).toBe("2026-10-14"); });
+      expect(screen.getByLabelText("Night of")).toHaveValue("2026-10-14");
+    } finally { vi.useRealTimers(); }
+  });
+
+  it("keeps an explicitly selected night and an active run's original night", async () => {
+    useSchedulingUiStore.getState().select("p1", "w1", "2026-09-24");
+    stubFetch(() => json(record, 200, "/api/plans/p1"));
+    renderWithQueryClient(<SchedulingTab />);
+    await waitFor(() => { expect(screen.getByLabelText("Night of")).toHaveValue("2026-09-24"); });
+    act(() => { useConnectionStore.setState({ snapshot: testSnapshot({ location: observingLocation,
+      plans: [{ id: "p1", name: record.document.name, revision: 1, updated_at: record.updated_at, night_date: record.night_date }], run: runningRun }) }); });
+    expect(screen.getByLabelText("Night of")).toHaveValue(runningRun.night_date);
+  });
+
+  it("refreshes a past session choice on the next day but retains future dates", async () => {
+    vi.useFakeTimers({ toFake: ["Date", "setInterval", "clearInterval"] });
+    vi.setSystemTime(new Date("2026-10-13T12:00:00Z"));
+    useSchedulingUiStore.getState().select("p1", "w1", "2026-10-12");
+    stubFetch(() => json(record, 200, "/api/plans/p1"));
+    try {
+      renderWithQueryClient(<SchedulingTab />);
+      expect(await screen.findByLabelText("Night of")).toHaveValue("2026-10-12");
+      vi.setSystemTime(new Date("2026-10-14T12:00:00Z"));
+      act(() => { vi.advanceTimersByTime(30_000); });
+      expect(screen.getByLabelText("Night of")).toHaveValue("2026-10-14");
+      act(() => { useSchedulingUiStore.getState().selectNightDate("2026-10-20"); });
+      vi.setSystemTime(new Date("2026-10-15T12:00:00Z"));
+      act(() => { vi.advanceTimersByTime(30_000); });
+      expect(screen.getByLabelText("Night of")).toHaveValue("2026-10-20");
+    } finally { cleanup(); vi.useRealTimers(); }
   });
 
   it("persists chronological order when a start is changed in the item editor", async () => {
@@ -377,6 +426,7 @@ describe("SchedulingTab", () => {
   });
 
   it("keeps the displayed night unchanged until reuse succeeds", async () => {
+    useSchedulingUiStore.getState().selectNightDate("2026-08-28");
     let releaseSave: (() => void) | undefined;
     const saveGate = new Promise<void>((resolve) => { releaseSave = resolve; });
     let requestStarted = false;
@@ -399,6 +449,7 @@ describe("SchedulingTab", () => {
   });
 
   it("retains the previous night when reuse fails", async () => {
+    useSchedulingUiStore.getState().selectNightDate("2026-08-28");
     stubFetch(() => json(record, 200, "/api/plans/p1"), (request) => {
       if (request.method !== "POST" || new URL(request.url).pathname !== "/api/plans/p1/apply-night") return null;
       return json({ detail: "Someone else changed this plan" }, 409, "/api/plans/p1/apply-night");
@@ -425,6 +476,7 @@ describe("SchedulingTab", () => {
   });
 
   it("applies the plan to the selected night using the fetched revision", async () => {
+    useSchedulingUiStore.getState().selectNightDate("2026-08-28");
     let appliedBody: unknown = null;
     stubFetch(
       () => json(record, 200, "/api/plans/p1"),

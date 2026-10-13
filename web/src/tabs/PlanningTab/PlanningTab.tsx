@@ -44,6 +44,8 @@ import {
 } from "../../skymap/overlay";
 import { fromDateLocalValue, fromDatetimeLocalValue, toDateLocalValue, toDatetimeLocalValue } from "./dateLocal";
 import { FramingStatsPanel } from "./FramingStatsPanel";
+import { useNow } from "../MountTab/useNow";
+import { observingDate } from "../../widgets/weather/nightConditions";
 import { siteNightDate } from "./siteNightWindow";
 import { AutoNightPanel } from "./AutoNightPanel";
 import { objectTypesForCategories } from "./targetCategories";
@@ -111,15 +113,17 @@ function targetCoordinateKey(raH: number, decDeg: number): string {
   return `${String(raH)}/${String(decDeg)}`;
 }
 
-export function PlanningTab() {
-  // One stable instant per opening. The map should not reopen on yesterday's
-  // retained scrub position, but it also must not creep forward on every
-  // render while somebody is deliberately planning at another time.
-  const [openedAt] = useState(() => new Date());
+export function PlanningTab({ active = true }: { active?: boolean }) {
+  // Keep a stable map instant until a new observing-site day requires
+  // refreshing a past night. Deliberate edits must not creep forward on render.
+  const [openedAt, setOpenedAt] = useState(() => new Date());
+  const lastActiveDayRef = useRef<string | null>(null);
   const location = useConnectionStore((s) => s.snapshot?.location ?? null);
   const activeHardwareProfileId = useConnectionStore(
     (s) => s.snapshot?.settings?.hardware_profile_id ?? null,
   );
+  const nowMs = useNow(30_000);
+  const activeSiteDay = observingDate(new Date(nowMs), location?.timezone ?? "UTC");
   const profilesQuery = useAstroProfilesQuery();
   const profiles = useMemo(() => profilesQuery.data?.profiles ?? [], [profilesQuery.data]);
 
@@ -167,8 +171,27 @@ export function PlanningTab() {
   }, [mosaicSpec.overlapPct, setMosaicSpec, setTarget]);
 
   useEffect(() => {
-    resetObservationTime(openedAt);
-  }, [openedAt, resetObservationTime]);
+    if (!active) return;
+    const now = new Date();
+    const timeZone = location?.timezone ?? "UTC";
+    const today = observingDate(now, timeZone);
+    const previousDay = lastActiveDayRef.current;
+    lastActiveDayRef.current = today;
+    const state = usePlanningUiStore.getState();
+    const selectedDay = state.startMode === "event"
+      ? toDateLocalValue(state.startAnchorDate)
+      : observingDate(state.startAbsolute, timeZone);
+    // Retaining the map must not retain a past default night indefinitely.
+    // Same-day edits and future choices survive navigation unchanged.
+    if (previousDay !== null && (previousDay === today || selectedDay >= today)) return;
+    resetObservationTime(now);
+    const anchor = fromDateLocalValue(today);
+    if (anchor !== null) {
+      anchor.setHours(12, 0, 0, 0);
+      setStartAnchorDate(anchor);
+    }
+    setOpenedAt(now);
+  }, [active, activeSiteDay, location?.timezone, resetObservationTime, setStartAnchorDate]);
   const observationTimeReset = startAbsolute.getTime() === openedAt.getTime();
 
   const selectedProfile = useMemo(
@@ -490,10 +513,10 @@ export function PlanningTab() {
   // Memoised on the two numbers so the map's `setDisplay` effect runs once
   // per scrub step, not once per render.
   const startTimeMs = startTime === null ? null : startTime.getTime();
-  const initialCurrentInstantAppliedRef = useRef(false);
+  const initialCurrentInstantAppliedRef = useRef<number | null>(null);
   useEffect(() => {
-    if (!observationTimeReset || startTimeMs === null || initialCurrentInstantAppliedRef.current) return;
-    initialCurrentInstantAppliedRef.current = true;
+    if (!observationTimeReset || startTimeMs === null || initialCurrentInstantAppliedRef.current === openedAt.getTime()) return;
+    initialCurrentInstantAppliedRef.current = openedAt.getTime();
     setInstantSeconds((openedAt.getTime() - startTimeMs) / 1000);
   }, [observationTimeReset, openedAt, setInstantSeconds, startTimeMs]);
   const scrubbedInstant = useMemo(

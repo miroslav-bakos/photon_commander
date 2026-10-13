@@ -10,7 +10,8 @@
  * machinery is exercised by `VectorSkyMapBackend.test.ts` and the
  * conformance suite, not this file.
  */
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { useState } from "react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -98,6 +99,7 @@ describe("PlanningTab", () => {
   // into the next. Real navigation away from Planning never resets it
   // either, which is exactly the point.
   afterEach(() => {
+    vi.useRealTimers();
     usePlanningUiStore.setState(usePlanningUiStore.getInitialState());
     mockSkyMapGoto.mockClear();
     mockSkyMapSetOverlay.mockClear();
@@ -310,6 +312,58 @@ describe("PlanningTab", () => {
     await waitFor(() => {
       expect(screen.getByTestId("skymap-stub").dataset.instant).toBe(new Date(2026, 8, 12, 23, 30).toISOString());
     });
+  });
+
+  it("refreshes a retained past night on a new site day and preserves deliberate dates", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-13T16:30:00Z"));
+    const site = withLocationSnapshot.location;
+    if (site === null) throw new Error("Missing site fixture");
+    mockUseConnectionStore.mockImplementation((selector) => selector({ snapshot: {
+      ...withLocationSnapshot,
+      location: { ...site, timezone: "Asia/Tokyo" },
+    } }));
+    function RetainedPlanner() {
+      const [active, setActive] = useState(true);
+      return <MemoryRouter><><button onClick={() => { setActive((value) => !value); }}>Toggle route</button><PlanningTab active={active} /></></MemoryRouter>;
+    }
+    renderWithClient(<RetainedPlanner />);
+    expect(usePlanningUiStore.getState().startAnchorDate.getDate()).toBe(14);
+    const deliberate = new Date(2026, 9, 12, 12);
+    usePlanningUiStore.getState().setStartAnchorDate(deliberate);
+    fireEvent.click(screen.getByText("Toggle route"));
+    fireEvent.click(screen.getByText("Toggle route"));
+    expect(usePlanningUiStore.getState().startAnchorDate).toEqual(deliberate);
+    fireEvent.click(screen.getByText("Toggle route"));
+    vi.setSystemTime(new Date("2026-10-14T16:30:00Z"));
+    fireEvent.click(screen.getByText("Toggle route"));
+    expect(usePlanningUiStore.getState().startAnchorDate.getDate()).toBe(15);
+    const future = new Date(2026, 9, 20, 12);
+    usePlanningUiStore.getState().setStartAnchorDate(future);
+    fireEvent.click(screen.getByText("Toggle route"));
+    vi.setSystemTime(new Date("2026-10-15T16:30:00Z"));
+    fireEvent.click(screen.getByText("Toggle route"));
+    expect(usePlanningUiStore.getState().startAnchorDate).toEqual(future);
+    vi.useRealTimers();
+  });
+
+  it("refreshes a past night across site midnight while Planning stays visible", () => {
+    vi.useFakeTimers({ toFake: ["Date", "setInterval", "clearInterval"] });
+    vi.setSystemTime(new Date("2026-10-13T14:59:45Z"));
+    const site = withLocationSnapshot.location;
+    if (site === null) throw new Error("Missing site fixture");
+    mockUseConnectionStore.mockImplementation((selector) => selector({ snapshot: {
+      ...withLocationSnapshot,
+      location: { ...site, timezone: "Asia/Tokyo" },
+    } }));
+    renderWithClient(<MemoryRouter><PlanningTab /></MemoryRouter>);
+    expect(screen.getByLabelText("Night of")).toHaveValue("2026-10-13");
+    act(() => { vi.advanceTimersByTime(30_000); });
+    expect(screen.getByLabelText("Night of")).toHaveValue("2026-10-14");
+    const deliberate = new Date(2026, 9, 12, 12);
+    act(() => { usePlanningUiStore.getState().setStartAnchorDate(deliberate); });
+    act(() => { vi.advanceTimersByTime(30_000); });
+    expect(usePlanningUiStore.getState().startAnchorDate).toEqual(deliberate);
   });
 
   it("accepts the renderer-recentered frame drag without issuing a projection-resetting goto", async () => {
