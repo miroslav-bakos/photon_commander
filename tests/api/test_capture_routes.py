@@ -210,6 +210,7 @@ def _camera(**kwargs: object) -> FakeCamera:
             "startx": 0,
             "starty": 0,
             "sensorname": "IMX585",
+            "sensortype": 2,  # Measured synthetic RGGB-color sensor with offsets 0/1.
             "offset": 1108,
             "maxadu": 65535,
             "readoutmode": 0,

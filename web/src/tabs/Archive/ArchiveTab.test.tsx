@@ -55,7 +55,7 @@ function stubArchive(entries: ArchiveEntry[], directories = ["M31", "M31/lights"
     }
     if (url.pathname === "/api/capture/archive/selection-zip") {
       requests.push({ path: url.pathname, body: JSON.parse(typeof init?.body === "string" ? init.body : "null") as unknown });
-      return Promise.resolve(new Response(new Blob(["zip"]), { headers: { "Content-Type": "application/zip", "Content-Disposition": "attachment; filename=Photon-selection.zip" } }));
+      return Promise.resolve(new Response(new Uint8Array([0x7a, 0x69, 0x70]), { headers: { "Content-Type": "application/zip", "Content-Disposition": "attachment; filename=Photon-selection.zip" } }));
     }
     if (url.pathname === "/api/capture/archive/header") return Promise.resolve(Response.json({ SIMPLE: true, OBJECT: "M31" }));
     if (url.pathname === "/api/capture/archive/quality") return Promise.resolve(Response.json({ star_count: 42, hfr_px: 1.54, fwhm_px: 3.51, hfr_arcsec: null, fwhm_arcsec: null, background: 100, noise: 4 }));
