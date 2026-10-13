@@ -347,3 +347,15 @@
 .app-shell nav[aria-label="Main"]:not(.ssc-mobile-tabbar) .ssc-nav-link {
   box-shadow: none;
 }
+
+/* A narrow desktop window keeps the compact dock, without the phone frame. */
+@media (hover: hover) and (pointer: fine) {
+  .app-shell nav[aria-label="Main"].ssc-mobile-tabbar {
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .app-shell .ssc-toolbar { border-bottom: 0; box-shadow: none; }
+}

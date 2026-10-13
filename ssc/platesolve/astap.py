@@ -606,7 +606,7 @@ async def astap_solve(
 
 async def astap_solve_reference(
     image_path: Path, *, env: Mapping[str, str] | None = None,
-    timeout_s: float = 120.0, solver_version: str | None = None,
+    timeout_s: float = 15.0, solver_version: str | None = None,
 ) -> ReferencePlateSolveResult:
     """Solve uploaded framing imagery without inventing an exposure timestamp.
 

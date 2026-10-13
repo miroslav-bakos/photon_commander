@@ -114,10 +114,13 @@ async def solve_reference_image(content: bytes, settings: SettingsStore,
             await write
             raise
         try:
-            result = await astap_solve_reference(image, env=solver_environment(settings))
+            result = await asyncio.wait_for(
+                astap_solve_reference(image, env=solver_environment(settings), timeout_s=15.0),
+                timeout=15.0,
+            )
         except SolverUnavailableError as exc:
             raise ValueError("ASTAP or its star database is unavailable. Check the plate solver settings.") from exc
-        except SolveTimedOutError as exc:
+        except (SolveTimedOutError, TimeoutError) as exc:
             raise ValueError("Reference image solving timed out.") from exc
         except SolveFailedError as exc:
             raise ValueError("No plate-solve solution was found for this image.") from exc

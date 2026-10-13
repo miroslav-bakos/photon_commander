@@ -170,3 +170,18 @@ def test_concurrent_upload_refused_before_stream_and_failed_upload_releases_slot
         assert not services.reference_image_slot.locked()
 
     paired.portal.call(exercise)
+
+
+@pytest.mark.asyncio
+async def test_reference_deadline_is_15_seconds_and_timeout_is_user_error(paired, monkeypatch):
+    from ssc.platesolve.base import SolveIssue, SolveTimedOutError
+    paths = []
+    async def timeout(path, **kwargs):
+        assert kwargs["timeout_s"] == 15.0
+        paths.append(path)
+        raise SolveTimedOutError(SolveIssue.TIMED_OUT, "private solver diagnostic")
+    monkeypatch.setattr(reference_image, "astap_solve_reference", timeout)
+    services = services_of(paired)
+    with pytest.raises(ValueError, match="^Reference image solving timed out[.]$"):
+        await reference_image.solve_reference_image(fits(), services.settings, services.config.data_dir)
+    assert not paths[0].parent.exists()
