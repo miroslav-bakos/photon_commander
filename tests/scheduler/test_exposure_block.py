@@ -250,11 +250,17 @@ class TestCompiler:
 # --- the executor ------------------------------------------------------------
 
 
-async def _execute(plan: Plan, *, freeze_at: int | None = None, capture_port: bool = True):  # type: ignore[no-untyped-def]
+async def _execute(plan: Plan, *, freeze_at: int | None = None, capture_port: bool = True, waits: list[tuple[datetime, datetime]] | None = None):  # type: ignore[no-untyped-def]
     schedule = build_schedule(plan)
     journal = FakeJournal("run")
     device = FakeDeviceCommands()
-    clock = FakeClock(BASE_UTC - timedelta(minutes=1))
+    class RecordingClock(FakeClock):
+        async def sleep_until(self, until: datetime) -> None:
+            if waits is not None:
+                waits.append((self.now(), until))
+            await super().sleep_until(until)
+
+    clock = RecordingClock(BASE_UTC - timedelta(minutes=1))
     exposure_sec = next(
         item.exposure_sec for item in plan.items if isinstance(item, TakeExposuresItem)
     )
@@ -360,27 +366,41 @@ class TestTheBlockSetsItsOwnState:
         assert _frames(device)[1]["frame_type"] == "dark"
 
 
-class TestFailingLoudly:
-    async def test_without_a_capture_port_the_block_fails_and_says_why(self) -> None:
-        plan = build_open_ended_plan(exposure_sec=10.0, window_min=5.0)
-        journal, device = await _execute(plan, capture_port=False)
+class TestBlockedAcquisition:
+    @staticmethod
+    def assert_visible_bounded_recovery(journal, waits, *, reason: str, end: datetime) -> None:
         state = reduce(journal.records)
-        assert state.items["open-block"].status is ItemStatus.FAILED
-        assert "no capture port" in state.items["open-block"].reason
+        blocked = [record for record in journal.records
+                   if "Acquisition blocked; retrying until window end:" in record.reason]
+        assert len(blocked) == 1  # Unchanged reasons remain durably visible, not journal spam.
+        assert reason in blocked[0].reason
+        assert blocked[0].status is ItemStatus.RUNNING
+        retries = [(start, finish) for start, finish in waits if start >= blocked[0].at]
+        assert len(retries) > 1
+        assert all(timedelta(0) < finish - start <= timedelta(seconds=30)
+                   for start, finish in retries)
+        assert retries[-1][1] == end
+        assert state.items["open-block"].status is ItemStatus.DONE
+        assert state.items["open-block"].reason == "window ended while acquisition blocked; saved frames retained"
+        assert journal.records[-1].run_status.value == "completed"
+        assert not any(record.status is ItemStatus.FAILED for record in journal.records)
+
+    async def test_without_a_capture_port_the_block_waits_visibly_until_window_end(self) -> None:
+        plan = build_open_ended_plan(exposure_sec=10.0, window_min=5.0)
+        waits: list[tuple[datetime, datetime]] = []
+        journal, device = await _execute(plan, capture_port=False, waits=waits)
+        self.assert_visible_bounded_recovery(journal, waits, reason="no capture port",
+                                            end=BASE_UTC + timedelta(minutes=5))
         assert _frames(device) == []
 
-    async def test_a_frame_the_catalogue_never_recorded_stops_the_block(self) -> None:
-        """The journal says frame 0 completed; the catalogue disagrees. Exposing
-        again would loop on the same index forever, so the block stops instead
-        and names the disagreement."""
+    async def test_catalogue_disagreement_blocks_reexposure_until_window_end(self) -> None:
         plan = build_open_ended_plan(exposure_sec=10.0, window_min=60.0)
-        # The catalogue stops recording after one frame, while the block still
-        # has an hour of window left to fill.
-        journal, device = await _execute(plan, freeze_at=1)
-        state = reduce(journal.records)
-        assert state.items["open-block"].status is ItemStatus.FAILED
-        assert "refusing to re-expose the same frame index" in state.items["open-block"].reason
-        assert len(_frames(device)) == 2
+        waits: list[tuple[datetime, datetime]] = []
+        journal, device = await _execute(plan, freeze_at=1, waits=waits)
+        self.assert_visible_bounded_recovery(
+            journal, waits, reason="refusing to re-expose the same frame index",
+            end=BASE_UTC + timedelta(minutes=60))
+        assert [frame["frame_index"] for frame in _frames(device)] == [0, 1]
 
 
 class TestDithering:
