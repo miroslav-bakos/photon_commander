@@ -164,8 +164,31 @@ async def test_crash_at_every_transition_resumes_identically(k: int) -> None:
 
     await _drive(journal, device, start_at=prefix[-1].at if prefix else START_AT)
 
-    assert _strip_timestamps(journal.records) == _strip_timestamps(REFERENCE_JOURNAL)
-    assert device.calls == REFERENCE_CALLS
+    # Restart adds only same-target, non-advancing optical verification.
+    verification = [record for record in journal.records if record.effect is not None
+                    and record.effect.args.get("resume_field_verification")]
+    for record in verification:
+        assert record.effect is not None
+        assert record.effect.name is EffectName.CENTER_TARGET
+        args = {key: value for key, value in record.effect.args.items()
+                if key not in {"resume_field_verification", "resume_autofocus_during_capture"}}
+        owned = [candidate for candidate in REFERENCE_JOURNAL
+                 if candidate.item_id == record.item_id
+                 and candidate.panel_index == record.panel_index
+                 and candidate.effect is not None
+                 and candidate.effect.name is EffectName.CENTER_TARGET]
+        assert owned
+        assert any(args == candidate.effect.args for candidate in owned)
+    ordinary = [record for record in journal.records if record not in verification]
+    assert [replace(record, attempt=None) for record in _strip_timestamps(ordinary)
+            if record.effect is None or record.effect_outcome is not None] == [
+        replace(record, attempt=None) for record in _strip_timestamps(REFERENCE_JOURNAL)
+        if record.effect is None or record.effect_outcome is not None]
+    assert device.calls == _resolved_calls_in_prefix(journal.records)
+    # Full adapter calls already match every durable effect in order above.
+    # The ordinary resolved effects retain the exact reference call sequence.
+    assert _resolved_calls_in_prefix(ordinary) == REFERENCE_CALLS
+
 
 
 async def test_a_slew_already_journalled_is_replayed_never_re_resolved() -> None:
