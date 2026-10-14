@@ -62,6 +62,9 @@ async def test_pair_saves_distinct_optics_and_counts_one_logical_frame(repo, tmp
     assert len(await repo.list_block_frames("run", "lights")) == 1
     assert (await repo.run_summary("run")).saved_frames == 1
     wide_record = await repo.dual_member("run", "lights", 0, "wide")
+    from ssc.api.routes.capture import _frame_model
+    assert wide_record.optic_role == "wide"
+    assert _frame_model(wide_record).optic_id == "wide"
     wide_header = read_fits_image(wide_record.path.read_bytes()).header
     assert wide_header.get("FILTER") is None
     assert wide_header.get("FOCALLEN") is None

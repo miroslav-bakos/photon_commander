@@ -5425,6 +5425,12 @@ export interface components {
         CaptureFrameModel: {
             /** Id */
             id: number;
+            /**
+             * Optic Id
+             * @default tele
+             * @enum {string}
+             */
+            optic_id: "tele" | "wide";
             /** Path */
             path: string;
             /** Object Name */

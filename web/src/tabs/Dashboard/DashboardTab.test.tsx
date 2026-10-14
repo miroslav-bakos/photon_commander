@@ -18,9 +18,10 @@ import { useForecastQuery } from "../../api/weather";
 import { useCaptureDitherSettingsQuery } from "../../api/settings";
 import { useCaptureFrameQualityQuery, useCaptureFramesQuery, useCaptureState, useLiveStackQuery } from "../../api/capture";
 
+const recentQualityIds = vi.hoisted(() => ({ values: [] as number[] }));
 vi.mock("@tanstack/react-query", async (original) => {
   const actual = await original<typeof import("@tanstack/react-query")>();
-  return { ...actual, useQueries: () => [{ data: { hfr_px: 1.5, fwhm_px: 2.4 } }] };
+  return { ...actual, useQueries: ({ queries }: { queries: { queryKey: readonly unknown[] }[] }) => { recentQualityIds.values = queries.map((query) => query.queryKey[2] as number); return [{ data: { hfr_px: 1.5, fwhm_px: 2.4 } }]; } };
 });
 vi.mock("../../api/mount", () => ({ useMountState: vi.fn() }));
 vi.mock("../../api/focuser", () => ({ useFocuserPositionQuery: vi.fn(), useAutofocusStateQuery: vi.fn() }));
@@ -341,4 +342,13 @@ describe("DashboardTab", () => {
     fireEvent.click(screen.getByRole("link", { name: "Open Focuser controls" }));
     expect(screen.getByLabelText("Current route")).toHaveTextContent("/mount?panel=focuser");
   });
+});
+
+
+it("excludes companion Wide frames from Tele focus quality averages", () => {
+  vi.mocked(useCaptureFramesQuery).mockReturnValue({ data: { frames: [
+    { id: 9, optic_id: "wide" }, { id: 8, optic_id: "tele" }, { id: 7 },
+  ] }, refetch: vi.fn() } as unknown as ReturnType<typeof useCaptureFramesQuery>);
+  renderWithQueryClient(<MemoryRouter initialEntries={["/dashboard"]}><LayoutRouteProvider><DashboardTab /></LayoutRouteProvider></MemoryRouter>);
+  expect(recentQualityIds.values).toEqual([8, 7]);
 });

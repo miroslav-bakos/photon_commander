@@ -11756,6 +11756,15 @@
             "type": "integer",
             "title": "Id"
           },
+          "optic_id": {
+            "type": "string",
+            "enum": [
+              "tele",
+              "wide"
+            ],
+            "title": "Optic Id",
+            "default": "tele"
+          },
           "path": {
             "type": "string",
             "title": "Path"

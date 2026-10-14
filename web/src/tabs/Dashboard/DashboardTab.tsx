@@ -196,7 +196,7 @@ export function DashboardTab() {
   const weather = useForecastQuery(true);
   const dither = useCaptureDitherSettingsQuery();
   const liveStack = useLiveStackQuery(true);
-  const frames = useCaptureFramesQuery(10);
+  const frames = useCaptureFramesQuery(20);
   const lastQuality = useCaptureFrameQualityQuery(capture?.last_frame_id);
 
   useEffect(() => {
@@ -220,7 +220,7 @@ export function DashboardTab() {
   const liveStackStatus = queryStatus(liveStack);
   const ditherStatus = queryStatus(dither);
 
-  const recentFrames = frames.data?.frames.slice(0, 10) ?? [];
+  const recentFrames = frames.data?.frames.filter((frame) => frame.optic_id !== "wide").slice(0, 10) ?? [];
   // Finish the latest-frame read first; its shared key reuses that result
   // when it also belongs to the recent ten rather than issuing it twice.
   const recentQualities = useRecentFrameQualities(

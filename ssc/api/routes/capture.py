@@ -202,6 +202,7 @@ def _frame_model(record: CaptureFrameRecord) -> CaptureFrameModel:
         object_name=record.object_name,
         filter_name=record.filter_name,
         frame_type=FrameType(record.frame_type),
+        optic_id=record.optic_role,
         date_obs=record.date_obs,
         exposure_s=record.exposure_s,
         gain=record.gain,

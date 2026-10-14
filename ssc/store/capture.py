@@ -26,7 +26,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 from weakref import WeakKeyDictionary
 
 import aiosqlite
@@ -35,7 +35,7 @@ from ssc.store.database import Database
 
 _SELECT = (
     "SELECT id, path, object, filter, frame_type, date_obs, exposure_s, gain, ccd_temp_c, "
-    "width, height, status, created_at FROM capture_frame"
+    "width, height, status, created_at, optic_role FROM capture_frame"
 )
 
 
@@ -71,6 +71,7 @@ class CaptureFrameRecord:
     height: int
     status: str
     created_at: datetime
+    optic_role: Literal["tele", "wide"] = "tele"
 
 
 @dataclass(frozen=True, slots=True)
@@ -470,6 +471,7 @@ def _record_of(row: aiosqlite.Row) -> CaptureFrameRecord:
         height=int(row["height"]),
         status=str(row["status"]),
         created_at=datetime.fromisoformat(str(row["created_at"])),
+        optic_role=cast(Literal["tele", "wide"], str(row["optic_role"])),
     )
 
 
