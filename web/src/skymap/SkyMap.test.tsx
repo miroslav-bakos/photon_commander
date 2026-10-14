@@ -70,7 +70,7 @@ function stubBackend(): SkyMapBackend {
 }
 
 vi.mock("./createSkyMapBackend", () => ({
-  FRAME_SRC: "about:blank",
+  FRAME_SRC: "about:blank?build=test-revision",
   createSkyMapBackend: (frame: HTMLIFrameElement) => {
     hoisted.frames.push(frame);
     return stubBackend();
@@ -241,6 +241,16 @@ describe("SkyMap display options", () => {
     } finally {
       setter.mockRestore();
     }
+  });
+
+  it("preserves the build revision and theme parameters in the iframe URL", () => {
+    stubFetch();
+    renderWithQueryClient(<SkyMap />);
+    const frame = screen.getByTitle<HTMLIFrameElement>("Sky map");
+    const url = new URL(frame.src);
+    expect(url.searchParams.get("build")).toBe("test-revision");
+    expect(url.searchParams.has("bg")).toBe(true);
+    expect(url.searchParams.has("pointing")).toBe(true);
   });
 
   it("provides a dark iframe surface before the skymap document loads", () => {

@@ -11,7 +11,7 @@
  * into it. Moving the call rather than dropping it keeps the one remaining
  * backend from losing a check it always should have had.
  */
-import { createVectorSkyMapBackend } from "./VectorSkyMapBackend";
+import { createVectorSkyMapBackend, VECTOR_FRAME_SRC } from "./VectorSkyMapBackend";
 import { describeSkyMapBackendConformance } from "./conformance/skyMapBackend.conformance";
 import { describe, expect, it } from "vitest";
 import { readySignal } from "../test/fakeSkyMapFrame";
@@ -21,6 +21,16 @@ describeSkyMapBackendConformance("vector", () => {
   const fake = new FakeSkyMapFrame();
   const backend = createVectorSkyMapBackend(fake.frame, { messageSource: fake.messageSource, targetOrigin: "*" });
   return { fake, backend };
+});
+
+describe("build-bound renderer document", () => {
+  it("scopes the iframe HTML to the exact source revision rather than an unversioned cached document", () => {
+    const url = new URL(VECTOR_FRAME_SRC, "https://ssc.example");
+    expect(url.pathname).toBe("/skymap-vector.html");
+    expect(url.searchParams.get("build")).toBe(__SSC_SKYMAP_REV__);
+    expect(url.searchParams.get("build")).toMatch(/^[a-f0-9]{40}$/);
+    expect(url.searchParams.size).toBe(1);
+  });
 });
 
 

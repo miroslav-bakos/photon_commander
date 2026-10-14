@@ -268,7 +268,7 @@ export function SkyMap({
   const stack = useThemeColor("--ssc-stack");
   const envelope = useThemeColor("--ssc-envelope");
   const pointing = useThemeColor("--ssc-pointing");
-  const src = `${FRAME_SRC}?${new URLSearchParams({
+  const src = `${FRAME_SRC}${FRAME_SRC.includes("?") ? "&" : "?"}${new URLSearchParams({
     bg,
     fg,
     fgMuted,

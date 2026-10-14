@@ -27,7 +27,7 @@
 import { IframeSkyMapBackend, type IframeSkyMapBackendOptions, type SkyMapFrameHandle } from "./IframeSkyMapBackend";
 import type { SkyMapBackend } from "./types";
 
-export const VECTOR_FRAME_SRC = "/skymap-vector.html";
+export const VECTOR_FRAME_SRC = `/skymap-vector.html?build=${encodeURIComponent(__SSC_SKYMAP_REV__)}`;
 
 export function createVectorSkyMapBackend(
   frame: SkyMapFrameHandle,
