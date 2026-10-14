@@ -13,7 +13,7 @@ function setup(key = "original") {
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
   const view = (framingKey: string) => <QueryClientProvider client={client}><ReferenceImageFraming framingKey={framingKey} onSolved={onSolved} /></QueryClientProvider>;
   const rendered = render(view(key));
-  const upload = (file = new File(["pixels"], "reference.fits")) => fireEvent.change(screen.getByLabelText(/Frame from picture/), { target: { files: [file] } });
+  const upload = (file = new File(["pixels"], "reference.fits")) => fireEvent.change(screen.getByLabelText(/^Frame from picture$/), { target: { files: [file] } });
   mocks.fetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({ id: "operation" }) });
   return { ...rendered, onSolved, upload, view };
 }
@@ -24,6 +24,7 @@ it("shows loading then applies exact solved coordinates", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Solve and place blue FOV" }));
   expect(await screen.findByText("Plate solving reference image")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Solving picture…" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Browse" })).toBeDisabled();
   await act(async () => { finish(solution); await Promise.resolve(); });
   await waitFor(() => { expect(test.onSolved).toHaveBeenCalledWith(23.123456, -45.654321); });
   expect(screen.getByText("Solved position applied.")).toBeInTheDocument();
@@ -60,4 +61,17 @@ it("rejects an oversized upload before sending any pixels", async () => {
   if (!button.hasAttribute("disabled")) fireEvent.click(button);
   expect(await screen.findByRole("alert")).toHaveTextContent(/64 MiB/);
   expect(mocks.fetch).not.toHaveBeenCalled(); expect(test.onSolved).not.toHaveBeenCalled();
+});
+
+it("offers an accessible browse button and names the selected file", () => {
+  const test = setup();
+  const input = screen.getByLabelText(/^Frame from picture$/);
+  const browse = vi.spyOn(input, "click");
+  expect(screen.getByText("No file selected.")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Browse" }));
+  expect(browse).toHaveBeenCalledOnce();
+  test.upload();
+  expect(screen.getByText("reference.fits")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Solve and place blue FOV" })).toBeEnabled();
+  browse.mockRestore();
 });

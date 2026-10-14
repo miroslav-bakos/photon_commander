@@ -10,6 +10,7 @@ export function ReferenceImageFraming({ framingKey, onSolved }: {
   framingKey: string;
   onSolved: (raH: number, decDeg: number) => void;
 }) {
+  const fileInput = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [applied, setApplied] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -34,11 +35,12 @@ export function ReferenceImageFraming({ framingKey, onSolved }: {
       if (current.current.mounted && current.current.framingKey === original) apply(solution);
     } catch { /* mutation owns the visible error */ }
   };
-  return <Card>
-    <label className="flex flex-col gap-2 text-sm">
-      <span className="font-semibold">Frame from picture</span>
-      <span className="text-xs text-fg-muted">Upload FITS, PNG or JPEG to move the blue FOV to its plate-solved position.</span>
-      <input type="file" accept=".fits,.fit,.fts,.png,.jpg,.jpeg" disabled={solve.isPending}
+  return <Card title="Frame from picture" collapseKey="planning.reference-image" defaultAfter="planning.target">
+    <p className="text-xs text-fg-muted">Upload FITS, PNG or JPEG to move the blue FOV to its plate-solved position.</p>
+    <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
+      <Button disabled={solve.isPending} onClick={() => { fileInput.current?.click(); }}>Browse</Button>
+      <span className="min-w-0 break-all text-xs text-fg-muted" aria-live="polite">{file?.name ?? "No file selected."}</span>
+      <input ref={fileInput} hidden aria-label="Frame from picture" type="file" accept=".fits,.fit,.fts,.png,.jpg,.jpeg" disabled={solve.isPending}
         onChange={(event) => {
           const selected = event.currentTarget.files?.[0] ?? null;
           const tooLarge = selected !== null && selected.size > 64 * 1024 * 1024;
@@ -46,7 +48,7 @@ export function ReferenceImageFraming({ framingKey, onSolved }: {
           setFileError(tooLarge ? "Reference image is larger than 64 MiB." : null);
           solve.reset(); setApplied(false);
         }} />
-    </label>
+    </div>
     <div className="mt-2 flex flex-wrap items-center gap-2">
       <Button disabled={file === null || solve.isPending} onClick={() => { void submit(); }}>
         {solve.isPending ? "Solving picture…" : "Solve and place blue FOV"}

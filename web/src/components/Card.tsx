@@ -20,6 +20,7 @@ export function Card({
   collapseKey,
   layoutId,
   layoutLabel,
+  defaultAfter,
   resizableHeight = false,
   defaultCollapsed = false,
   ...rest
@@ -32,6 +33,8 @@ export function Card({
   /** Name used by layout-editor controls when the card has no visible title
    * (for example the Planning skymap). */
   layoutLabel?: string;
+  /** Follow this card's saved placement until this card is explicitly moved. */
+  defaultAfter?: string;
   /** Show a per-card height handle while the layout editor is unlocked. */
   resizableHeight?: boolean;
   defaultCollapsed?: boolean;
@@ -47,12 +50,17 @@ export function Card({
   const cardId = layoutId ?? collapseKey ?? rest.id ?? (slug(label) || `card-${instanceId}`);
   const customizable = route.enabled && cardId !== "";
   const placement = useLayoutStore((state) => state.saved.tabs[route.tab]?.cards[cardId]);
+  const anchorPlacement = useLayoutStore((state) =>
+    defaultAfter !== undefined && placement?.panel === undefined && placement?.order === undefined
+      ? state.saved.tabs[route.tab]?.cards[defaultAfter] : undefined);
+  // CSS order only accepts integers; reserve odd slots for newly anchored cards.
+  const defaultOrder = anchorPlacement?.order === undefined ? undefined : anchorPlacement.order * 2 + 1;
   const tabCustomized = useLayoutStore((state) => Object.keys(state.saved.tabs[route.tab]?.cards ?? {}).length > 0);
   const setCollapsed = useLayoutStore((state) => state.setCollapsed);
   const placeCards = useLayoutStore((state) => state.placeCards);
   const setCardHeight = useLayoutStore((state) => state.setCardHeight);
   const collapsed = placement?.collapsed ?? readLegacyCollapsed(collapseKey, defaultCollapsed);
-  const destination = placement?.panel ?? board.defaultPanel;
+  const destination = placement?.panel ?? anchorPlacement?.panel ?? board.defaultPanel;
   const target = destination === undefined ? undefined : board.panels?.[destination];
   const foldable = title !== undefined && collapseKey !== undefined;
   const pointerDrag = useRef<{ pointerId: number; startX: number; startY: number } | null>(null);
@@ -165,7 +173,7 @@ export function Card({
       className={`ssc-card relative rounded-lg border border-border bg-surface shadow-[0_1px_0_var(--color-shadow)] ${padded ? "p-4" : ""} ${unlocked && customizable ? "ring-1 ring-accent/60" : ""} ${collapsed ? "h-auto min-h-0 self-start" : ""} ${height === undefined ? "" : "overflow-y-auto"} ${className}`}
       data-layout-card-id={customizable ? cardId : undefined}
       data-layout-panel={destination}
-      style={{ ...rest.style, ...(height === undefined ? {} : { height, flex: "none" }), ...(customizable && (placement?.order !== undefined || tabCustomized) ? { order: placement?.order ?? 1000 } : {}) }}
+      style={{ ...rest.style, ...(height === undefined ? {} : { height, flex: "none" }), ...(customizable && (placement?.order !== undefined || defaultOrder !== undefined || tabCustomized) ? { order: placement?.order === undefined ? defaultOrder ?? 2000 : placement.order * 2 } : {}) }}
       onDragOver={unlocked && customizable ? (event) => { event.preventDefault(); } : rest.onDragOver}
       onDrop={unlocked && customizable ? dropBefore : rest.onDrop}
     >
@@ -231,7 +239,7 @@ export function Card({
   // reordered card inside its original wrapper makes CSS `order` local to
   // that wrapper and is why Night summary and several other cards appeared
   // immovable even though their saved order changed.
-  const hasExplicitPanelPlacement = placement?.panel !== undefined;
+  const hasExplicitPanelPlacement = placement?.panel !== undefined || anchorPlacement?.panel !== undefined;
   return target === undefined || !customizable || !hasExplicitPanelPlacement ? card : createPortal(card, target);
 }
 

@@ -27,7 +27,11 @@ vi.mock("../../api/focuser", () => ({ useFocuserPositionQuery: vi.fn(), useAutof
 vi.mock("../../api/filterwheel", () => ({ useFilterWheelQuery: vi.fn() }));
 vi.mock("../../api/heater", () => ({ useHeaterQuery: vi.fn() }));
 vi.mock("../../api/weather", () => ({ useForecastQuery: vi.fn(), nearestForecastPoint: (points: unknown[]) => points[0] ?? null }));
-vi.mock("../../api/settings", () => ({ useCaptureDitherSettingsQuery: vi.fn() }));
+vi.mock("../../api/settings", () => ({
+  useCaptureDitherSettingsQuery: vi.fn(),
+  useSettingsQuery: () => ({ data: { appearance: { workflow_guide_visible: true } } }),
+  useSetAppearanceMutation: () => ({ isPending: false, mutate: vi.fn() }),
+}));
 vi.mock("../../api/capture", () => ({
   useCaptureState: vi.fn(),
   useCaptureFramesQuery: vi.fn(),
@@ -287,22 +291,22 @@ describe("DashboardTab", () => {
     expect(region.querySelector('[data-layout-card-id="observing-now"]')).not.toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Move Mount down" }));
-    expect(useLayoutStore.getState().saved.tabs["/dashboard"]?.cards.mount?.order).toBe(1);
-    expect(useLayoutStore.getState().saved.tabs["/dashboard"]?.cards.focuser?.order).toBe(0);
-    expect(screen.getByLabelText("Mount connected").closest<HTMLElement>("[data-layout-card-id]")?.style.order).toBe("1");
+    expect(useLayoutStore.getState().saved.tabs["desktop:/dashboard"]?.cards.mount?.order).toBe(1);
+    expect(useLayoutStore.getState().saved.tabs["desktop:/dashboard"]?.cards.focuser?.order).toBe(0);
+    expect(screen.getByLabelText("Mount connected").closest<HTMLElement>("[data-layout-card-id]")?.style.order).toBe("2");
 
     view.unmount();
     renderWithQueryClient(editableDashboard());
-    expect(screen.getByLabelText("Mount connected").closest<HTMLElement>("[data-layout-card-id]")?.style.order).toBe("1");
+    expect(screen.getByLabelText("Mount connected").closest<HTMLElement>("[data-layout-card-id]")?.style.order).toBe("2");
   });
 
   it("moves Observing now within the equipment grid using its existing layout ID", () => {
     useLayoutStore.getState().setUnlocked(true);
     renderWithQueryClient(editableDashboard());
     fireEvent.click(screen.getByRole("button", { name: "Move Observing now up" }));
-    expect(useLayoutStore.getState().saved.tabs["/dashboard"]?.cards["observing-now"]?.order).toBe(8);
+    expect(useLayoutStore.getState().saved.tabs["desktop:/dashboard"]?.cards["observing-now"]?.order).toBe(8);
     const grid = screen.getByRole("region", { name: "Observatory status" });
-    expect(grid.querySelector<HTMLElement>('[data-layout-card-id="observing-now"]')?.style.order).toBe("8");
+    expect(grid.querySelector<HTMLElement>('[data-layout-card-id="observing-now"]')?.style.order).toBe("16");
   });
 
   it("pointer-drags a dashboard card to a new grid position", () => {
@@ -317,8 +321,8 @@ describe("DashboardTab", () => {
     const handle = within(mountCard).getByTitle("Drag this card");
     fireEvent.pointerDown(handle, { pointerId: 7, button: 0, clientX: 200, clientY: 300 });
     fireEvent.pointerUp(handle, { pointerId: 7, button: 0, clientX: 200, clientY: 200 });
-    expect(useLayoutStore.getState().saved.tabs["/dashboard"]?.cards.mount?.order).toBe(1);
-    expect(useLayoutStore.getState().saved.tabs["/dashboard"]?.cards.focuser?.order).toBe(0);
+    expect(useLayoutStore.getState().saved.tabs["desktop:/dashboard"]?.cards.mount?.order).toBe(1);
+    expect(useLayoutStore.getState().saved.tabs["desktop:/dashboard"]?.cards.focuser?.order).toBe(0);
   });
 
   it("opens the exact Telescope control card from a dashboard status card", () => {

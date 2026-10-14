@@ -205,7 +205,7 @@ describe("SkyMap display options", () => {
 
   it("keeps the same warm iframe when layout placement moves the skymap card", async () => {
     stubFetch();
-    useLayoutStore.getState().resetTab("/planning");
+    useLayoutStore.getState().resetTab("desktop:/planning");
     hoisted.frames.length = 0;
     renderWithQueryClient(
       <MemoryRouter initialEntries={["/planning"]}>
@@ -215,14 +215,14 @@ describe("SkyMap display options", () => {
     await waitFor(() => { expect(hoisted.frames.length).toBeGreaterThan(0); });
     const firstFrame = hoisted.frames.at(-1);
     const attachmentsBeforeMove = hoisted.frames.length;
-    act(() => { useLayoutStore.getState().placeCards("/planning", "secondary", ["sky-map"]); });
+    act(() => { useLayoutStore.getState().placeCards("desktop:/planning", "secondary", ["sky-map"]); });
     await waitFor(() => {
       const liveFrame = screen.getByTitle("Sky map");
       expect(liveFrame).toBe(firstFrame);
       expect(hoisted.frames.at(-1)).toBe(liveFrame);
       expect(hoisted.frames.length).toBeGreaterThan(attachmentsBeforeMove);
     });
-    useLayoutStore.getState().resetTab("/planning");
+    useLayoutStore.getState().resetTab("desktop:/planning");
   });
 
   it("navigates the connected iframe after a fallback DOM attachment", () => {

@@ -45,6 +45,21 @@ interface LayoutState {
 
 export const LAYOUT_STORAGE_KEY = "ssc.layout.v1";
 
+/** Preserve legacy positions in both views; explicit responsive entries win.
+ * Removing legacy keys makes resetting one view permanent (no fallback revival).
+ */
+export function splitResponsiveLayouts(saved: SavedLayouts): SavedLayouts {
+  const tabs = Object.fromEntries(Object.entries(saved.tabs).filter(([tab]) => tab.startsWith("desktop:") || tab.startsWith("mobile:")));
+  for (const [tab, layout] of Object.entries(saved.tabs)) {
+    if (tab.startsWith("desktop:") || tab.startsWith("mobile:")) continue;
+    for (const viewport of ["desktop", "mobile"]) {
+      const key = `${viewport}:${tab}`;
+      if (!Object.hasOwn(tabs, key)) tabs[key] = layout;
+    }
+  }
+  return { version: 1, tabs };
+}
+
 function updateTab(
   saved: SavedLayouts,
   tab: string,
@@ -129,12 +144,23 @@ export const useLayoutStore = create<LayoutState>()(
         });
       },
       resetAll: () => { set({ saved: { version: 1, tabs: {} } }); },
-      replaceSaved: (saved) => { set({ saved }); },
+      replaceSaved: (saved) => { set({ saved: splitResponsiveLayouts(saved) }); },
     }),
     {
       name: LAYOUT_STORAGE_KEY,
       version: 1,
       storage: createJSONStorage(safeLocalStorage),
+      merge: (persisted, current) => {
+        const restored = persisted as { saved?: unknown } | undefined;
+        try {
+          const saved = validateSavedLayouts(restored?.saved);
+          return { ...current, saved: splitResponsiveLayouts(saved) };
+        } catch {
+          // Broken optional browser storage must not prevent startup or erase
+          // a usable layout already held in memory.
+          return current;
+        }
+      },
       partialize: (state) => ({ saved: state.saved }),
     },
   ),

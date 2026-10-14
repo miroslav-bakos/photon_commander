@@ -57,7 +57,7 @@ describe("customizable layouts", () => {
     expect(screen.getByRole("heading", { name: "Alpha" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Collapse Alpha" }));
     expect(screen.queryByText("Alpha body")).not.toBeInTheDocument();
-    expect(useLayoutStore.getState().saved.tabs["/capture"]?.cards.alpha?.collapsed).toBe(true);
+    expect(useLayoutStore.getState().saved.tabs["desktop:/capture"]?.cards.alpha?.collapsed).toBe(true);
     const collapsedButton = screen.getByRole("button", { name: /Alpha/ });
     expect(collapsedButton.closest("[data-layout-card-id]")).toHaveClass("h-auto", "min-h-0", "self-start");
 
@@ -85,7 +85,7 @@ describe("customizable layouts", () => {
     useLayoutStore.getState().setUnlocked(true);
     const handle = await screen.findByRole("button", { name: /resize night timeline height/i });
     fireEvent.keyDown(handle, { key: "ArrowDown" });
-    expect(useLayoutStore.getState().saved.tabs["/planning"]?.cards["planning.timeline"]?.height).toBe(320);
+    expect(useLayoutStore.getState().saved.tabs["desktop:/planning"]?.cards["planning.timeline"]?.height).toBe(320);
     expect(screen.getByText("Chart").closest("[data-layout-card-id]")).toHaveStyle({ height: "320px" });
     expect(validateSavedLayouts(useLayoutStore.getState().saved)).toEqual(useLayoutStore.getState().saved);
     useLayoutStore.getState().setUnlocked(false);
@@ -106,17 +106,17 @@ describe("customizable layouts", () => {
     await waitFor(() => {
       expect(screen.getByText("Alpha body").closest("[data-layout-card-id]")).toHaveAttribute("data-layout-panel", "detail");
     });
-    expect(useLayoutStore.getState().saved.tabs["/capture"]?.cards.alpha?.panel).toBe("detail");
+    expect(useLayoutStore.getState().saved.tabs["desktop:/capture"]?.cards.alpha?.panel).toBe("detail");
   });
 
   it("supports button-based ordering for touch screens and saves collapse state", async () => {
     useLayoutStore.getState().setUnlocked(true);
     render(<Board />);
     fireEvent.click(await screen.findByRole("button", { name: "Move Alpha down" }));
-    expect(useLayoutStore.getState().saved.tabs["/capture"]?.cards.alpha?.order).toBe(1);
+    expect(useLayoutStore.getState().saved.tabs["desktop:/capture"]?.cards.alpha?.order).toBe(1);
     fireEvent.click(screen.getByRole("button", { name: "Collapse Alpha" }));
     expect(screen.queryByText("Alpha body")).not.toBeInTheDocument();
-    expect(useLayoutStore.getState().saved.tabs["/capture"]?.cards.alpha?.collapsed).toBe(true);
+    expect(useLayoutStore.getState().saved.tabs["desktop:/capture"]?.cards.alpha?.collapsed).toBe(true);
   });
 
   it("reorders Night summary through Planning-style nested wrappers", async () => {
@@ -125,8 +125,8 @@ describe("customizable layouts", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "Move Night summary up" }));
 
-    expect(useLayoutStore.getState().saved.tabs["/planning"]?.cards["night-summary"]?.order).toBe(0);
-    expect(useLayoutStore.getState().saved.tabs["/planning"]?.cards.target?.order).toBe(1);
+    expect(useLayoutStore.getState().saved.tabs["desktop:/planning"]?.cards["night-summary"]?.order).toBe(0);
+    expect(useLayoutStore.getState().saved.tabs["desktop:/planning"]?.cards.target?.order).toBe(1);
     expect(screen.getByText("Night body").closest("[data-layout-card-id]")?.parentElement).toHaveAttribute("data-layout-panel-target", "primary");
   });
 
@@ -146,8 +146,8 @@ describe("customizable layouts", () => {
     fireEvent.pointerDown(handle, { pointerId: 7, button: 0, clientX: 200, clientY: 300 });
     fireEvent.pointerUp(handle, { pointerId: 7, button: 0, clientX: 200, clientY: 200 });
 
-    expect(useLayoutStore.getState().saved.tabs["/planning"]?.cards["night-summary"]?.order).toBe(0);
-    expect(useLayoutStore.getState().saved.tabs["/planning"]?.cards.target?.order).toBe(1);
+    expect(useLayoutStore.getState().saved.tabs["desktop:/planning"]?.cards["night-summary"]?.order).toBe(0);
+    expect(useLayoutStore.getState().saved.tabs["desktop:/planning"]?.cards.target?.order).toBe(1);
   });
 
   it("gives a titleless skymap card edit chrome and controls", async () => {
@@ -171,16 +171,16 @@ describe("customizable layouts", () => {
     useLayoutStore.getState().setUnlocked(true);
     render(<Board />);
     fireEvent.click(await screen.findByRole("button", { name: "Move Beta down" }));
-    expect(useLayoutStore.getState().saved.tabs["/capture"]?.cards.beta?.panel).toBe("secondary");
-    expect(useLayoutStore.getState().saved.tabs["/capture"]?.cards.beta?.order).toBe(0);
+    expect(useLayoutStore.getState().saved.tabs["desktop:/capture"]?.cards.beta?.panel).toBe("secondary");
+    expect(useLayoutStore.getState().saved.tabs["desktop:/capture"]?.cards.beta?.order).toBe(0);
   });
 
   it("stops desktop arrow ordering at the selected panel boundary", async () => {
-    vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: true })));
+    vi.stubGlobal("matchMedia", vi.fn((query: string) => ({ matches: query === "(min-width: 640px)", addEventListener: () => undefined, removeEventListener: () => undefined })));
     useLayoutStore.getState().setUnlocked(true);
     render(<Board />);
     fireEvent.click(await screen.findByRole("button", { name: "Move Timeline up" }));
-    expect(useLayoutStore.getState().saved.tabs["/capture"]?.cards.timeline).toBeUndefined();
+    expect(useLayoutStore.getState().saved.tabs["desktop:/capture"]?.cards.timeline).toBeUndefined();
     expect(screen.getByText("Timeline body").closest("[data-layout-card-id]")).toHaveAttribute("data-layout-panel", "detail");
   });
 
@@ -193,7 +193,7 @@ describe("customizable layouts", () => {
   it("persists collapsed side panels per screen", () => {
     render(<Board />);
     fireEvent.click(screen.getByRole("button", { name: "Hide the left panel" }));
-    expect(useLayoutStore.getState().saved.tabs["/capture"]?.primaryCollapsed).toBe(true);
+    expect(useLayoutStore.getState().saved.tabs["desktop:/capture"]?.primaryCollapsed).toBe(true);
   });
 
   it("places directional pane toggles at the measured inter-panel gutter centers", async () => {
@@ -251,8 +251,8 @@ describe("customizable layouts", () => {
   });
 
   it("uses persisted panel widths", () => {
-    useLayoutStore.getState().setPanelWidth("/capture", "primary", 410);
-    useLayoutStore.getState().setPanelWidth("/capture", "detail", 470);
+    useLayoutStore.getState().setPanelWidth("desktop:/capture", "primary", 410);
+    useLayoutStore.getState().setPanelWidth("desktop:/capture", "detail", 470);
     const { container } = render(<Board />);
     const grid = container.querySelector<HTMLElement>("[data-panes]");
     expect(grid?.style.getPropertyValue("--ssc-pane-cols-lg")).toContain("410px");
@@ -262,7 +262,7 @@ describe("customizable layouts", () => {
   it("keeps fill panels tall and persists an explicit panel height", async () => {
     const { container } = render(<Board />);
     expect(container.querySelector('[data-layout-panel-target="secondary"]')).toHaveClass("h-full", "min-h-0");
-    useLayoutStore.getState().setPanelHeight("/capture", "secondary", 640);
+    useLayoutStore.getState().setPanelHeight("desktop:/capture", "secondary", 640);
     await waitFor(() => {
       expect(container.querySelector<HTMLElement>('[data-layout-panel-target="secondary"]')?.style.getPropertyValue("--ssc-panel-height")).toBe("640px");
     });

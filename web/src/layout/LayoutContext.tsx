@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Miroslav Bakoš
 /* eslint-disable react-refresh/only-export-components -- providers and their hooks form one context API */
 
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useSyncExternalStore, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import type { LayoutPanel } from "./layoutStore";
 
@@ -19,10 +19,25 @@ interface LayoutBoardContextValue {
 const LayoutRouteContext = createContext<LayoutRouteContextValue>({ enabled: false, tab: "global" });
 const LayoutBoardContext = createContext<LayoutBoardContextValue>({});
 
+// Matches TabNav's desktop boundary. One provider scopes every layout consumer.
+export const MOBILE_LAYOUT_QUERY = "(max-width: 767px)";
+
+function subscribeViewport(onChange: () => void) {
+  if (typeof window.matchMedia !== "function") return () => undefined;
+  const query = window.matchMedia(MOBILE_LAYOUT_QUERY);
+  query.addEventListener("change", onChange);
+  return () => { query.removeEventListener("change", onChange); };
+}
+
+function isMobileViewport() {
+  return typeof window.matchMedia === "function" && window.matchMedia(MOBILE_LAYOUT_QUERY).matches;
+}
+
 export function LayoutRouteProvider({ children, tab }: { children: ReactNode; tab?: string }) {
   const location = useLocation();
+  const mobile = useSyncExternalStore(subscribeViewport, isMobileViewport, () => false);
   return (
-    <LayoutRouteContext.Provider value={{ enabled: true, tab: tab ?? location.pathname }}>
+    <LayoutRouteContext.Provider value={{ enabled: true, tab: `${mobile ? "mobile" : "desktop"}:${tab ?? location.pathname}` }}>
       {children}
     </LayoutRouteContext.Provider>
   );

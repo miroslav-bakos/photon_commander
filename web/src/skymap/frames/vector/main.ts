@@ -62,20 +62,14 @@
  * `screenToWorld` regardless of backend — reused directly here for the
  * canvas's own drawing math rather than re-derived. Whenever a site and
  * instant are known, `currentViewport()` also attaches a `CoordTransform`
- * (`shared/sidereal.ts`'s `horizontalCoordTransform`) that remaps every
- * RA/Dec through alt/az before the same gnomonic maths runs — a *true*
- * horizontal projection, flat edge to edge, unlike WWT's roll-only
- * approximation (level only at the view centre) before it was removed
- * (`THIRD_PARTY_NOTICES.md` §9). Every consumer of `Viewport` (drawing, label
- * placement, `shared/fovDrag.ts`'s hit-testing, `shared/objectPick.ts`'s
- * click-picking, `shared/panZoom.ts`'s pan/zoom) goes through this one seam,
- * so none of them needed to change.
+ * from `shared/horizontalCamera.ts` that rotates RA/Dec into a persistent
+ * horizontal camera frame before the same gnomonic maths runs. Its basis
+ * remains continuous through zenith. Drawing, labels, FOV hit-testing and
+ * catalogue picking all use this same viewport.
  *
- * Pan/zoom: this frame owns its camera outright (no engine underneath it to
- * delegate to), so anchor-preserving zoom and click-drag panning are both
- * solved synchronously and exactly by `shared/panZoom.ts`'s
- * `centerForAnchor` — see that file's own doc comment for why this needs no
- * asynchronous re-anchoring the way WWT's own `zoomAbout` did.
+ * Pan/zoom: horizontal gestures rotate the whole camera frame to preserve
+ * the pointer anchor, without iterative longitude/latitude corrections.
+ * Unsited equatorial views retain `shared/panZoom.ts`'s existing solver.
  */
 import {
   circleWorldVertices,
@@ -84,7 +78,6 @@ import {
   rectWorldCorners,
   screenToWorld,
   worldToScreen,
-  type CoordTransform,
   type Viewport,
 } from "../../projection";
 import type { SurveyCredit,
@@ -104,14 +97,18 @@ import { pickCatalogObjectId } from "../shared/objectPick";
 import { centerForAnchor, zoomAboutScreenPoint } from "../shared/panZoom";
 import { makeRoleColorResolver, resolveShapeStyle } from "../shared/roleStyle";
 import {
-  altAzFromProjected,
-  altAzToRaDec,
-  horizontalCoordTransform,
-  projectedFromAltAz,
   raDecToAltAz,
   type SiteInstant,
 } from "../shared/sidereal";
 import { heldTargetNeedsReanchor } from "./cameraContinuity";
+import {
+  createHorizontalCamera,
+  horizontalCameraViewport,
+  horizontalCameraCenter,
+  panHorizontalCameraToSkyPoint,
+  zoomHorizontalCamera,
+  type HorizontalCamera,
+} from "../shared/horizontalCamera";
 import {
   altAzGridShapes,
   altitudeLimitCircleShape,
@@ -215,55 +212,13 @@ let heightPx = 600;
 let horizonSite: { latitudeDeg: number; longitudeDeg: number } | null = null;
 let horizonInstant: Date | null = null;
 
-/**
- * The camera's own altitude/azimuth, authoritative for *orientation*
- * whenever a horizontal `CoordTransform` is active — `null` exactly when it
- * is not (no site/instant known yet).
- *
- * This exists because `view.ra`/`view.dec` (equatorial) cannot be the
- * authoritative state for a horizontal view: every draw, pan and zoom used
- * to derive the tangent plane's orientation by calling `raDecToAltAz` afresh
- * on `view.ra`/`view.dec` each time, and azimuth is ill-conditioned near the
- * zenith — a fraction of a degree of camera motion there swings the computed
- * azimuth by tens of degrees, and crossing the true zenith flips it by
- * ~180deg (verified directly: sweeping the camera through the site's zenith
- * showed azimuth jump from 180 to 0 in a single 0.02deg dec step, and a real
- * one-pixel drag through zenith made the view jump backward by about a
- * degree — `centerForAnchor`'s fixed-point iteration re-deriving azimuth
- * from its own *evolving* guess on every pass, which is the same
- * ill-conditioned inverse, one level deeper). That produced all three
- * symptoms reported: rotation near zenith with no actual camera motion,
- * Polaris (or any reference point) jumping sides, and the alt-az grid/
- * horizon — built the same way — jittering with it.
- *
- * The fix: track alt/az here directly, update it only via operations that
- * are themselves continuous (pan/zoom iterated in projected — i.e. already
- * alt/az — space via `centerForAnchorHorizontal`/`zoomAboutScreenPointHorizontal`
- * below, or the scrubber holding it exactly fixed while re-deriving `view.ra`/
- * `view.dec` at the new instant in `applyDisplay`), and never recompute it
- * from `view.ra`/`view.dec` except at the one genuinely discontinuous
- * transition each of these already was anyway: a `goto` (an external command
- * to point somewhere new) or the horizontal view's own first activation this
- * session (there is no continuous history yet to preserve). `view.ra`/
- * `view.dec` become a *mirror* of this, refreshed via the always-continuous
- * forward transform `altAzToRaDec` — never the reverse — by
- * `syncViewFromHzCamera` below.
- *
- * One residual case is *not* fixable by any of this, and is not a bug: a
- * drag (or zoom) whose requested path takes the camera exactly *through*
- * the true zenith — not just near it — forces a real ~180deg azimuth
- * relabelling at the single frame the boresight is exactly overhead, the
- * same "meridian flip" a real alt-az mount shows crossing zenith (no
- * continuous assignment of "which way is up" exists at a sphere's own pole —
- * `panZoom.ts`'s `wrapOverPole` still keeps altitude itself continuous
- * through that frame, no backward jump or pinning the way this bug used to
- * show; only the arbitrary orientation label changes, once, exactly at the
- * crossing). Verified directly: a path that comes within 0.1deg of zenith
- * *without* crossing it shows no jump larger than its own step size (this
- * file's own zenith-fix verification); a path *through* it shows exactly one
- * clean flip, never more than one, never a backward or repeated one.
- */
-let hzCamera: { altDeg: number; azDeg: number } | null = null;
+/** The horizontal camera owns a continuous Cartesian screen basis as well
+ * as its altitude/azimuth centre. A centre alone loses screen orientation
+ * at the zenith: normalizing across the pole flips the tangent plane, and
+ * recreating azimuth from equatorial coordinates makes it arbitrary there.
+ * Pan and zoom rotate this whole basis; draw and pick use it unchanged.
+ * Only a goto or first activation seeds a fresh horizon-up orientation. */
+let hzCamera: HorizontalCamera | null = null;
 
 /** `null`/`undefined` when `site`/`instant` are not both known (no Planning
  * location, or no resolved session instant yet) — the horizontal view is not
@@ -275,104 +230,12 @@ function currentSiteInstant(): SiteInstant | null {
   return { ...horizonSite, instant: horizonInstant };
 }
 
-/** `undefined` — the ordinary equatorial projection, byte-identical to
- * before this existed — only when `currentSiteInstant()` is `null`. */
-function currentCoordTransform(): CoordTransform | undefined {
-  const site = currentSiteInstant();
-  return site === null ? undefined : horizontalCoordTransform(site);
-}
-
-/** Refreshes `view.ra`/`view.dec` from `hzCamera`, the *only* direction this
- * ever flows while a horizontal camera exists — see `hzCamera`'s own doc
- * comment for why the reverse (deriving alt/az from `view.ra`/`view.dec`)
- * is what caused the zenith jump. `altAzToRaDec` is a plain forward
- * transform of an already-known, already-continuous (altDeg, azDeg) pair, so
- * this introduces no discontinuity of its own. */
+/** Refresh the equatorial mirror from the camera's forward vector. The
+ * full screen basis remains authoritative in `hzCamera`. */
 function syncViewFromHzCamera(site: SiteInstant): void {
   if (hzCamera === null) return;
-  const [ra, dec] = altAzToRaDec(hzCamera.altDeg, hzCamera.azDeg, site);
+  const [ra, dec] = horizontalCameraCenter(hzCamera, site);
   view = { ...view, ra, dec };
-}
-
-/**
- * `centerForAnchor` (`panZoom.ts`) is generic gnomonic maths over whatever
- * pair of angle-like coordinates it is handed (`projection.ts`'s own doc
- * comment) — called here with the anchor and result *already* projected
- * (negated-azimuth, altitude) and no `CoordTransform`, instead of handing it
- * a `CoordTransform` and equatorial (ra, dec) the way the non-horizontal
- * path does. The difference matters exactly at the zenith: handed a
- * `CoordTransform`, every one of the iteration's passes re-derives azimuth
- * from that pass's own *evolving* (ra, dec) guess via `raDecToAltAz` — the
- * same ill-conditioned inverse `hzCamera`'s doc comment describes, one level
- * deeper, and the direct cause of the one-pixel backward jump found while
- * reproducing this bug. Converting the anchor to projected space once,
- * iterating there, and converting the result back once removes every
- * intermediate call to that inverse.
- *
- * Seeded from the *current* `hzCamera` (`centerForAnchor`'s own
- * `initialGuess`), not left to default to the anchor's position: at the
- * exact pole every azimuth describes the same point, so restarting from the
- * anchor on every call — which barely moves between calls, while the
- * *target* screen position does — could converge to a different arbitrary
- * azimuth each time even though the camera itself was continuous, which is
- * precisely the one-frame jump a real drag through the exact zenith
- * otherwise still shows. Warm-starting from where the camera already is
- * makes the pole a stable fixed point instead. */
-function centerForAnchorHorizontal(
-  fovDeg: number,
-  anchorAltDeg: number,
-  anchorAzDeg: number,
-  screenX: number,
-  screenY: number,
-): { altDeg: number; azDeg: number } {
-  const [anchorProjRa, anchorProjDec] = projectedFromAltAz(anchorAltDeg, anchorAzDeg);
-  let initialGuess: { ra: number; dec: number } | undefined;
-  if (hzCamera !== null) {
-    const [ra, dec] = projectedFromAltAz(hzCamera.altDeg, hzCamera.azDeg);
-    initialGuess = { ra, dec };
-  }
-  const center = centerForAnchor(
-    fovDeg,
-    widthPx,
-    heightPx,
-    anchorProjRa,
-    anchorProjDec,
-    screenX,
-    screenY,
-    undefined,
-    initialGuess,
-  );
-  const [altDeg, azDeg] = altAzFromProjected(center.ra, center.dec);
-  return { altDeg, azDeg };
-}
-
-/** `zoomAboutScreenPoint`'s own horizontal-space counterpart, for the same
- * reason `centerForAnchorHorizontal` above exists: zoom re-anchors through
- * `centerForAnchor` internally, so it needs the same projected-space
- * treatment to stay continuous through the zenith. */
-function zoomAboutScreenPointHorizontal(
-  altDeg: number,
-  azDeg: number,
-  fovDeg: number,
-  screenX: number,
-  screenY: number,
-  factor: number,
-  minFovDeg: number,
-  maxFovDeg: number,
-): { altDeg: number; azDeg: number; fovDeg: number } {
-  const [projRa, projDec] = projectedFromAltAz(altDeg, azDeg);
-  const zoomed = zoomAboutScreenPoint(
-    { ra: projRa, dec: projDec, fovDeg },
-    widthPx,
-    heightPx,
-    screenX,
-    screenY,
-    factor,
-    minFovDeg,
-    maxFovDeg,
-  );
-  const [newAltDeg, newAzDeg] = altAzFromProjected(zoomed.ra, zoomed.dec);
-  return { altDeg: newAltDeg, azDeg: newAzDeg, fovDeg: zoomed.fovDeg };
 }
 
 /** Zooms by `factor` about (`screenX`, `screenY`), updating `view`/`hzCamera`
@@ -382,17 +245,18 @@ function zoomAboutScreenPointHorizontal(
 function zoomBy(screenX: number, screenY: number, factor: number): void {
   const siteInstant = currentSiteInstant();
   if (hzCamera !== null && siteInstant !== null) {
-    const zoomed = zoomAboutScreenPointHorizontal(
-      hzCamera.altDeg,
-      hzCamera.azDeg,
+    const zoomed = zoomHorizontalCamera(
+      hzCamera,
       view.fovDeg,
+      widthPx,
+      heightPx,
       screenX,
       screenY,
       factor,
       MIN_FOV_DEG,
       MAX_FOV_DEG,
     );
-    hzCamera = { altDeg: zoomed.altDeg, azDeg: zoomed.azDeg };
+    hzCamera = zoomed.camera;
     syncViewFromHzCamera(siteInstant);
     view = { ...view, fovDeg: zoomed.fovDeg };
   } else {
@@ -401,18 +265,15 @@ function zoomBy(screenX: number, screenY: number, factor: number): void {
   publishViewChange();
 }
 
-/** Pans so that the fixed sky point (`anchorRaDeg`, `anchorDecDeg`) — the
- * point that was under the pointer when this gesture started — sits at
- * (`screenX`, `screenY`) now, at `fovDeg`. Updates `view`/`hzCamera` and
- * publishes, the same shared-branch reasoning as `zoomBy` above. The anchor
- * is a single fixed point, so converting it to alt/az here (if needed) is a
- * one-off, non-iterated call — never the ill-conditioned *iterated* inverse
- * `hzCamera`'s doc comment describes. */
+/** Keep the gesture's fixed sky point under the current pointer. The
+ * horizontal path rotates its full camera basis, including at zenith. */
 function panTo(anchorRaDeg: number, anchorDecDeg: number, fovDeg: number, screenX: number, screenY: number): void {
   const siteInstant = currentSiteInstant();
   if (hzCamera !== null && siteInstant !== null) {
-    const [anchorAltDeg, anchorAzDeg] = raDecToAltAz(anchorRaDeg, anchorDecDeg, siteInstant);
-    hzCamera = centerForAnchorHorizontal(fovDeg, anchorAltDeg, anchorAzDeg, screenX, screenY);
+    hzCamera = panHorizontalCameraToSkyPoint(
+      hzCamera, fovDeg, widthPx, heightPx, siteInstant,
+      anchorRaDeg, anchorDecDeg, screenX, screenY,
+    );
     syncViewFromHzCamera(siteInstant);
     view = { ...view, fovDeg };
   } else {
@@ -430,20 +291,18 @@ function panTo(anchorRaDeg: number, anchorDecDeg: number, fovDeg: number, screen
  * of which has continuous camera motion to preserve in the first place. */
 function seedHzCameraFromView(site: SiteInstant): void {
   const [altDeg, azDeg] = raDecToAltAz(view.ra, view.dec, site);
-  hzCamera = { altDeg, azDeg };
+  hzCamera = createHorizontalCamera(altDeg, azDeg);
 }
 
-/** The one seam every draw, label placement, FOV-drag hit-test and
- * catalogue click-pick projects through (skymap-viz.md: "all of those must
- * use the same projection, or labels and hit-tests will disagree with what
- * is drawn") — `coordTransform` is the whole difference between the
- * ordinary equatorial map and a true horizontal one; nothing else about
- * drawing or hit-testing changes between the two. Safe to call at any time:
- * `view.ra`/`view.dec` are always kept in sync with `hzCamera` (via
- * `syncViewFromHzCamera`) whenever the latter is non-null, so this needs no
- * `hzCamera` handling of its own. */
+/** One viewport for drawing, labels, FOV hit-testing and catalogue
+ * picking. The horizontal transform uses the camera's persistent basis,
+ * never an azimuth reconstructed from the equatorial centre. */
 function currentViewport(): Viewport {
-  return { view, widthPx, heightPx, coordTransform: currentCoordTransform() };
+  const site = currentSiteInstant();
+  if (site !== null && hzCamera !== null) {
+    return horizontalCameraViewport(view, widthPx, heightPx, site, hzCamera);
+  }
+  return { view, widthPx, heightPx };
 }
 
 /** 0..1 multipliers the host sets through `setDisplay` — see
@@ -827,18 +686,14 @@ function applyDisplay(display: DisplayOptions): void {
     // (the reanchor below only ever fired on an actual instant *change*).
     seedHzCameraFromView(siteInstant);
   } else if (heldTargetNeedsReanchor(previousInstant, siteInstant.instant, display.holdOnTarget === true)) {
-    // A target is resolved and being framed: hold RA/Dec, so the object
-    // stays where it is and the horizon and grid move around it. Re-seed
-    // only when the instant actually changes: a same-instant target update
-    // follows a FOV drop, whose continuous `panTo` camera is authoritative.
-    // Re-seeding that camera through the inverse transform at pointer-up was
-    // the visible ALT/AZ <-> EQ orientation jump in the owner's recording.
-    // On an actual scrub tick, `hzCamera`
-    // is re-seeded from the (unchanged) equatorial view, so that
-    // when the viewer clears the target and goes back to hunting, alt/az
-    // anchoring resumes from where the sky actually is rather than from a
-    // stale bearing minutes or hours out of date.
-    seedHzCameraFromView(siteInstant);
+    // Follow the fixed equatorial target at the new instant by rotating
+    // the existing basis. Re-seeding a pole-up frame here would restore the
+    // zenith flip during timeline scrubbing even though pointer pans work.
+    // Same-instant refreshes retain the drag-established basis unchanged.
+    hzCamera = panHorizontalCameraToSkyPoint(
+      hzCamera, view.fovDeg, widthPx, heightPx, siteInstant,
+      view.ra, view.dec, widthPx / 2, heightPx / 2,
+    );
   } else if (previousInstant !== null && previousInstant.getTime() !== siteInstant.instant.getTime()) {
     // Time moved on: hold the *same* alt/az and re-derive `view.ra`/
     // `view.dec` at the new instant — `hzCamera` itself is never touched

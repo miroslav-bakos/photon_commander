@@ -700,7 +700,7 @@ export function PlanningTab({ active = true }: { active?: boolean }) {
     <PaneLayout
       fill
       primary={
-        <div className="flex flex-col gap-4">
+        <div className="contents">
           <TargetPicker
             target={target}
             onTargetChange={handleTargetChange}

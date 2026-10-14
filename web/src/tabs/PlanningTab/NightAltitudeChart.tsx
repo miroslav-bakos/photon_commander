@@ -9,6 +9,7 @@ import { useId, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as
 import { useAnnualAltitudeQuery, type AnnualAltitudeNightModel, type AnnualAltitudeRequest, type AnnualAltitudeResponse, type NightResponse } from "../../api/astro";
 import type { components } from "../../api/schema";
 import { Card, CardTitle } from "../../components/Card";
+import { useLayoutRoute } from "../../layout/LayoutContext";
 import { useLayoutStore } from "../../layout/layoutStore";
 import { ABBREVIATED_EVENT_LABELS, EVENT_LABELS } from "../SchedulingTab/timeSpecs";
 import { axisRange, bandFill, hourTicks, labelLayout, linearAxisMap, moonPhasePath, moonUpIntervals, twilightBands, twilightGradientStops } from "../SchedulingTab/timelineGeometry";
@@ -98,7 +99,8 @@ export function NightAltitudeChart({
   // same "don't trap the scroll" fix already applied to the sky map's
   // iframes, here for a one-axis chart instead of a two-axis pan/zoom.
   const svgRef = useRef<SVGSVGElement>(null);
-  const cardHeight = useLayoutStore((state) => state.saved.tabs["/planning"]?.cards["planning.timeline"]?.height);
+  const layoutRoute = useLayoutRoute();
+  const cardHeight = useLayoutStore((state) => state.saved.tabs[layoutRoute.tab]?.cards["planning.timeline"]?.height);
   const [view, setView] = useState<TimelineView>("daily");
   const annualAltitude = useAnnualAltitudeQuery(view === "yearly" ? annualAltitudeRequest : null);
   useLayoutEffect(() => {
