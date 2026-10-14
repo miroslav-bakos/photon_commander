@@ -33,35 +33,6 @@ their own licences and attribution; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOT
   application with a layout adapted to their screen. Each device needs access
   to the same server and the appropriate viewing or control permission.
 
-![NGC 7000 two-panel mosaic in the DSS2 sky-map planner](.github/images/ngc7000-dss2-mosaic.jpg)
-
-*The complete Photon Commander window, planning a two-panel mosaic across
-NGC 7000 with DSS2 enabled. Settings and status are illustrative; this is a
-framing preview, not a captured observation.*
-
-<details>
-<summary>DSS2 image credits and usage terms</summary>
-
-DSS2 colour — Digitized Sky Survey, STScI/NASA; coloured and HEALPixed by
-CDS Aladin Sky Atlas, Unistra/CNRS. Plates © STFC/ROE, Anglo-Australian
-Observatory Board, Caltech and AURA — All Rights Reserved. Free for
-research, teaching and other non-profit use; commercial, for-profit use
-prohibited without written permission. See the
-[MAST data-use policy](https://archive.stsci.edu/publishing/data-use).
-HiPS database: ODbL-1.0. Survey pixels are excluded from the application's
-GPL licence and from the application installers.
-
-</details>
-
-![Whole-night ALT-AZ field rotation preview for IC 1805](.github/images/altaz-whole-night-rotation.jpg)
-
-A 10.5-hour ALT-AZ planning example: the overlaid frames show changing
-orientation, the swept outline shows total coverage, and the central keep region
-shows what remains in every frame. This example predicts about 229° of rotation
-and 44% retained frame area. Geometry uses a fictional reference site;
-solar/lunar context is illustrative, not a measured observing result.
-The DSS2 image credits and restrictions above also apply to this illustration.
-
 ## Live stacking and mobile access
 
 Real observing screenshots: M31 live stacking and equipment status on a phone.
@@ -156,8 +127,8 @@ Packaging rejects survey tile packs. Source licensing and acknowledgements do
 not establish survey redistribution rights.
 
 DSS2 is fetched only subject to its user consent and applicable personal-use
-restrictions. The credited README illustration contains DSS2 pixels; it is
-excluded from application installers and the application's GPL licence.
+restrictions. Survey illustrations are excluded from release source archives
+and application installers.
 User caches and observing data are not distributed here. GPL licensing does
 not grant survey image rights.
 
