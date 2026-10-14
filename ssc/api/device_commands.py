@@ -41,10 +41,12 @@ import importlib.metadata
 import logging
 from collections import deque
 from collections.abc import Awaitable, Callable, Mapping
+from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from functools import wraps
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 from uuid import uuid4, uuid5
 from zoneinfo import ZoneInfo
 
@@ -67,6 +69,7 @@ from ssc.api.capture_service import (
     capture_one_exposure,
     exposure_metadata_fallbacks,
 )
+from ssc.api.dual_capture import DualCaptureError, capture_pair, recover_dual_ownership
 from ssc.api.external_tools import ConfiguredAstap
 from ssc.api.mount_target import MountFrameUnavailableError, resolve_mount_target
 from ssc.api.plans_service import PlanTimezoneUnknownError, resolve_timezone, site_of
@@ -164,6 +167,35 @@ async def _translate[T](call: Awaitable[T]) -> T:
 _ASCOM_DRIVE_RATES: Final[Mapping[str, int]] = {"sidereal": 0, "lunar": 1, "solar": 2}
 
 
+@dataclass
+class _MotionGuardLease:
+    # Only same-task nested calls and the explicitly awaited autofocus child
+    # share ownership. Arbitrary inherited ContextVars never grant permission.
+    owner: asyncio.Task[object] | None
+    active: bool = True
+
+
+def _guard_camera_motion[**P, R](method: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
+    @wraps(method)
+    async def guarded(*args: P.args, **kwargs: P.kwargs) -> R:
+        commands = cast("AlpacaDeviceCommands", args[0])
+        lease = commands._motion_guard_active.get()
+        task = asyncio.current_task()
+        inherited_owner = (lease is not None and lease.active
+                           and (task is lease.owner or task is commands._autofocus_task))
+        if inherited_owner or commands._before_motion is None:
+            return await method(*args, **kwargs)
+        async with commands._before_motion():
+            lease = _MotionGuardLease(owner=task)
+            token = commands._motion_guard_active.set(lease)
+            try:
+                return await method(*args, **kwargs)
+            finally:
+                lease.active = False
+                commands._motion_guard_active.reset(token)
+    return guarded
+
+
 class AlpacaDeviceCommands:
     """``DeviceCommands`` over the driver ``ssc-core`` hosts.
 
@@ -194,7 +226,10 @@ class AlpacaDeviceCommands:
         park_state_ready_retries: int = PARK_STATE_READY_RETRIES,
         park_state_ready_interval_s: float = PARK_STATE_READY_INTERVAL_S,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        before_motion: Callable[[], contextlib.AbstractAsyncContextManager[None]] | None = None,
     ) -> None:
+        self._before_motion = before_motion
+        self._motion_guard_active = ContextVar[_MotionGuardLease | None]("camera_motion_guard", default=None)
         self._telescope = client.device("telescope")
         self._camera = client.device("camera")
         self._filterwheel = client.device("filterwheel")
@@ -276,6 +311,7 @@ class AlpacaDeviceCommands:
         await self._ensure_connected(device)
         await _translate(device.put(member, **params))
 
+    @_guard_camera_motion
     async def startup(self) -> None:
         # ``iscope_start_view`` is the verified precondition for a goto (the
         # driver's telescope docstring): it opens the imaging pipeline. Nothing
@@ -293,6 +329,7 @@ class AlpacaDeviceCommands:
         ):
             await self.unpark()
 
+    @_guard_camera_motion
     async def set_tracking_rate(self, rate: str) -> None:
         """ASCOM ``Telescope.TrackingRate``, the standard member for exactly this
         (invariant 2). The device offers sidereal/lunar/solar and nothing else, so
@@ -308,9 +345,11 @@ class AlpacaDeviceCommands:
         await self._unpark_for_imaging()
         await self._put(self._telescope, "trackingrate", TrackingRate=code)
 
+    @_guard_camera_motion
     async def set_tracking(self, enabled: bool) -> None:
         await self._put(self._telescope, "tracking", Tracking=enabled)
 
+    @_guard_camera_motion
     async def slew_to(self, ra_j2000_h: float, dec_j2000_deg: float) -> None:
         await self._unpark_for_imaging()
         device_ra_h, device_dec_deg = await self._to_mount_frame(
@@ -336,6 +375,7 @@ class AlpacaDeviceCommands:
     async def stop_stack(self) -> None:
         await self._action("ssc.stop_stack")
 
+    @_guard_camera_motion
     async def autofocus(self) -> None:
         runner = self._autofocus_runner
         if runner is None:
@@ -366,6 +406,7 @@ class AlpacaDeviceCommands:
             task.cancel()
             await asyncio.gather(task, return_exceptions=True)
 
+    @_guard_camera_motion
     async def set_filter(self, position: str) -> None:
         await self._ensure_connected(self._filterwheel)
         index = await self._filter_index(position)
@@ -483,6 +524,7 @@ class AlpacaDeviceCommands:
         details = "; ".join([*errors, latest])
         raise DeviceCommandError(f"Dawn park unverified: {details}")
 
+    @_guard_camera_motion
     async def park(self) -> str | None:
         try:
             await self._put(self._telescope, "park")
@@ -531,9 +573,11 @@ class AlpacaDeviceCommands:
         self._state.apply(NoticeCleared(notice_id="park-safe-home"))
         return None
 
+    @_guard_camera_motion
     async def unpark(self) -> None:
         await self._put(self._telescope, "unpark")
 
+    @_guard_camera_motion
     async def find_home(self) -> None:
         await self._put(self._telescope, "findhome")
 
@@ -544,6 +588,7 @@ class AlpacaDeviceCommands:
             )
         await self._calibration_runner(**args)
 
+    @_guard_camera_motion
     async def shutdown(self) -> None:
         await self._action("ssc.shutdown")
 
@@ -769,6 +814,8 @@ class AlpacaCapturePort:
         run_id: str,
         device_commands: DeviceCommands,
         camera: CameraDevice | None,
+        wide_camera: CameraDevice | None = None,
+        companion_enabled: bool = False,
         telescope: Device | None,
         filterwheel: Device | None,
         focuser: Device | None = None,
@@ -798,6 +845,8 @@ class AlpacaCapturePort:
         self._run_id = run_id
         self._device_commands = device_commands
         self._camera = camera
+        self._wide_camera = wide_camera
+        self._companion_enabled = companion_enabled
         self._telescope = telescope
         self._filterwheel = filterwheel
         self._focuser = focuser
@@ -877,6 +926,12 @@ class AlpacaCapturePort:
             resolved_frame_type = FrameType(frame_type)
         except ValueError as exc:
             raise DeviceCommandError(f"unknown frame type {frame_type!r}: {exc}") from exc
+        companion = await self._repo.freeze_run_companion(self._run_id, self._companion_enabled)
+        paired = companion and resolved_frame_type is FrameType.LIGHT
+        if paired and self._wide_camera is None:
+            raise DeviceCommandNotImplementedError("Wide companion camera is unavailable")
+        if paired:
+            tz = _resolve_capture_timezone(self._settings, "%TARGET%/%DATEOFCAPTURE%")
         device = self._state.snapshot.device
         context = ExposureContext(
             object_name=object_name,
@@ -901,6 +956,7 @@ class AlpacaCapturePort:
         )
         owned = False
         try:
+            await self.recover_dual_capture()
             if self._before_capture is not None:
                 await _translate(self._before_capture())
             owned = True
@@ -913,35 +969,48 @@ class AlpacaCapturePort:
                 )
             for capture_attempt in range(SCHEDULED_CAPTURE_RETRIES + 1):
                 try:
-                    frame_id = await _translate(
-                        capture_one_exposure(
-                            camera=self._camera,
-                            telescope=self._telescope,
-                            filterwheel=self._filterwheel,
-                            focuser=self._focuser,
-                            repo=self._repo,
-                            folder=folder,
-                            duration_s=exposure_sec,
-                            context=context,
-                            frame_type=resolved_frame_type,
-                            folder_template=template,
-                            filename_template=filename_template,
-                            tz=tz,
-                            # 0-based and stable across a resume (unlike a
-                            # process-local counter): frame 37 of a resumed block is
-                            # still asked for as ``frame_index=37``.
-                            sequence=frame_index,
-                            run_id=self._run_id,
-                            block_id=block_id,
-                            on_stage=(
-                                None
-                                if self._update_capture_stage is None
-                                else self._publish_capture_stage
-                            ),
-                            unsupported_members=(self._metadata_capabilities() if self._metadata_capabilities is not None
-                                                 else self._unsupported_metadata_members),
+                    if paired:
+                        assert self._wide_camera is not None
+                        try:
+                            frame_id = await capture_pair(
+                                tele=self._camera, wide=self._wide_camera, telescope=self._telescope,
+                                filterwheel=self._filterwheel, focuser=self._focuser, repo=self._repo,
+                                run_id=self._run_id, block_id=block_id, frame_index=frame_index,
+                                duration_s=exposure_sec, gain=gain, context=context, folder=folder,
+                                filename_template=filename_template, tz=tz,
+                            )
+                        except DualCaptureError as exc:
+                            raise DeviceCommandError(str(exc)) from exc
+                    else:
+                        frame_id = await _translate(
+                            capture_one_exposure(
+                                camera=self._camera,
+                                telescope=self._telescope,
+                                filterwheel=self._filterwheel,
+                                focuser=self._focuser,
+                                repo=self._repo,
+                                folder=folder,
+                                duration_s=exposure_sec,
+                                context=context,
+                                frame_type=resolved_frame_type,
+                                folder_template=template,
+                                filename_template=filename_template,
+                                tz=tz,
+                                # 0-based and stable across a resume (unlike a
+                                # process-local counter): frame 37 of a resumed block is
+                                # still asked for as ``frame_index=37``.
+                                sequence=frame_index,
+                                run_id=self._run_id,
+                                block_id=block_id,
+                                on_stage=(
+                                    None
+                                    if self._update_capture_stage is None
+                                    else self._publish_capture_stage
+                                ),
+                                unsupported_members=(self._metadata_capabilities() if self._metadata_capabilities is not None
+                                                     else self._unsupported_metadata_members),
+                            )
                         )
-                    )
                     break
                 except DeviceCommandError as exc:
                     if capture_attempt >= SCHEDULED_CAPTURE_RETRIES or not _retryable_capture_error(
@@ -1045,6 +1114,7 @@ class AlpacaCapturePort:
         self._scheduled_live_stack_active = False
 
     async def center_target(self, *, ra_j2000_h: float, dec_j2000_deg: float) -> None:
+        await self.recover_dual_capture()
         if self._recenter is None:
             raise DeviceCommandNotImplementedError(
                 "closed-loop centering is unavailable from this capture adapter"
@@ -1084,10 +1154,12 @@ class AlpacaCapturePort:
         return self._focus_monitor.pending
 
     async def autofocus(self) -> None:
+        await self.recover_dual_capture()
         await self._device_commands.autofocus()
         self._focus_monitor.focused()
 
     async def recover_operation(self, *, level: int, operation: str) -> None:
+        await self.recover_dual_capture()
         if self._recover_operation is None:
             raise DeviceCommandNotImplementedError("scheduled operation recovery unavailable")
         try:
@@ -1099,6 +1171,7 @@ class AlpacaCapturePort:
             raise DeviceCommandError(str(exc)) from exc
 
     async def recover_dither(self, *, object_name: str | None) -> None:
+        await self.recover_dual_capture()
         if self._recover_dither is None:
             raise DeviceCommandNotImplementedError("ambiguous dither image recovery unavailable")
         try:
@@ -1113,6 +1186,7 @@ class AlpacaCapturePort:
     async def dither(
         self, *, pixels: float | None, max_pixels: float | None, object_name: str | None
     ) -> None:
+        await self.recover_dual_capture()
         if pixels is None or max_pixels is None:
             raise DeviceCommandNotImplementedError(
                 "scheduled dithering requires an explicit pixel amount and maximum"
@@ -1130,10 +1204,18 @@ class AlpacaCapturePort:
         self._dithered_since_reference = True
         self._dither_group_index += 1
 
+    async def recover_dual_capture(self) -> None:
+        try:
+            await recover_dual_ownership(repo=self._repo, run_id=self._run_id,
+                                         tele=self._camera, wide=self._wide_camera)
+        except Exception as exc:
+            raise DeviceCommandError(f"companion cleanup must complete before motion/acquisition: {exc}") from exc
+
     async def frames_captured(self, *, run_id: str, item_id: str) -> int:
         try:
+            await self.recover_dual_capture()
             return await self._repo.count_committed(run_id=run_id, block_id=item_id)
-        except aiosqlite.Error as exc:
+        except (aiosqlite.Error, DeviceCommandError) as exc:
             raise FrameCountError(str(exc)) from exc
 
 

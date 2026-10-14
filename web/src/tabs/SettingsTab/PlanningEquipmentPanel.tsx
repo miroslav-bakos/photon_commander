@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Miroslav Bakoš
 
 import { useAstroProfilesQuery } from "../../api/astro";
-import { useAutoLpFilterSettingsQuery, useSetAutoLpFilterMutation } from "../../api/settings";
+import { useAutoLpFilterSettingsQuery, useSetAutoLpFilterMutation, useWideCompanionSettingsQuery, useSetWideCompanionMutation } from "../../api/settings";
 import { Button } from "../../components/Button";
 import { Badge } from "../../components/Badge";
 import { Card, CardTitle } from "../../components/Card";
@@ -25,6 +25,8 @@ const TARGET_CATEGORIES: { id: BestTargetCategory; label: string }[] = [
 /** Equipment defaults used by Planning and its sky-map actions. */
 export function PlanningEquipmentPanel() {
   const profilesQuery = useAstroProfilesQuery();
+  const wideCompanion = useWideCompanionSettingsQuery();
+  const saveWideCompanion = useSetWideCompanionMutation();
   const autoLp = useAutoLpFilterSettingsQuery();
   const saveAutoLp = useSetAutoLpFilterMutation();
   const activeProfileId = useConnectionStore(
@@ -122,6 +124,21 @@ export function PlanningEquipmentPanel() {
             ))}
           </div>
         </fieldset>
+
+        <label className="flex max-w-xl items-start gap-3 text-sm text-fg-muted">
+          <input type="checkbox" className="mt-1" checked={wideCompanion.data?.enabled ?? false}
+            disabled={wideCompanion.data === undefined || saveWideCompanion.isPending}
+            onChange={(event) => { saveWideCompanion.mutate({ enabled: event.target.checked }); }} />
+          <span><span className="block font-medium text-fg">Experimental: save Wide companion exposures</span>
+            Scheduled Tele lights also save independent Wide FITS at the same exposure duration, up to 60 seconds. Wide streaming is disabled. Calibration remains manual; Wide darks require a covered lens.
+          </span>
+        </label>
+        {wideCompanion.data === undefined && <p role="status" className="text-sm text-fg-muted">
+          {wideCompanion.isError ? "Could not load the Wide companion setting." : "Loading the Wide companion setting…"}
+        </p>}
+        {wideCompanion.isError && <Button onClick={() => { void wideCompanion.refetch(); }}>Retry now</Button>}
+        {saveWideCompanion.isPending && <p role="status">Saving Wide companion setting…</p>}
+        {saveWideCompanion.isError && <p role="alert" className="text-sm text-danger">{saveWideCompanion.error.message}</p>}
 
         <label className="flex max-w-xl items-start gap-3 text-sm text-fg-muted">
           <input

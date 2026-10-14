@@ -672,6 +672,26 @@ export function useSetAutoLpFilterMutation() {
   });
 }
 
+export interface WideCompanionSettings { enabled: boolean }
+const wideCompanionKey = ["settings", "wide-companion"] as const;
+
+export function useWideCompanionSettingsQuery() {
+  return useQuery({
+    queryKey: wideCompanionKey,
+    queryFn: async () => unwrap(rawCall("/api/settings/capture/wide-companion") as Promise<{ data?: WideCompanionSettings; error?: unknown; response: Response }>),
+  });
+}
+
+export function useSetWideCompanionMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: WideCompanionSettings) =>
+      unwrap(rawCall("/api/settings/capture/wide-companion", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }) as Promise<{ data?: WideCompanionSettings; error?: unknown; response: Response }>),
+    onSuccess: (saved) => {
+      queryClient.setQueryData(wideCompanionKey, saved); void queryClient.invalidateQueries({ queryKey: wideCompanionKey }); },
+  });
+}
+
 type CaptureFolderResult = Promise<{ data?: CaptureFolderSettings; error?: unknown; response: Response }>;
 type CaptureFolderTemplateResult = Promise<{
   data?: CaptureFolderTemplateSettings;

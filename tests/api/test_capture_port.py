@@ -714,3 +714,26 @@ async def test_missing_retained_stack_is_not_reported_saved(repo, settings, stat
     await port.stop_live_stack()
     with pytest.raises(DeviceCommandError, match='missing after restart'):
         await port.stop_live_stack(require_retained=True)
+
+
+async def test_companion_wide_is_retained_when_tele_is_discarded(repo, settings, state, monkeypatch):
+    from zoneinfo import ZoneInfo
+
+    from ssc.api import device_commands
+
+    monkeypatch.setattr(device_commands, "_resolve_capture_timezone", lambda *_args: ZoneInfo("UTC"))
+    tele = _camera(properties={"camerastate": 0})
+    wide = _camera(properties={"camerastate": 0, "exposuremax": 60})
+    telescope = _telescope()
+    telescope.properties["slewing"] = False
+    port = AlpacaCapturePort(run_id="paired-discard", device_commands=FakeDeviceCommands(),
+        camera=tele, wide_camera=wide, companion_enabled=True, telescope=telescope,
+        filterwheel=_filterwheel(), repo=repo, settings=settings, state=state)
+    await port.expose_frame(exposure_sec=0.01, gain=100, frame_type="light", filter_name="LP",
+                            block_id="lights", frame_index=0, object_name="M42", retain=False)
+    records = await repo.list_complete()
+    assert len(records) == 1
+    assert records[0].path.parent.name == "wide"
+    assert records[0].path.is_file()
+    assert await port.frames_captured(run_id="paired-discard", item_id="lights") == 0
+    assert wide.start_exposure_calls == tele.start_exposure_calls == [(0.01, True)]

@@ -1594,6 +1594,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/settings/capture/wide-companion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Wide Companion */
+        get: operations["read_wide_companion_api_settings_capture_wide_companion_get"];
+        /** Set Wide Companion */
+        put: operations["set_wide_companion_api_settings_capture_wide_companion_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings/capture/path-tags": {
         parameters: {
             query?: never;
@@ -4894,7 +4912,12 @@ export interface components {
             /** Filter Positions */
             filter_positions?: number[];
             /** Optic Id */
-            optic_id?: string | null;
+            optic_id?: ("tele" | "wide" | "both") | null;
+            /**
+             * Covered Lens Confirmed
+             * @default false
+             */
+            covered_lens_confirmed: boolean;
             /** Flat Source */
             flat_source?: ("panel" | "sky") | null;
             /**
@@ -5058,6 +5081,8 @@ export interface components {
             gain: number | null;
             /** Exposure S */
             exposure_s: number | null;
+            /** Optic Id */
+            optic_id: string | null;
             /** Filter Name */
             filter_name: string | null;
             /** Width */
@@ -5604,6 +5629,11 @@ export interface components {
              * @default false
              */
             auto_lp_filter_for_emission_targets: boolean;
+            /**
+             * Wide Companion Enabled
+             * @default false
+             */
+            wide_companion_enabled: boolean;
         };
         /**
          * CaptureStage
@@ -14827,6 +14857,59 @@ export interface operations {
         };
     };
     set_auto_lp_filter_api_settings_auto_lp_filter_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AutoLpFilterRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutoLpFilterResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_wide_companion_api_settings_capture_wide_companion_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutoLpFilterResponse"];
+                };
+            };
+        };
+    };
+    set_wide_companion_api_settings_capture_wide_companion_put: {
         parameters: {
             query?: never;
             header?: never;

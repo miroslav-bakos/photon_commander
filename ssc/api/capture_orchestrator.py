@@ -117,6 +117,7 @@ from ssc.capture.calibration import (
     is_dark_filter_name,
     is_flat_eligible_filter_name,
 )
+from ssc.capture.fits_rows import FitsRowSource
 from ssc.capture.master_catalogue import (
     CalibrationMasterCatalogueError,
     CalibrationMasterRecord,
@@ -124,6 +125,7 @@ from ssc.capture.master_catalogue import (
     move_calibration_master,
     scan_calibration_masters,
 )
+from ssc.capture.masters import calibration_optic_id, calibration_optics_match
 from ssc.client.errors import AlpacaClientError, AlpacaRemoteError
 from ssc.platesolve import (
     PlateSolveResult,
@@ -448,6 +450,7 @@ class CalibrationSourceSet:
     filter_name: str | None
     width: int
     height: int
+    optic_id: str | None = None
 
     @property
     def started_at(self) -> datetime:
@@ -471,10 +474,14 @@ def _calibration_source_sets(
     groups: list[CalibrationSourceSet] = []
     for session in derive_sessions(calibration):
         compatible: dict[
-            tuple[str, int | None, float | None, str | None, int, int],
+            tuple[str, int | None, float | None, str | None, int, int, str | None],
             list[CaptureFrameRecord],
         ] = {}
         for record in session.frames:
+            try:
+                optic = calibration_optic_id(FitsRowSource.open(record.path).header)
+            except (OSError, ValueError):
+                continue
             key = (
                 record.frame_type,
                 record.gain,
@@ -482,10 +489,11 @@ def _calibration_source_sets(
                 record.filter_name,
                 record.width,
                 record.height,
+                optic,
             )
             compatible.setdefault(key, []).append(record)
         for key, grouped in compatible.items():
-            frame_type, gain, exposure_s, filter_name, width, height = key
+            frame_type, gain, exposure_s, filter_name, width, height, optic = key
             groups.append(
                 CalibrationSourceSet(
                     records=tuple(sorted(grouped, key=lambda item: item.date_obs)),
@@ -495,6 +503,7 @@ def _calibration_source_sets(
                     filter_name=filter_name,
                     width=width,
                     height=height,
+                    optic_id=optic,
                 )
             )
     return sorted(groups, key=lambda group: group.ended_at, reverse=True)
@@ -506,6 +515,7 @@ def _best_bias_source_set(
     gain: int | None,
     width: int,
     height: int,
+    optic_id: str | None = None,
 ) -> CalibrationSourceSet | None:
     return next(
         (
@@ -515,6 +525,7 @@ def _best_bias_source_set(
             and group.gain == gain
             and group.width == width
             and group.height == height
+            and (group.optic_id or "tele") == (optic_id or "tele")
             and len(group.records) >= 10
         ),
         None,
@@ -1830,15 +1841,19 @@ class CaptureService:
         flat_source: str | None,
         generate_master: bool,
         keep_only_master: bool,
+        covered_lens_confirmed: bool = False,
         run_id: str | None = None,
         block_id: str | None = None,
         continue_guard: Callable[[], Awaitable[bool]] | None = None,
     ) -> CaptureState:
-        """Validate and start a server-owned automatic bias/flat sequence."""
-        if optic_id is not None and optic_id.casefold() == "wide":
-            raise CalibrationConfigurationError(
-                "Automatic Wide calibration is unavailable; use manual Wide flat capture"
-            )
+        """Start manual per-lens sets; scheduled calibration remains Tele-only."""
+        optic_id = optic_id or "tele"
+        if optic_id not in {"tele", "wide", "both"}:
+            raise CalibrationConfigurationError("calibration optic must be tele, wide or both")
+        if (run_id is not None or block_id is not None) and optic_id != "tele":
+            raise CalibrationConfigurationError("scheduled calibration supports Tele only")
+        if optic_id in {"wide", "both"} and kind in {"bias", "dark"} and not covered_lens_confirmed:
+            raise CalibrationConfigurationError("Confirm the Wide lens is physically covered for dark/bias calibration")
         folder = self._settings.capture.folder
         if folder is None:
             raise CaptureFolderNotConfiguredError(
@@ -1861,16 +1876,82 @@ class CaptureService:
         await self._recover_failed_exposure()
         if continue_guard is not None and not await continue_guard():
             raise _CalibrationCancelledError
+        await self.drain_wide_preview()
         if self._wide_preview_busy():
             raise CaptureAlreadyRunningError("camera acquisition is already in progress")
         if self._section.loop_active:
             raise CaptureAlreadyRunningError("a capture loop is already in progress")
 
-        minimum_s, maximum_s = await self._read_limits()
-        actual_gain = await self._calibration_gain(kind=kind, requested=gain)
+        runners = []
+        for lens in (("tele", "wide") if optic_id == "both" else (optic_id,)):
+            runners.append(await self._prepare_calibration_set(
+                kind=kind, count=count, duration_s=duration_s, gain=gain,
+                filter_positions=filter_positions, optic_id=lens, flat_source=flat_source,
+                generate_master=generate_master, keep_only_master=keep_only_master,
+                run_id=run_id, block_id=block_id, continue_guard=continue_guard,
+            ))
+        if self._section.in_progress:
+            raise CaptureAlreadyRunningError("another acquisition owns the camera")
+        self._calibration_cancel_requested = False
+        self._calibration_target_count = count
+        self._publish(in_progress=True, last_error=None, calibration=CalibrationRunState(
+            status="running", kind=kind, phase="preparing", requested_count=count,
+            total_frames=count, generate_master=generate_master, keep_only_master=keep_only_master,
+            message=f"Preparing {optic_id} calibration run"))
+        self._calibration_task = self._tasks.spawn(
+            self._run_calibration_sets(runners), name=f"capture-calibration-{kind}")
+        return self._section
+
+    async def _run_calibration_sets(self, runners: list[Callable[[], Awaitable[None]]]) -> None:
+        master_paths: list[str] = []
+        removed_frames = 0
+        try:
+            for runner in runners:
+                if self._calibration_cancel_requested:
+                    self._publish(calibration=self._section.calibration.model_copy(
+                        update={"status": "cancelled", "message": "Calibration capture cancelled"}))
+                    break
+                await runner()
+                master_paths.extend(self._section.calibration.master_paths)
+                removed_frames += self._section.calibration.removed_source_frames
+                self._publish(calibration=self._section.calibration.model_copy(update={
+                    "master_paths": tuple(master_paths), "removed_source_frames": removed_frames}))
+                if self._section.calibration.status != "completed":
+                    break
+        finally:
+            self._calibration_task = None
+            self._calibration_cancel_requested = False
+            self._calibration_target_count = None
+            self._publish(in_progress=getattr(self, "_failed_exposure_camera", None) is not None,
+                          stage=None, duration_s=None, started_at=None, object_name=None,
+                          frame_type=None, gain=None)
+
+    async def _prepare_calibration_set(
+        self,
+        *,
+        kind: CalibrationRunKind,
+        count: int,
+        duration_s: float | None,
+        gain: int | None,
+        filter_positions: list[int],
+        optic_id: str | None,
+        flat_source: str | None,
+        generate_master: bool,
+        keep_only_master: bool,
+        run_id: str | None = None,
+        block_id: str | None = None,
+        continue_guard: Callable[[], Awaitable[bool]] | None = None,
+    ) -> Callable[[], Awaitable[None]]:
+        folder = self._settings.capture.folder
+        assert folder is not None
+        camera = self._wide_camera if optic_id == "wide" else self._camera
+        if camera is None:
+            raise CaptureDeviceUnavailableError(f"this ssc-core hosts no {optic_id} camera")
+        minimum_s, maximum_s = await self._read_limits(camera)
+        actual_gain = await self._calibration_gain(kind=kind, requested=gain, camera=camera)
         filter_names: tuple[str, ...] = ()
         max_adu: float | None = None
-        if kind == "flat":
+        if kind == "flat" and optic_id != "wide":
             if self._filterwheel is None:
                 raise CalibrationConfigurationError(
                     "per-filter flats require a connected filter wheel"
@@ -1900,14 +1981,20 @@ class CaptureService:
                     "the Dark shutter position cannot be used for flat frames; "
                     "select only illuminated filter positions"
                 )
-            max_adu = _as_float(await self._camera.get("maxadu"), label="Camera.MaxADU")
+        if kind == "flat":
+            if flat_source is None:
+                raise CalibrationConfigurationError("flat capture requires panel or sky source")
+            if optic_id == "wide":
+                filter_names = ("Unfiltered",)
+                filter_positions = [0]
+            max_adu = _as_float(await camera.get("maxadu"), label="Camera.MaxADU")
             if generate_master:
                 try:
                     # Full-sensor geometry is authoritative here. NumX/NumY
                     # are subframe controls, which SSC's native Seestar bridge
                     # deliberately refuses because the camera ignores them.
                     width_raw, height_raw = await asyncio.gather(
-                        self._camera.get("cameraxsize"), self._camera.get("cameraysize")
+                        camera.get("cameraxsize"), camera.get("cameraysize")
                     )
                     width = _as_positive_int(width_raw, label="Camera.CameraXSize")
                     height = _as_positive_int(height_raw, label="Camera.CameraYSize")
@@ -1918,7 +2005,7 @@ class CaptureService:
                     ) from exc
                 groups = await self.list_calibration_source_sets()
                 if (
-                    _best_bias_source_set(groups, gain=actual_gain, width=width, height=height)
+                    _best_bias_source_set(groups, gain=actual_gain, width=width, height=height, optic_id=optic_id)
                     is None
                 ):
                     raise CalibrationConfigurationError(
@@ -1937,6 +2024,7 @@ class CaptureService:
             "dark": capture_settings.calibration_dark_folder_template,
             "flat": capture_settings.calibration_flat_folder_template,
         }[kind]
+        folder_template = f"{folder_template}/{optic_id}"
         filename_template = (
             capture_settings.calibration_filename_template or capture_settings.filename_template
         )
@@ -1958,19 +2046,13 @@ class CaptureService:
             gain=actual_gain,
             generate_master=generate_master,
             keep_only_master=keep_only_master,
-            message="Preparing calibration run",
+            message=f"Preparing {optic_id} calibration run",
         )
-        self._calibration_cancel_requested = False
-        self._calibration_target_count = count
-        self._publish(
-            in_progress=True,
-            last_error=None,
-            frame_type=FrameType(kind),
-            gain=actual_gain,
-            calibration=calibration,
-        )
-        self._calibration_task = self._tasks.spawn(
-            self._run_calibration(
+        async def run_set() -> None:
+            self._publish(in_progress=True, last_error=None, frame_type=FrameType(kind),
+                          gain=actual_gain, calibration=calibration)
+            await self._run_calibration(
+                camera=camera,
                 kind=kind,
                 count=count,
                 requested_duration_s=duration_s,
@@ -1992,10 +2074,8 @@ class CaptureService:
                 block_id=block_id,
                 retained=retained,
                 continue_guard=continue_guard,
-            ),
-            name=f"capture-calibration-{kind}",
-        )
-        return self._section
+            )
+        return run_set
 
     async def _resume_calibration_frames(
         self, *, run_id: str | None, block_id: str | None,
@@ -2082,12 +2162,13 @@ class CaptureService:
         await asyncio.shield(task)
         return self._section
 
-    async def _calibration_gain(self, *, kind: CalibrationRunKind, requested: int | None) -> int:
-        assert self._camera is not None
+    async def _calibration_gain(self, *, kind: CalibrationRunKind, requested: int | None, camera: GainSettableCamera | None = None) -> int:
+        camera = camera if camera is not None else self._camera
+        assert camera is not None
         if requested is not None:
             return requested
         member = "gainmin" if kind == "flat" else "gain"
-        raw = await self._camera.get(member)
+        raw = await camera.get(member)
         if isinstance(raw, bool) or not isinstance(raw, int):
             raise CalibrationConfigurationError(
                 f"Camera.{member.title()} returned {raw!r}, not an integer; specify gain explicitly"
@@ -2136,6 +2217,7 @@ class CaptureService:
     async def _save_calibration_frame(
         self,
         *,
+        camera: GainSettableCamera,
         duration_s: float,
         frame_type: FrameType,
         context: ExposureContext,
@@ -2146,13 +2228,12 @@ class CaptureService:
         run_id: str | None = None,
         block_id: str | None = None,
     ) -> int:
-        assert self._camera is not None
         self._sequence += 1
         return await capture_one_exposure(
-            camera=self._camera,
+            camera=camera,
             telescope=self._telescope,
-            filterwheel=self._filterwheel,
-            focuser=self._focuser,
+            filterwheel=None if context.optic_id == "wide" else self._filterwheel,
+            focuser=None if context.optic_id == "wide" else self._focuser,
             repo=self._repo,
             folder=folder,
             duration_s=duration_s,
@@ -2165,7 +2246,7 @@ class CaptureService:
             now=self._now,
             sleep=self._sleep,
             on_stage=self._calibration_stage,
-            unsupported_members=self.metadata_capabilities(),
+            unsupported_members=self.metadata_capabilities(wide=context.optic_id == "wide"),
             run_id=run_id,
             block_id=block_id,
         )
@@ -2180,6 +2261,7 @@ class CaptureService:
     async def _run_calibration(
         self,
         *,
+        camera: GainSettableCamera,
         kind: CalibrationRunKind,
         count: int,
         requested_duration_s: float | None,
@@ -2202,16 +2284,15 @@ class CaptureService:
         retained: dict[str | None, list[int]] | None = None,
         continue_guard: Callable[[], Awaitable[bool]] | None = None,
     ) -> None:
-        assert self._camera is not None
         try:
             await self.prepare_main_capture()
             await self._check_calibration_cancel(continue_guard)
-            if kind in {"bias", "dark"}:
+            if kind in {"bias", "dark"} and optic_id != "wide":
                 await self._select_dark_filter_if_available()
-            await self._camera.put("gain", Gain=gain)
+            await camera.put("gain", Gain=gain)
             frame_ids_by_filter = {key: list(ids) for key, ids in (retained or {}).items()}
             if kind in {"bias", "dark"}:
-                context = self._context(None)
+                context = replace(self._context(None, optic_id=optic_id), wide_camera=optic_id == "wide")
                 exposure_s = minimum_s if kind == "bias" else cast(float, requested_duration_s)
                 frame_type = FrameType(kind)
                 while len(frame_ids_by_filter.get(None, ())) < (
@@ -2225,11 +2306,12 @@ class CaptureService:
                             update={
                                 "phase": "capturing",
                                 "exposure_s": exposure_s,
-                                "message": f"Capturing {kind} frames",
+                                "message": f"Capturing {optic_id} {kind} frames",
                             }
                         ),
                     )
                     frame_id = await self._save_calibration_frame(
+                        camera=camera,
                         duration_s=exposure_s,
                         frame_type=frame_type,
                         context=context,
@@ -2254,9 +2336,10 @@ class CaptureService:
                     zip(filter_positions, filter_names, strict=True)
                 ):
                     await self._check_calibration_cancel(continue_guard)
-                    await self._select_filter(position)
+                    if optic_id != "wide":
+                        await self._select_filter(position)
                     exposure_s = minimum_s
-                    context = self._context(None, optic_id=optic_id, flat_source=flat_source)
+                    context = replace(self._context(None, optic_id=optic_id, flat_source=flat_source), wide_camera=optic_id == "wide")
                     for probe_number in range(1, 11):
                         await self._check_calibration_cancel(continue_guard)
                         self._publish(
@@ -2268,21 +2351,21 @@ class CaptureService:
                                     "current_filter": filter_name,
                                     "current_filter_index": filter_index,
                                     "exposure_s": exposure_s,
-                                    "message": f"Measuring {filter_name} flat illumination",
+                                    "message": f"Measuring {optic_id} {filter_name} flat illumination",
                                 }
                             ),
                         )
                         frame, _ = await drive_exposure(
-                            camera=self._camera,
+                            camera=camera,
                             telescope=self._telescope,
-                            filterwheel=self._filterwheel,
+                            filterwheel=None if optic_id == "wide" else self._filterwheel,
                             duration_s=exposure_s,
                             context=context,
                             frame_type=FrameType.FLAT,
                             now=self._now,
                             sleep=self._sleep,
                             on_stage=self._calibration_stage,
-                            unsupported_members=self.metadata_capabilities(),
+                            unsupported_members=self.metadata_capabilities(wide=optic_id == "wide"),
                         )
                         metrics = await asyncio.to_thread(
                             analyse_flat_frame, frame.pixels, max_adu=max_adu
@@ -2331,11 +2414,12 @@ class CaptureService:
                                 update={
                                     "phase": "capturing",
                                     "exposure_s": exposure_s,
-                                    "message": f"Capturing {filter_name} flats",
+                                    "message": f"Capturing {optic_id} {filter_name} flats",
                                 }
                             ),
                         )
                         frame_id = await self._save_calibration_frame(
+                        camera=camera,
                             duration_s=exposure_s,
                             frame_type=FrameType.FLAT,
                             context=context,
@@ -2355,6 +2439,7 @@ class CaptureService:
                                 }
                             )
                         )
+            await self._check_calibration_cancel(continue_guard)
             if generate_master:
                 await self._generate_calibration_masters(
                     kind=kind,
@@ -2389,26 +2474,13 @@ class CaptureService:
         except Exception as exc:
             _log.exception("automatic calibration capture failed")
             if self._section.calibration.phase != "integrating":
-                self._failed_exposure_camera = self._camera
+                self._failed_exposure_camera = camera
             message = f"{type(exc).__name__}: {exc}"
             self._publish(
                 last_error=message,
                 calibration=self._section.calibration.model_copy(
                     update={"status": "failed", "error": str(exc), "message": None}
                 ),
-            )
-        finally:
-            self._calibration_task = None
-            self._calibration_cancel_requested = False
-            self._calibration_target_count = None
-            self._publish(
-                in_progress=getattr(self, "_failed_exposure_camera", None) is not None,
-                stage=None,
-                duration_s=None,
-                started_at=None,
-                object_name=None,
-                frame_type=None,
-                gain=None,
             )
 
     async def _generate_calibration_masters(
@@ -2490,12 +2562,13 @@ class CaptureService:
         stored = first_image.header.get("MAXADU")
         if isinstance(stored, int | float) and not isinstance(stored, bool) and stored > 0:
             return float(stored)
-        if self._camera is None:
+        camera = self._wide_camera if calibration_optic_id(first_image.header) == "wide" else self._camera
+        if camera is None:
             raise CalibrationConfigurationError(
                 "the retained flats predate MAXADU metadata; connect their camera to "
                 "verify illumination before rebuilding the master"
             )
-        return _as_float(await self._camera.get("maxadu"), label="Camera.MaxADU")
+        return _as_float(await camera.get("maxadu"), label="Camera.MaxADU")
 
     async def _build_one_calibration_master(
         self,
@@ -2510,6 +2583,8 @@ class CaptureService:
         folder = self._settings.capture.folder
         assert folder is not None
         first = records[0]
+        optic = calibration_optic_id((await asyncio.to_thread(FitsRowSource.open, first.path)).header)
+        lens = optic or "tele"
         suffix_filter = ""
         if filter_name is not None:
             safe_filter = (
@@ -2539,7 +2614,7 @@ class CaptureService:
             folder
             / "Calibration"
             / type_folder
-            / f"master_{kind}{suffix_filter}_{exposure_text}_g{gain}{temperature_text}_{stamp}.fits"
+            / f"master_{kind}_{lens}{suffix_filter}_{exposure_text}_g{gain}{temperature_text}_{stamp}.fits"
         )
         collision = 2
         while output.exists():
@@ -2550,7 +2625,7 @@ class CaptureService:
         if kind == "flat":
             groups = await self.list_calibration_source_sets()
             bias_group = _best_bias_source_set(
-                groups, gain=gain, width=first.width, height=first.height
+                groups, gain=gain, width=first.width, height=first.height, optic_id=optic
             )
             if bias_group is None:
                 raise CalibrationMasterError(
@@ -2604,6 +2679,7 @@ class CaptureService:
                 gain=source.gain,
                 width=source.width,
                 height=source.height,
+                optic_id=source.optic_id,
             )
             if bias_group is None:
                 raise CalibrationConfigurationError(
@@ -3247,6 +3323,11 @@ class CaptureService:
                     continue
                 if image.data.shape != light.data.shape:
                     continue
+                try:
+                    if not calibration_optics_match(image.header, matching_optic_id):
+                        continue
+                except CalibrationMasterError:
+                    continue
                 image_type = image.header.get("IMAGETYP")
                 if isinstance(image_type, str) and image_type.casefold() != frame_type.value:
                     continue
@@ -3286,7 +3367,6 @@ class CaptureService:
                 for item in candidates[FrameType.FLAT]
                 if item[1].get("GAIN") == gain
                 and _canonical_filter_name(item[1].get("FILTER")) == filter_name
-                and _canonical_optic_id(item[1]) == matching_optic_id
             ]
         )
         return dark, bias, flat
@@ -3781,7 +3861,26 @@ class CaptureService:
         if self._rtsp.status.active:
             await self.stop_live_stack_rtsp()
 
+    async def set_wide_companion_policy(self, enabled: bool) -> None:
+        """Reserve preview ownership before persisting a changed capture policy."""
+        self._wide_policy_transition = True
+        try:
+            await self.drain_wide_preview()
+            await self._settings.set_wide_companion_enabled(enabled)
+            self.refresh_wide_stream_policy()
+        finally:
+            self._wide_policy_transition = False
+
+    def refresh_wide_stream_policy(self) -> None:
+        if self._settings.capture.wide_companion_enabled:
+            # Never replay an obsolete Wide preview as a live camera feed.
+            self._wide_rtsp_pixels = None
+        else:
+            self._ensure_wide_rtsp_polling()
+
     def _ensure_wide_rtsp_polling(self) -> None:
+        if self._settings.capture.wide_companion_enabled:
+            return
         config = self._rtsp.status.config
         mount = self._state.snapshot.mount
         stack_available = (
@@ -3807,7 +3906,9 @@ class CaptureService:
             )
 
     def _wide_preview_busy(self) -> bool:
-        return self._section.in_progress or getattr(self, "_auxiliary_camera_busy", lambda: False)()
+        return (getattr(self, "_wide_policy_transition", False)
+                or self._section.in_progress
+                or getattr(self, "_auxiliary_camera_busy", lambda: False)())
 
     async def drain_wide_preview(self) -> None:
         """Wait for preview retrieval/cleanup before touching the main camera."""
@@ -3989,12 +4090,12 @@ class CaptureService:
             raise LiveStackError("Main capture started while waiting for Wide preview")
 
     async def _capture_wide_rtsp_frame(self) -> None:
-        if self._wide_preview_busy():
+        if self._settings.capture.wide_companion_enabled or self._wide_preview_busy():
             # Native camera/1 shares capture resources with camera/0.
             # Preserve the last preview; science acquisition has priority.
             return
         async with self._wide_capture_lock:
-            if not self._wide_preview_busy():
+            if not self._settings.capture.wide_companion_enabled and not self._wide_preview_busy():
                 if getattr(self, "_wide_cleanup_error", None) is not None:
                     raise LiveStackError(self._wide_cleanup_error)
                 async with asyncio.timeout(WIDE_STREAM_MAX_EXPOSURE_S + 8):
@@ -4099,6 +4200,8 @@ class CaptureService:
     async def _poll_wide_rtsp(self) -> None:
         failures = 0
         while self._rtsp.status.active:
+            if self._settings.capture.wide_companion_enabled:
+                return
             config = self._rtsp.status.config
             mount = self._state.snapshot.mount
             stack_available = (
@@ -4141,7 +4244,7 @@ class CaptureService:
             or self._live_stack is None
             or self._live_stack.pixels is None
         ):
-            if self._wide_rtsp_pixels is None:
+            if self._settings.capture.wide_companion_enabled or self._wide_rtsp_pixels is None:
                 return None
             now = self._stream_local_time()
             temperature = (
@@ -4211,7 +4314,8 @@ class CaptureService:
             overlay_lines=lines,
             version=(
                 f"{version}:wide:{self._wide_rtsp_version}"
-                if self._settings.streaming.wide_camera_picture_in_picture
+                if (self._settings.streaming.wide_camera_picture_in_picture
+                    and not self._settings.capture.wide_companion_enabled)
                 else version
             ),
             # Overlay clocks and queue notices change independently of pixels.
@@ -4226,7 +4330,8 @@ class CaptureService:
             header_text=header,
             picture_in_picture_pixels=(
                 self._wide_rtsp_pixels
-                if self._settings.streaming.wide_camera_picture_in_picture
+                if (self._settings.streaming.wide_camera_picture_in_picture
+                    and not self._settings.capture.wide_companion_enabled)
                 else None
             ),
             picture_in_picture_bayer_pattern=self._wide_rtsp_bayer_pattern,

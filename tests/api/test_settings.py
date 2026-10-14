@@ -144,6 +144,32 @@ def test_capture_center_after_drift_defaults_disabled_and_persists_opt_in(
     assert paired.get("/api/settings/capture-center-after-drift").json() == saved.json()
 
 
+def test_wide_companion_defaults_off_persists_and_preserves_stream_preferences(paired: TestClient) -> None:
+    before = paired.get("/api/settings/streaming").json()
+    assert paired.get("/api/settings/capture/wide-companion").json() == {"enabled": False}
+    saved = paired.put("/api/settings/capture/wide-companion", json={"enabled": True})
+    assert saved.status_code == 200, saved.text
+    assert paired.get("/api/settings/capture/wide-companion").json() == {"enabled": True}
+    assert paired.get("/api/settings/streaming").json() == before
+    capture = services_of(paired).capture
+    assert not capture._wide_preview_busy()  # The policy cannot block science admission.
+    assert capture._wide_rtsp_pixels is None
+    assert paired.put("/api/settings/capture/wide-companion", json={"enabled": False}).status_code == 200
+
+
+@pytest.mark.parametrize("status", ["running", "paused"])
+def test_wide_companion_cannot_change_during_plan(paired: TestClient, status: str) -> None:
+    from ssc.state.events import RunChanged
+    from ssc.state.models import RunState
+    at = datetime.now(UTC)
+    services_of(paired).state.apply(RunChanged(run=RunState(
+        run_id="dual-test", plan_id="plan", plan_name="night", plan_revision=1,
+        night_date=at.date(), status=status, started_at=at,
+    )))
+    assert paired.put("/api/settings/capture/wide-companion", json={"enabled": True}).status_code == 409
+    assert paired.get("/api/settings/capture/wide-companion").json() == {"enabled": False}
+
+
 def test_auto_lp_filter_defaults_disabled_and_persists_opt_in(paired: TestClient) -> None:
     assert paired.get("/api/settings/auto-lp-filter").json() == {"enabled": False}
     saved = paired.put("/api/settings/auto-lp-filter", json={"enabled": True})

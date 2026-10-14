@@ -335,6 +335,8 @@ class CaptureSettings(SettingsModel):
     #: otherwise-unset filter to LP. Existing/explicit plan filters are never
     #: rewritten.
     auto_lp_filter_for_emission_targets: bool = False
+    #: Experimental raw Wide companion frames during scheduled Tele lights.
+    wide_companion_enabled: bool = False
 
     @model_validator(mode="after")
     def _dither_range_is_ordered(self) -> CaptureSettings:

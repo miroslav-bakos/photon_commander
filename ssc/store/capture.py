@@ -21,11 +21,13 @@ row order or a user's later reorganising of files on disk can desynchronise it.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
+from weakref import WeakKeyDictionary
 
 import aiosqlite
 
@@ -101,8 +103,11 @@ class HistoricalCaptureFrame:
 class CaptureRepository:
     """Create/complete/discard/list over ``capture_frame``."""
 
+    _dual_locks: WeakKeyDictionary[Database, asyncio.Lock] = WeakKeyDictionary()
+
     def __init__(self, database: Database) -> None:
         self._database = database
+        self.dual_capture_lock = self._dual_locks.setdefault(database, asyncio.Lock())
 
     async def get_quality_cache(self, path: Path, identity: str) -> str | None:
         row = await self._database.fetch_one(
@@ -121,6 +126,71 @@ class CaptureRepository:
             "DELETE FROM capture_quality_cache WHERE path IN "
             "(SELECT path FROM capture_quality_cache ORDER BY updated_at DESC, path LIMIT -1 OFFSET 4096)"
         )
+
+    async def freeze_run_companion(self, run_id: str, enabled: bool) -> bool:
+        await self._database.execute(
+            "INSERT OR IGNORE INTO capture_run_companion(run_id, enabled) VALUES (?, ?)",
+            (run_id, int(enabled)),
+        )
+        row = await self._database.fetch_one("SELECT enabled FROM capture_run_companion WHERE run_id = ?", (run_id,))
+        assert row is not None
+        return bool(row["enabled"])
+
+    async def begin_dual_pair(self, run_id: str, block_id: str, frame_index: int, intent: str) -> None:
+        await self._database.execute(
+            "INSERT OR IGNORE INTO dual_capture_intent(run_id, block_id, frame_index, intent) VALUES (?, ?, ?, ?)",
+            (run_id, block_id, frame_index, intent),
+        )
+        row = await self._database.fetch_one(
+            "SELECT intent FROM dual_capture_intent WHERE run_id = ? AND block_id = ? AND frame_index = ?",
+            (run_id, block_id, frame_index),
+        )
+        if row is None or row["intent"] != intent:
+            raise ValueError("paired exposure intent changed during recovery")
+
+    async def dual_issued(self, run_id: str, block_id: str, frame_index: int, role: str, *, mark: bool = False) -> bool:
+        if role not in {"tele", "wide"}:
+            raise ValueError("unknown camera role")
+        if mark:
+            await self._database.execute(
+                f"UPDATE dual_capture_intent SET {role}_issued = 1 WHERE run_id = ? AND block_id = ? AND frame_index = ?",
+                (run_id, block_id, frame_index),
+            )
+        row = await self._database.fetch_one(
+            f"SELECT {role}_issued AS issued FROM dual_capture_intent WHERE run_id = ? AND block_id = ? AND frame_index = ?",
+            (run_id, block_id, frame_index),
+        )
+        return row is not None and row["issued"] == 1
+
+    async def settle_dual_member(self, run_id: str, block_id: str, frame_index: int, role: str) -> None:
+        if role not in {"tele", "wide"}:
+            raise ValueError("unknown camera role")
+        await self._database.execute(
+            f"UPDATE dual_capture_intent SET {role}_issued = 2 WHERE run_id = ? AND block_id = ? AND frame_index = ?",
+            (run_id, block_id, frame_index),
+        )
+
+    async def pending_dual_runs(self) -> list[str]:
+        rows = await self._database.fetch_all(
+            "SELECT DISTINCT run_id FROM dual_capture_intent WHERE tele_issued = 1 OR wide_issued = 1"
+        )
+        return [str(row["run_id"]) for row in rows]
+
+    async def pending_dual_owned(self, run_id: str, role: str) -> list[tuple[str, int]]:
+        if role not in {"tele", "wide"}:
+            raise ValueError("unknown camera role")
+        rows = await self._database.fetch_all(
+            f"SELECT block_id, frame_index FROM dual_capture_intent WHERE run_id = ? AND {role}_issued = 1",
+            (run_id,),
+        )
+        return [(str(row["block_id"]), int(row["frame_index"])) for row in rows]
+
+    async def dual_member(self, run_id: str, block_id: str, frame_index: int, role: str) -> CaptureFrameRecord | None:
+        row = await self._database.fetch_one(
+            f"{_SELECT} WHERE run_id = ? AND block_id = ? AND frame_index = ? AND optic_role = ?",
+            (run_id, block_id, frame_index, role),
+        )
+        return None if row is None else _record_of(row)
 
     async def path_exists(self, path: Path) -> bool:
         row = await self._database.fetch_one(
@@ -144,6 +214,8 @@ class CaptureRepository:
         run_id: str | None = None,
         block_id: str | None = None,
         now: datetime | None = None,
+        optic_role: str = "tele",
+        frame_index: int | None = None,
     ) -> int:
         """Insert the durable placeholder row. Returns its id.
 
@@ -174,7 +246,7 @@ class CaptureRepository:
         return await self._database.execute_insert(
             "INSERT INTO capture_frame (path, object, filter, frame_type, date_obs, "
             "exposure_s, gain, ccd_temp_c, width, height, run_id, block_id, status, "
-            "created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'writing', ?)",
+            "created_at, optic_role, frame_index) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'writing', ?, ?, ?)",
             (
                 str(path),
                 object_name,
@@ -189,6 +261,8 @@ class CaptureRepository:
                 run_id,
                 block_id,
                 moment.isoformat(),
+                optic_role,
+                frame_index,
             ),
         )
 
@@ -267,7 +341,7 @@ class CaptureRepository:
         """Read a persisted item in acquisition order without mixing other runs."""
         statuses = "('complete', 'writing')" if include_writing else "('complete')"
         rows = await self._database.fetch_all(
-            f"{_SELECT} WHERE run_id = ? AND block_id = ? AND status IN {statuses} "
+            f"{_SELECT} WHERE run_id = ? AND block_id = ? AND optic_role = 'tele' AND status IN {statuses} "
             "ORDER BY date_obs, id", (run_id, block_id),
         )
         return [_record_of(row) for row in rows]
@@ -313,7 +387,7 @@ class CaptureRepository:
         rows = await self._database.fetch_all(
             "SELECT f.id, f.run_id, f.block_id, f.object, f.frame_type, f.status, f.exposure_s, s.outcome "
             "FROM capture_frame f LEFT JOIN capture_stack_outcome s ON s.frame_id = f.id "
-            f"WHERE f.run_id IN ({placeholders}) ORDER BY f.id",
+            f"WHERE f.run_id IN ({placeholders}) AND f.optic_role = 'tele' ORDER BY f.id",
             tuple(run_ids),
         )
         return [
@@ -342,7 +416,7 @@ class CaptureRepository:
             "COUNT(CASE WHEN f.status = 'complete' AND s.outcome = 'error' THEN 1 END) AS errors, "
             "COUNT(CASE WHEN f.status = 'complete' AND f.frame_type = 'light' AND s.outcome IS NULL THEN 1 END) AS unmeasured, "
             "SUM(CASE WHEN f.status = 'complete' AND s.outcome = 'accepted' THEN f.exposure_s END) AS accepted_integration "
-            "FROM capture_frame f LEFT JOIN capture_stack_outcome s ON s.frame_id = f.id WHERE f.run_id = ?",
+            "FROM capture_frame f LEFT JOIN capture_stack_outcome s ON s.frame_id = f.id WHERE f.run_id = ? AND f.optic_role = 'tele'",
             (run_id,),
         )
         assert row is not None
@@ -371,7 +445,10 @@ class CaptureRepository:
         does."""
         row = await self._database.fetch_one(
             "SELECT COUNT(*) AS n FROM capture_frame WHERE run_id = ? AND block_id = ? "
-            "AND status = 'complete'",
+            "AND status = 'complete' AND optic_role = 'tele' "
+            "AND (frame_index IS NULL OR EXISTS (SELECT 1 FROM capture_frame w "
+            "WHERE w.run_id = capture_frame.run_id AND w.block_id = capture_frame.block_id "
+            "AND w.frame_index = capture_frame.frame_index AND w.optic_role = 'wide' AND w.status = 'complete'))",
             (run_id, block_id),
         )
         assert row is not None, "COUNT(*) always returns exactly one row"

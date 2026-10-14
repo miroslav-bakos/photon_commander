@@ -643,7 +643,13 @@ describe("Capture camera selection", () => {
     fireEvent.click(screen.getByRole("button", { name: "Dark" }));
     expect(screen.getByRole("button", { name: "Capture" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Capture dark set" })).toBeDisabled();
-    expect(screen.getByText(/Automatic calibration and dark\/bias capture are unavailable/)).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /Wide lens is fully covered/ })).not.toBeChecked();
+    fireEvent.click(screen.getByRole("checkbox", { name: /Wide lens is fully covered/ }));
+    expect(screen.getByRole("button", { name: "Capture dark set" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Capture" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("radio", { name: "Both" }));
+    expect(screen.getByRole("checkbox", { name: /Wide lens is fully covered/ })).not.toBeChecked();
+    expect(screen.getByRole("button", { name: "Capture dark set" })).toBeDisabled();
   });
 
   it("does not offer unsupported Wide hardware", async () => {

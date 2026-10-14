@@ -991,6 +991,7 @@ async def capture_one_exposure(
     sequence: int = 0,
     run_id: str | None = None,
     block_id: str | None = None,
+    frame_index: int | None = None,
     poll_interval_s: float = DEFAULT_POLL_INTERVAL_S,
     ready_timeout_s: float | None = None,
     now: Callable[[], datetime] = lambda: datetime.now(tz=UTC),
@@ -1056,6 +1057,7 @@ async def capture_one_exposure(
         sequence=sequence,
         run_id=run_id,
         block_id=block_id,
+        frame_index=frame_index,
         now=now(),
     )
     _log.info(

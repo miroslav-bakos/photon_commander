@@ -15,7 +15,8 @@ from ssc.capture.masters import CalibrationMasterError, build_calibration_master
 from ssc.skymap.fits import read_fits_image
 
 
-def _write(path: Path, pixels: np.ndarray, kind: FrameType, *, gain: int = 10) -> Path:
+def _write(path: Path, pixels: np.ndarray, kind: FrameType, *, gain: int = 10,
+           optic_id: str | None = None, wide_camera: bool | None = False) -> Path:
     metadata = FrameMetadata(
         date_obs=datetime(2026, 9, 12, tzinfo=UTC),
         exposure_s=0.1,
@@ -35,7 +36,7 @@ def _write(path: Path, pixels: np.ndarray, kind: FrameType, *, gain: int = 10) -
         telescope_name="test",
         ssc_version="test",
         device_firmware=None,
-        optic_id="tele" if kind is FrameType.FLAT else None,
+        optic_id=optic_id or ("tele" if kind is FrameType.FLAT else None),
         flat_source="panel" if kind is FrameType.FLAT else None,
         bin_x=1,
         bin_y=1,
@@ -51,7 +52,7 @@ def _write(path: Path, pixels: np.ndarray, kind: FrameType, *, gain: int = 10) -
         alignment_mode=1,
         aperture_diameter_mm=30.0,
         focal_ratio=160.0 / 30.0,
-        wide_camera=False,
+        wide_camera=wide_camera,
         total_exposure_s=0.1,
     )
     write_fits_file(path, pixels, metadata)
@@ -587,3 +588,49 @@ def test_copy_backup_failure_does_not_touch_prior_file(tmp_path, monkeypatch):
         masters._backup_master_artifact(source, backup)
     assert source.read_bytes() == b"previous published master"
     assert not backup.exists()
+
+
+@pytest.mark.parametrize("kind", [FrameType.BIAS, FrameType.DARK])
+def test_same_size_tele_and_wide_sources_cannot_mix(tmp_path: Path, kind: FrameType) -> None:
+    paths = tuple(_write(tmp_path / f"source-{i}.fits", np.full((4, 5), 1000, np.uint16),
+                         kind, optic_id="wide" if i == 9 else "tele", wide_camera=i == 9)
+                  for i in range(10))
+    with pytest.raises(CalibrationMasterError, match="optic ids"):
+        build_calibration_master(frame_type=kind, source_paths=paths,
+                                 output_path=tmp_path / "master.fits", ssc_version="test")
+
+
+@pytest.mark.parametrize("kind", [FrameType.BIAS, FrameType.DARK])
+def test_wide_master_keeps_explicit_optic_provenance(tmp_path: Path, kind: FrameType) -> None:
+    paths = tuple(_write(tmp_path / f"source-{i}.fits", np.full((4, 5), 1000, np.uint16),
+                         kind, optic_id="wide", wide_camera=True) for i in range(10))
+    output = tmp_path / "master.fits"
+    build_calibration_master(frame_type=kind, source_paths=paths,
+                             output_path=output, ssc_version="test")
+    assert read_fits_image(output.read_bytes()).header["OPTICID"] == "wide"
+
+
+def test_legacy_unknown_master_is_never_a_wide_match() -> None:
+    from ssc.capture.masters import calibration_optics_match
+    assert calibration_optics_match({}, "tele")
+    assert calibration_optics_match({}, None)
+    assert not calibration_optics_match({}, "wide")
+    assert calibration_optics_match({"WIDECAM": 1}, "wide")
+    assert not calibration_optics_match({"WIDECAM": 0}, "wide")
+
+
+def test_conflicting_optic_provenance_is_rejected() -> None:
+    from ssc.capture.masters import calibration_optic_id
+    with pytest.raises(CalibrationMasterError, match="conflicting optic"):
+        calibration_optic_id({"OPTICID": "tele", "WIDECAM": 1})
+
+
+def test_wide_flat_rejects_legacy_unknown_bias_pedestal(tmp_path: Path) -> None:
+    biases = tuple(_write(tmp_path / f"bias-{i}.fits", np.full((4, 5), 100, np.uint16),
+                          FrameType.BIAS, wide_camera=None) for i in range(10))
+    flats = tuple(_write(tmp_path / f"flat-{i}.fits", np.full((4, 5), 30000, np.uint16),
+                         FrameType.FLAT, optic_id="wide", wide_camera=True) for i in range(10))
+    with pytest.raises(CalibrationMasterError, match="bias optic"):
+        build_calibration_master(frame_type=FrameType.FLAT, source_paths=flats,
+                                 bias_paths=biases, output_path=tmp_path / "master.fits",
+                                 ssc_version="test", max_adu=65535)

@@ -1,4 +1,76 @@
 {
+  "Both": [
+    "Obe",
+    "Obě"
+  ],
+  "Before any flat is captured, Photon Commander verifies that at least 10 retained bias frames match the selected lens, gain and camera dimensions.": [
+    "Pred snímaním flatov Photon Commander overí aspoň 10 zachovaných bias snímok so zhodným objektívom, gainom a rozmermi snímača.",
+    "Před snímáním flatů Photon Commander ověří alespoň 10 zachovaných bias snímků se shodným objektivem, gainem a rozměry snímače."
+  ],
+  "/tele or wide.": [
+    "/tele alebo wide.",
+    "/tele nebo wide."
+  ],
+  "Confirm the Wide lens is physically covered for dark/bias calibration": [
+    "Potvrď fyzické zakrytie Wide objektívu pri dark/bias kalibrácii",
+    "Potvrď fyzické zakrytí Wide objektivu při dark/bias kalibraci"
+  ],
+  "Scheduled calibration supports Tele only; Wide calibration must be manual": [
+    "Plánovaná kalibrácia podporuje iba Tele; Wide kalibrácia musí byť manuálna",
+    "Plánovaná kalibrace podporuje pouze Tele; Wide kalibrace musí být ruční"
+  ],
+  "Wide companion camera is unavailable": [
+    "Kamera pre sprievodné Wide snímanie nie je dostupná",
+    "Kamera pro doprovodné Wide snímání není dostupná"
+  ],
+  "Wide companion requires the same exposure within {minimum}-{maximum} seconds; requested {duration}": [
+    "Sprievodné Wide snímanie vyžaduje rovnakú expozíciu v rozsahu {minimum}–{maximum} sekúnd; požadovaná {duration}",
+    "Doprovodné Wide snímání vyžaduje stejnou expozici v rozsahu {minimum}–{maximum} sekund; požadovaná {duration}"
+  ],
+  "Preparing {optic} calibration run": [
+    "Pripravujem kalibráciu {optic}",
+    "Připravuji kalibraci {optic}"
+  ],
+  "Capturing {optic} {kind} frames": [
+    "Snímam {optic} {kind} snímky",
+    "Snímám {optic} {kind} snímky"
+  ],
+  "Experimental: save Wide companion exposures": [
+    "Experimentálne: ukladať sprievodné Wide expozície",
+    "Experimentální: ukládat doprovodné Wide expozice"
+  ],
+  "Scheduled Tele lights also save independent Wide FITS at the same exposure duration, up to 60 seconds. Wide streaming is disabled. Calibration remains manual; Wide darks require a covered lens.": [
+    "Plánované Tele lighty ukladajú aj samostatné Wide FITS s rovnakou expozíciou, najviac 60 sekúnd. Wide streamovanie je vypnuté. Kalibrácia zostáva manuálna; Wide darky vyžadujú zakrytý objektív.",
+    "Plánované Tele lighty ukládají také samostatné Wide FITS se stejnou expozicí, nejvýše 60 sekund. Wide streamování je vypnuté. Kalibrace zůstává ruční; Wide darky vyžadují zakrytý objektiv."
+  ],
+  "Could not load the Wide companion setting.": [
+    "Nepodarilo sa načítať nastavenie sprievodného Wide snímania.",
+    "Nepodařilo se načíst nastavení doprovodného Wide snímání."
+  ],
+  "Loading the Wide companion setting…": [
+    "Načítavam nastavenie sprievodného Wide snímania…",
+    "Načítám nastavení doprovodného Wide snímání…"
+  ],
+  "Saving Wide companion setting…": [
+    "Ukladám nastavenie sprievodného Wide snímania…",
+    "Ukládám nastavení doprovodného Wide snímání…"
+  ],
+  "Wide lens is fully covered with an opaque cap. The Tele Dark filter does not cover Wide.": [
+    "Wide objektív je úplne zakrytý nepriehľadnou krytkou. Tele Dark filter nezakrýva Wide.",
+    "Wide objektiv je úplně zakrytý neprůhlednou krytkou. Tele Dark filtr nezakrývá Wide."
+  ],
+  "Calibration sets run separately for Tele and Wide. Keep both lenses prepared until completion.": [
+    "Kalibračné sady sa snímajú samostatne pre Tele a Wide. Oba objektívy nechaj pripravené až do dokončenia.",
+    "Kalibrační sady se snímají samostatně pro Tele a Wide. Oba objektivy ponech připravené až do dokončení."
+  ],
+  "Stop the active plan before changing Wide companion capture.": [
+    "Pred zmenou sprievodného Wide snímania zastav aktívny plán.",
+    "Před změnou doprovodného Wide snímání zastav aktivní plán."
+  ],
+  "Finish capture before changing Wide companion capture.": [
+    "Pred zmenou sprievodného Wide snímania dokonči snímanie.",
+    "Před změnou doprovodného Wide snímání dokonči snímání."
+  ],
   "Frame quality analysis is busy; retry shortly.": [
     "Analýza kvality snímok je vyťažená; skús to o chvíľu.",
     "Analýza kvality snímků je vytížená; zkus to za chvíli."

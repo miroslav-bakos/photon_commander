@@ -23,6 +23,8 @@ vi.mock("../../api/astro", () => ({
 
 const lpState = vi.hoisted(() => ({ data: { enabled: false } as { enabled: boolean } | undefined, isError: false, refetch: vi.fn() }));
 vi.mock("../../api/settings", () => ({
+  useWideCompanionSettingsQuery: () => ({ data: { enabled: false }, isError: false }),
+  useSetWideCompanionMutation: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
   useAutoLpFilterSettingsQuery: () => lpState,
   useSetAutoLpFilterMutation: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
 }));

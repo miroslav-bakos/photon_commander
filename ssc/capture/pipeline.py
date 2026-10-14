@@ -109,6 +109,7 @@ async def capture_frame(
     sequence: int = 0,
     run_id: str | None = None,
     block_id: str | None = None,
+    frame_index: int | None = None,
     now: datetime | None = None,
 ) -> int:
     """Write ``frame`` into ``folder`` and catalogue it. Returns the new
@@ -168,6 +169,8 @@ async def capture_frame(
         height=int(height),
         run_id=run_id,
         block_id=block_id,
+        optic_role="wide" if frame.metadata.wide_camera else "tele",
+        frame_index=frame_index,
         now=now,
     )
     write_fits_file(path, frame.pixels, frame.metadata)
@@ -221,7 +224,7 @@ def _validate_and_sync_final(record: CaptureFrameRecord) -> None:
             os.close(directory)
 
 
-async def reconcile_incomplete(repo: CaptureRepository) -> list[Path]:
+async def reconcile_incomplete(repo: CaptureRepository, *, records: list[CaptureFrameRecord] | None = None) -> list[Path]:
     """Recover verified finals; discard only placeholders with no final file.
 
     Unknown, malformed or mismatched final files and their writing rows remain
@@ -230,7 +233,7 @@ async def reconcile_incomplete(repo: CaptureRepository) -> list[Path]:
     """
     removed: list[Path] = []
     unresolved: list[str] = []
-    for record in await repo.list_writing():
+    for record in (await repo.list_writing() if records is None else records):
         if not record.path.exists():
             removed.append(await repo.discard_frame(record.id))
             continue

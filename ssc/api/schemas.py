@@ -2261,7 +2261,8 @@ class CalibrationCaptureStartRequest(Request):
     duration_s: float | None = Field(default=None, gt=0)
     gain: int | None = Field(default=200, ge=0)
     filter_positions: list[int] = Field(default_factory=list, max_length=16)
-    optic_id: str | None = Field(default=None, min_length=1, max_length=64)
+    optic_id: Literal["tele", "wide", "both"] | None = None
+    covered_lens_confirmed: bool = False
     flat_source: Literal["panel", "sky"] | None = None
     generate_master: bool = False
     keep_only_master: bool = False
@@ -2269,7 +2270,7 @@ class CalibrationCaptureStartRequest(Request):
     @model_validator(mode="after")
     def flat_fields_match_kind(self) -> CalibrationCaptureStartRequest:
         if self.kind == "flat":
-            if not self.filter_positions:
+            if self.optic_id != "wide" and not self.filter_positions:
                 raise ValueError("an automatic flat run requires at least one filter position")
             if len(set(self.filter_positions)) != len(self.filter_positions):
                 raise ValueError("flat filter positions must be unique")
@@ -2277,8 +2278,8 @@ class CalibrationCaptureStartRequest(Request):
                 raise ValueError("flat filter positions must be non-negative")
             if self.optic_id is None or self.flat_source is None:
                 raise ValueError("an automatic flat run requires optic_id and flat_source")
-        elif self.filter_positions or self.optic_id is not None or self.flat_source is not None:
-            raise ValueError("bias/dark runs do not use flat filter/source/optic fields")
+        elif self.filter_positions or self.flat_source is not None:
+            raise ValueError("bias/dark runs do not use flat filter/source fields")
         if self.kind == "dark" and self.duration_s is None:
             raise ValueError("an automatic dark run requires duration_s")
         if self.kind != "dark" and self.duration_s is not None:
@@ -2330,6 +2331,7 @@ class CalibrationSourceSetModel(Response):
     frame_count: int
     gain: int | None
     exposure_s: float | None
+    optic_id: str | None
     filter_name: str | None
     width: int
     height: int

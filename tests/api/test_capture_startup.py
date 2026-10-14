@@ -11,8 +11,10 @@ it — not merely that ``ssc.capture.reconcile_incomplete`` works in isolation
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -150,6 +152,7 @@ async def test_wide_preview_does_not_touch_camera_during_main_capture() -> None:
 
     from ssc.api.capture_orchestrator import CaptureService
     capture = object.__new__(CaptureService)
+    capture._settings = SimpleNamespace(capture=SimpleNamespace(wide_companion_enabled=False))
     capture._section = SimpleNamespace(in_progress=True)
     capture._wide_camera = SimpleNamespace(start_exposure=AsyncMock(), get=AsyncMock())
     await capture._capture_wide_rtsp_frame()
@@ -165,6 +168,7 @@ async def test_wide_preview_rechecks_main_ownership_after_waiting_for_camera() -
     from ssc.api.capture_orchestrator import CaptureService
 
     capture = object.__new__(CaptureService)
+    capture._settings = SimpleNamespace(capture=SimpleNamespace(wide_companion_enabled=False))
     capture._section = SimpleNamespace(in_progress=False)
     capture._wide_capture_lock = asyncio.Lock()
     capture._capture_wide_rtsp_frame_locked = AsyncMock()
@@ -184,6 +188,7 @@ async def test_wide_preview_does_not_touch_camera_during_auxiliary_acquisition()
     from ssc.api.capture_orchestrator import CaptureService
 
     capture = object.__new__(CaptureService)
+    capture._settings = SimpleNamespace(capture=SimpleNamespace(wide_companion_enabled=False))
     capture._section = SimpleNamespace(in_progress=False)
     import asyncio
 
@@ -205,6 +210,7 @@ async def test_cancelled_wide_preview_drains_abort_before_main_can_acquire() -> 
     from ssc.api.capture_orchestrator import CaptureService
 
     capture = object.__new__(CaptureService)
+    capture._settings = SimpleNamespace(capture=SimpleNamespace(wide_companion_enabled=False))
     capture._section = SimpleNamespace(in_progress=False)
     capture._wide_cleanup_error = None
     capture._wide_capture_lock = asyncio.Lock()
@@ -254,6 +260,7 @@ async def test_wide_cleanup_failure_blocks_main_acquisition() -> None:
     )
 
     capture = object.__new__(CaptureService)
+    capture._settings = SimpleNamespace(capture=SimpleNamespace(wide_companion_enabled=False))
     capture._wide_capture_lock = asyncio.Lock()
     capture._wide_cleanup_error = None
     capture._publish = Mock()
@@ -273,6 +280,7 @@ async def test_wide_timeout_aborts_exposure_before_releasing_lock() -> None:
     from ssc.api.capture_orchestrator import CaptureService, LiveStackError
 
     capture = object.__new__(CaptureService)
+    capture._settings = SimpleNamespace(capture=SimpleNamespace(wide_companion_enabled=False))
     capture._section = SimpleNamespace(in_progress=False)
     capture._wide_capture_lock = asyncio.Lock()
     capture._wide_cleanup_error = None
@@ -347,7 +355,10 @@ async def test_scheduled_capture_rejected_cleanup_does_not_claim_or_touch_device
     camera = SimpleNamespace(start_exposure=AsyncMock(), get=AsyncMock())
     port = AlpacaCapturePort(
         run_id="guard-test", device_commands=Mock(), camera=camera,
-        telescope=None, filterwheel=None, repo=Mock(),
+        telescope=None, filterwheel=None, repo=SimpleNamespace(
+            freeze_run_companion=AsyncMock(return_value=False),
+            pending_dual_owned=AsyncMock(return_value=[]), dual_capture_lock=asyncio.Lock(),
+        ),
         settings=SimpleNamespace(
             capture=SimpleNamespace(folder=tmp_path, folder_template="", filename_template="test"),
             device=SimpleNamespace(label=None), active_location=lambda: None,
@@ -373,6 +384,7 @@ async def test_wide_rejected_exposure_does_not_abort_another_capture() -> None:
     from ssc.client.errors import AlpacaRemoteError
 
     capture = object.__new__(CaptureService)
+    capture._settings = SimpleNamespace(capture=SimpleNamespace(wide_companion_enabled=False))
     capture._section = SimpleNamespace(in_progress=False)
     capture._wide_rtsp_exposure_s = .1
     capture._wide_rtsp_min_exposure_s = .1
@@ -392,6 +404,7 @@ async def test_wide_preview_skips_physical_main_capture_after_reconnect() -> Non
     from ssc.api.capture_orchestrator import CaptureService
 
     capture = object.__new__(CaptureService)
+    capture._settings = SimpleNamespace(capture=SimpleNamespace(wide_companion_enabled=False))
     capture._camera = SimpleNamespace(get=AsyncMock(return_value=2))
     capture._wide_camera = SimpleNamespace(is_connected=AsyncMock(return_value=True),
         get=AsyncMock(return_value=0), start_exposure=AsyncMock())
@@ -407,6 +420,7 @@ async def test_wide_cleanup_recovers_only_after_both_cameras_confirm_idle() -> N
     from ssc.api.capture_orchestrator import CaptureAlreadyRunningError, CaptureService
 
     capture = object.__new__(CaptureService)
+    capture._settings = SimpleNamespace(capture=SimpleNamespace(wide_companion_enabled=False))
     capture._wide_capture_lock = asyncio.Lock()
     capture._wide_cleanup_error = "cleanup failed"
     capture._section = SimpleNamespace(last_error="unrelated error")
@@ -431,6 +445,7 @@ def test_metadata_cache_is_shared_until_the_authoritative_connection_changes() -
     from ssc.state.store import StateStore
 
     capture = object.__new__(CaptureService)
+    capture._settings = SimpleNamespace(capture=SimpleNamespace(wide_companion_enabled=False))
     capture._state = StateStore(StateSnapshot(server_started_at=DATE_OBS))
     capture._unsupported_metadata_members = set()
     capture._wide_unsupported_metadata_members = set()
@@ -453,6 +468,7 @@ def _wide_poll_fixture():
     from ssc.api.capture_orchestrator import CaptureService
 
     capture = object.__new__(CaptureService)
+    capture._settings = SimpleNamespace(capture=SimpleNamespace(wide_companion_enabled=False))
     capture._rtsp = SimpleNamespace(status=SimpleNamespace(active=True,
         config=SimpleNamespace(wide_camera_until_stacked=True)))
     capture._state = SimpleNamespace(snapshot=SimpleNamespace(mount=SimpleNamespace(at_park=False)))

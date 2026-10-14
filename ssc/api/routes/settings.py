@@ -1026,6 +1026,29 @@ async def set_auto_lp_filter(
     return AutoLpFilterResponse(enabled=capture.auto_lp_filter_for_emission_targets)
 
 
+@router.get("/capture/wide-companion", response_model=AutoLpFilterResponse)
+async def read_wide_companion(services: ServicesDep, session: SessionDep) -> AutoLpFilterResponse:
+    del session
+    return AutoLpFilterResponse(enabled=services.settings.capture.wide_companion_enabled)
+
+
+@router.put("/capture/wide-companion", response_model=AutoLpFilterResponse)
+async def set_wide_companion(
+    body: AutoLpFilterRequest, services: ServicesDep, session: ControlDep
+) -> AutoLpFilterResponse:
+    del session
+    snapshot = services.state.snapshot
+    if snapshot.run is not None and snapshot.run.status in {"running", "paused"}:
+        raise HTTPException(status_code=409, detail="Stop the active plan before changing Wide companion capture.")
+    if snapshot.capture is not None and (snapshot.capture.in_progress or snapshot.capture.loop_active):
+        raise HTTPException(status_code=409, detail="Finish capture before changing Wide companion capture.")
+    # Drain a previously accepted preview before publishing the new policy.
+    await services.capture.set_wide_companion_policy(body.enabled)
+    capture = services.settings.capture
+    services.state.apply(SettingsChanged(settings=services.settings.summary()))
+    return AutoLpFilterResponse(enabled=capture.wide_companion_enabled)
+
+
 @router.get("/capture/path-tags", response_model=CapturePathTagsResponse)
 async def read_capture_path_tags(session: SessionDep) -> CapturePathTagsResponse:
     """The full ``%PLACEHOLDER%`` vocabulary a capture folder template may

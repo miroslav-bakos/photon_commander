@@ -336,6 +336,7 @@ async def start_calibration(
             gain=body.gain,
             filter_positions=body.filter_positions,
             optic_id=body.optic_id,
+            covered_lens_confirmed=body.covered_lens_confirmed,
             flat_source=body.flat_source,
             generate_master=body.generate_master,
             keep_only_master=body.keep_only_master,
@@ -390,6 +391,7 @@ async def list_calibration_source_sets(services: ServicesDep) -> CalibrationSour
                 and candidate.gain == group.gain
                 and candidate.width == group.width
                 and candidate.height == group.height
+                and (candidate.optic_id or "tele") == (group.optic_id or "tele")
                 and len(candidate.records) >= 10
             ),
             None,
@@ -412,6 +414,7 @@ async def list_calibration_source_sets(services: ServicesDep) -> CalibrationSour
                 gain=group.gain,
                 exposure_s=group.exposure_s,
                 filter_name=group.filter_name,
+                optic_id=group.optic_id,
                 width=group.width,
                 height=group.height,
                 started_at=group.started_at,

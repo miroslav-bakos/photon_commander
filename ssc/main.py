@@ -72,6 +72,7 @@ from ssc.api.capture_orchestrator import (
 )
 from ssc.api.deps import Services
 from ssc.api.device_commands import AlpacaCapturePort, AlpacaDeviceCommands, AlpacaDeviceEvents
+from ssc.api.dual_capture import dual_motion_guard
 from ssc.api.heater_automation import HeaterAutomationService
 from ssc.api.operation_service import OperationService
 from ssc.api.plans_service import PlanTimezoneUnknownError, current_night_date, resolve_timezone
@@ -613,7 +614,9 @@ class AlpacaDeviceGateway:
         tasks: TaskRegistry,
         state: StateStore | None = None,
         persist_autofocus: Callable[[AutofocusState], Awaitable[None]] | None = None,
+        before_motion: Callable[[], contextlib.AbstractAsyncContextManager[None]] | None = None,
     ) -> None:
+        self._before_motion = before_motion
         self._client = client
         self._telescope: AlpacaDeviceClient = client.device("telescope")
         self._camera: AlpacaDeviceClient = client.device("camera")
@@ -845,6 +848,20 @@ class AlpacaDeviceGateway:
             raise MountRefusedError("not connected to the scope")
 
     async def _mount_put(self, member: str, **params: object) -> None:
+        # Emergency stop must remain available even when camera cleanup fails.
+        stopping = member == "abortslew" or (member == "moveaxis" and params.get("Rate") == 0)
+        if not stopping and self._before_motion is not None:
+            try:
+                async with self._before_motion():
+                    await self._mount_put_unchecked(member, **params)
+            except MountRefusedError:
+                raise
+            except Exception as exc:
+                raise MountRefusedError(f"Camera cleanup required before mount command: {exc}") from exc
+        else:
+            await self._mount_put_unchecked(member, **params)
+
+    async def _mount_put_unchecked(self, member: str, **params: object) -> None:
         try:
             await self._telescope.put(member, **params)
         except AlpacaRemoteError as exc:
@@ -2107,14 +2124,22 @@ async def build_services(
             else AlpacaRuntime(port=config.alpaca_port)
         )
         await alpaca_runtime.start()
+        def _recover_companion_before_motion() -> contextlib.AbstractAsyncContextManager[None]:
+            assert alpaca_runtime is not None
+            return dual_motion_guard(repo=capture_repo,
+                tele=alpaca_runtime.client.device("camera"),
+                wide=alpaca_runtime.client.device("camera", 1))
+
         run_device_commands = AlpacaDeviceCommands(
-            alpaca_runtime.client, state=state, astro=astro_service
+            alpaca_runtime.client, state=state, astro=astro_service,
+            before_motion=_recover_companion_before_motion,
         )
         device_gateway = AlpacaDeviceGateway(
             alpaca_runtime.client,
             tasks=tasks,
             state=state,
             persist_autofocus=autofocus_repo.save,
+            before_motion=_recover_companion_before_motion,
         )
 
     device = DeviceService(
@@ -2219,6 +2244,8 @@ async def build_services(
         client = alpaca_runtime.client
         return AlpacaCapturePort(
             run_id=run_id,
+            wide_camera=client.device("camera", 1),
+            companion_enabled=settings.capture.wide_companion_enabled,
             device_commands=run_device_commands,
             camera=client.device("camera"),
             telescope=client.device("telescope"),

@@ -109,6 +109,7 @@ export interface CalibrationRunState {
 }
 
 export interface CalibrationCaptureStartRequest {
+  covered_lens_confirmed?: boolean;
   kind: Exclude<FrameType, "light">;
   count: number;
   duration_s?: number | null;
@@ -121,6 +122,7 @@ export interface CalibrationCaptureStartRequest {
 }
 
 export interface CalibrationSourceSet {
+  optic_id?: string | null;
   frame_ids: number[];
   frame_type: Exclude<FrameType, "light">;
   frame_count: number;

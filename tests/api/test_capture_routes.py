@@ -537,7 +537,7 @@ def test_calibration_capture_uses_its_configured_path_and_filename(
     assert response.status_code == 202, response.text
     final = _wait_for(paired, lambda section: section["in_progress"] is False)
     assert final["calibration"]["status"] == "completed"
-    files = list((tmp_path / "Cal" / "biases" / "100").glob("*.fits"))
+    files = list((tmp_path / "Cal" / "biases" / "100" / "tele").glob("*.fits"))
     assert len(files) == 1
     assert files[0].name.startswith("biases-100-")
 
@@ -1884,20 +1884,6 @@ def test_wide_capture_uses_wide_exposure_limits(paired: TestClient, tmp_path: Pa
     assert "exposuremin" in wide.get_calls
     assert tele.get_calls == []
 
-
-def test_automatic_wide_flat_rejects_before_tele_calibration(
-    paired: TestClient, tmp_path: Path
-) -> None:
-    _configure_folder(paired, tmp_path)
-    tele, wide = _camera(), _camera()
-    _install_capture_service(paired, camera=tele, wide_camera=wide)
-    response = paired.post("/api/capture/calibration/start", json={
-        "kind": "flat", "count": 1, "gain": 100, "filter_positions": [1],
-        "optic_id": "wide", "flat_source": "panel", "generate_master": False,
-    })
-    assert response.status_code == 422, response.text
-    assert "Automatic Wide calibration" in response.json()["detail"]
-    assert wide.start_exposure_calls == tele.start_exposure_calls == []
 
 
 def test_manual_capture_rejects_unknown_camera_before_device_commands(

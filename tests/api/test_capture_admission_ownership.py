@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from ssc.api.capture_orchestrator import CaptureService
+from ssc.api.capture_service import ExposureContext
 from ssc.scheduler.executor import DeviceCommandError
 from ssc.state.models import CaptureState, StateSnapshot
 from ssc.state.store import StateStore
@@ -73,7 +74,9 @@ async def test_scheduled_admission_does_not_begin_or_latch_other_owner(
 async def test_cpu_master_failure_does_not_latch_camera_ownership(tmp_path):
     service = admission_service()
     service._select_dark_filter_if_available = AsyncMock()
-    service._context = Mock()
+    service._context = lambda *args, **kwargs: ExposureContext(
+        object_name=None, focal_length_mm=None, telescope_name="test",
+        ssc_version="test", device_firmware=None)
     service._calibration_target_count = None
     service._calibration_cancel_requested = False
     service._now = lambda: datetime(2026, 10, 8, tzinfo=UTC)
@@ -85,7 +88,9 @@ async def test_cpu_master_failure_does_not_latch_camera_ownership(tmp_path):
         raise RuntimeError("CPU master failed after camera acquisition finished")
 
     service._generate_calibration_masters = fail_master
-    await service._run_calibration(
+    async def run_set():
+        await service._run_calibration(
+        camera=service._camera,
         kind="dark",
         count=0,
         requested_duration_s=10,
@@ -104,6 +109,7 @@ async def test_cpu_master_failure_does_not_latch_camera_ownership(tmp_path):
         filename_template="frame",
         tz=ZoneInfo("UTC"),
     )
+    await service._run_calibration_sets([run_set])
     assert service._section.calibration.status == "failed"
     assert service._section.in_progress is False
     assert getattr(service, "_failed_exposure_camera", None) is None

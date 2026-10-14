@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Miroslav Bakoš
 
 import { translate, useLanguage } from "../i18n/locale";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { CaptureIcon, CaptureSetIcon, LoopIcon, StopIcon } from "../components/ActionIcons";
 import { SegmentedControl } from "../components/SegmentedControl";
@@ -131,6 +131,7 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
   const lastQuality = useCaptureFrameQualityQuery(captureState?.last_frame_id);
   const resolvedTargetName = usePlanningUiStore((s) => s.target?.name ?? null);
   const captureForm = useCaptureFormStore();
+  const [coverConfirmation, setCoverConfirmation] = useState({ optic: "", kind: "", confirmed: false });
   const {
     frameType: localFrameType,
     durationText,
@@ -147,6 +148,13 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
     syncPlanningTarget,
   } = captureForm;
   const frameType = controlledFrameType ?? localFrameType;
+  if (coverConfirmation.optic !== opticId || coverConfirmation.kind !== frameType) {
+    setCoverConfirmation({ optic: opticId, kind: frameType, confirmed: false });
+  }
+  const coveredLensConfirmed = coverConfirmation.optic === opticId && coverConfirmation.kind === frameType && coverConfirmation.confirmed;
+  function setCoveredLensConfirmed(confirmed: boolean): void {
+    setCoverConfirmation({ optic: opticId, kind: frameType, confirmed });
+  }
   const calibrationSourceSets = useCalibrationSourceSetsQuery(frameType !== "light");
 
   const durationS = Number(durationText);
@@ -184,8 +192,10 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
   const inProgress = captureState?.in_progress === true;
   const looping = captureState?.loop_active === true;
   const cameraBusy = inProgress || looping || startExposure.isPending || startCalibration.isPending || captureState?.calibration?.status === "running";
-  const cameraValid = opticId === "tele" || (opticId === "wide" && wideAvailable);
-  const wideCalibration = opticId === "wide" && frameType !== "light";
+  const cameraValid = opticId === "tele" || ((opticId === "wide" || (opticId === "both" && frameType !== "light")) && wideAvailable);
+  const includesWide = opticId === "wide" || opticId === "both";
+  const needsCover = includesWide && (isDark || isBias);
+  const wideCalibration = needsCover && !coveredLensConfirmed;
   const wideDitherBlocked = opticId === "wide" && frameType === "light" && ditherSettings.data?.enabled !== false;
   const loopFrameCount = captureState?.loop_completed_frames ?? 0;
   // Read once and reused below (in-progress line, last-frame line) rather
@@ -218,12 +228,12 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
   }
 
   function handleCapture(): void {
-    if (isFlat || !cameraValid || wideCalibration || !durationValid || !gainValid || !loopCountValid || cameraBusy) return;
+    if (isFlat || (includesWide && frameType !== "light") || !cameraValid || wideCalibration || !durationValid || !gainValid || !loopCountValid || cameraBusy) return;
     startExposure.mutate(exposureRequest());
   }
 
   function handleLoop(): void {
-    if (isFlat || !cameraValid || wideCalibration || wideDitherBlocked || !durationValid || !gainValid || !loopCountValid || cameraBusy) return;
+    if (isFlat || (includesWide && frameType !== "light") || !cameraValid || wideCalibration || wideDitherBlocked || !durationValid || !gainValid || !loopCountValid || cameraBusy) return;
     startExposure.mutate({ ...exposureRequest(), capture_mode: "loop", ...(requestedLoopCount === null ? {} : { frame_limit: requestedLoopCount }) });
   }
 
@@ -239,12 +249,15 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
       count: calibrationCount,
       gain: gainNumber,
       ...(frameType === "dark" ? { duration_s: durationS } : {}),
+      optic_id: opticId.trim(),
+      ...(needsCover ? { covered_lens_confirmed: coveredLensConfirmed } : {}),
       ...(frameType === "flat"
-        ? { filter_positions: resolvedSelectedFilters, optic_id: opticId.trim(), flat_source: flatSource }
+        ? { filter_positions: opticId === "wide" ? [] : resolvedSelectedFilters, flat_source: flatSource }
         : {}),
       generate_master: generateMaster,
       ...(keepOnlyMaster ? { keep_only_master: true } : {}),
     });
+    setCoveredLensConfirmed(false);
   }
 
   async function positionForFlatPanel(): Promise<void> {
@@ -261,11 +274,16 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
 
       <div className="mb-3">
         <SegmentedControl label="Capture camera" value={opticId}
-          options={[{ value: "tele", label: "Tele" }, { value: "wide", label: "Wide", disabled: !wideAvailable }]}
+          options={[{ value: "tele", label: "Tele" }, { value: "wide", label: "Wide", disabled: !wideAvailable }, ...(frameType !== "light" ? [{ value: "both", label: "Both", disabled: !wideAvailable }] : [])]}
           disabled={cameraBusy}
-          onChange={(camera) => { updateCaptureForm({ opticId: camera }); }} />
+          onChange={(camera) => { setCoveredLensConfirmed(false); updateCaptureForm({ opticId: camera }); }} />
         {!wideAvailable && <p className="mt-1 text-xs text-fg-muted">Wide camera requires a confirmed hardware profile with Wide support.</p>}
-        {wideCalibration && <p role="status" className="mt-1 text-xs text-warning">Automatic calibration and dark/bias capture are unavailable for Wide. Select Tele for calibration sets.</p>}
+        {needsCover && <label className="mt-2 flex items-start gap-2 text-sm text-warning">
+          <input type="checkbox" checked={coveredLensConfirmed} disabled={cameraBusy}
+            onChange={(event) => { setCoveredLensConfirmed(event.target.checked); }} />
+          Wide lens is fully covered with an opaque cap. The Tele Dark filter does not cover Wide.
+        </label>}
+        {opticId === "both" && <p className="mt-1 text-xs text-fg-muted">Calibration sets run separately for Tele and Wide. Keep both lenses prepared until completion.</p>}
         {wideDitherBlocked && <p role="status" className="mt-1 text-xs text-warning">Disable dithering in Capture options before starting a Wide loop; its pixel scale is not calibrated.</p>}
       </div>
 
@@ -457,11 +475,11 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
           {isFlat && generateMaster && (
             <p className="mt-2 text-xs text-fg-muted">
               Before any flat is captured, Photon Commander verifies that at least 10 retained
-              bias frames match the selected gain and camera dimensions.
+              bias frames match the selected lens, gain and camera dimensions.
             </p>
           )}
           <p className="mt-2 text-xs text-fg-muted">
-            Stored under Calibration/{isFlat ? "flats/<filter>" : isDark ? "darks/singles" : "bias/singles"}.
+            Stored under Calibration/{isFlat ? "flats/<filter>" : isDark ? "darks/singles" : "bias/singles"}/tele or wide.
           </p>
           {reusableSets.length > 0 && (
             <div className="mt-3 border-t border-border pt-3">
@@ -473,7 +491,7 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
                     className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border p-2"
                   >
                     <span className="text-xs text-fg-muted">
-                      {source.frame_count} {source.filter_name ?? source.frame_type} frames · gain {source.gain ?? "unknown"}
+                      {source.optic_id ?? "tele"} · {source.frame_count} {source.filter_name ?? source.frame_type} frames · gain {source.gain ?? "unknown"}
                       {source.exposure_s === null ? "" : ` · ${String(source.exposure_s)} s`}
                       {` · ${String(source.width)}×${String(source.height)}`}
                       {` · ${formatWhen(source.ended_at)}`}
@@ -510,7 +528,7 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
           <>
             <Button
               variant="primary"
-              disabled={!cameraValid || wideCalibration || !durationValid || !gainValid || cameraBusy}
+              disabled={!cameraValid || (includesWide && frameType !== "light") || wideCalibration || !durationValid || !gainValid || cameraBusy}
               onClick={handleCapture}
             >
               <CaptureIcon />
@@ -525,7 +543,7 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
               <Button
                 className="ml-2"
                 variant="secondary"
-                disabled={!cameraValid || wideCalibration || wideDitherBlocked || !durationValid || !gainValid || !loopCountValid || cameraBusy}
+                disabled={!cameraValid || (includesWide && frameType !== "light") || wideCalibration || wideDitherBlocked || !durationValid || !gainValid || !loopCountValid || cameraBusy}
                 onClick={handleLoop}
               >
                 <LoopIcon />
@@ -546,7 +564,7 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
             className={isFlat ? undefined : "ml-2"}
             disabled={
               !cameraValid || wideCalibration || cameraBusy || !durationValid || !gainValid || !calibrationCountValid ||
-              (isFlat && resolvedSelectedFilters.length === 0)
+              (isFlat && opticId !== "wide" && resolvedSelectedFilters.length === 0)
             }
             onClick={handleCalibration}
           >

@@ -552,6 +552,13 @@ class SettingsStore:
         return capture
 
     @_serialized_mutation
+    async def set_wide_companion_enabled(self, enabled: bool) -> CaptureSettings:
+        capture = self._capture.model_copy(update={"wide_companion_enabled": enabled})
+        await self._write(SECTION_CAPTURE, capture)
+        self._capture = capture
+        return capture
+
+    @_serialized_mutation
     async def set_auto_lp_filter_for_emission_targets(self, enabled: bool) -> CaptureSettings:
         capture = self._capture.model_copy(
             update={"auto_lp_filter_for_emission_targets": enabled}

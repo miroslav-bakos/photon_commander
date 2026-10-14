@@ -3218,6 +3218,66 @@
         }
       }
     },
+    "/api/settings/capture/wide-companion": {
+      "get": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Read Wide Companion",
+        "operationId": "read_wide_companion_api_settings_capture_wide_companion_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoLpFilterResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Set Wide Companion",
+        "operationId": "set_wide_companion_api_settings_capture_wide_companion_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoLpFilterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoLpFilterResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/settings/capture/path-tags": {
       "get": {
         "tags": [
@@ -10483,14 +10543,22 @@
             "anyOf": [
               {
                 "type": "string",
-                "maxLength": 64,
-                "minLength": 1
+                "enum": [
+                  "tele",
+                  "wide",
+                  "both"
+                ]
               },
               {
                 "type": "null"
               }
             ],
             "title": "Optic Id"
+          },
+          "covered_lens_confirmed": {
+            "type": "boolean",
+            "title": "Covered Lens Confirmed",
+            "default": false
           },
           "flat_source": {
             "anyOf": [
@@ -10868,6 +10936,17 @@
             ],
             "title": "Exposure S"
           },
+          "optic_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Optic Id"
+          },
           "filter_name": {
             "anyOf": [
               {
@@ -10925,6 +11004,7 @@
           "frame_count",
           "gain",
           "exposure_s",
+          "optic_id",
           "filter_name",
           "width",
           "height",
@@ -12087,6 +12167,11 @@
           "auto_lp_filter_for_emission_targets": {
             "type": "boolean",
             "title": "Auto Lp Filter For Emission Targets",
+            "default": false
+          },
+          "wide_companion_enabled": {
+            "type": "boolean",
+            "title": "Wide Companion Enabled",
             "default": false
           }
         },

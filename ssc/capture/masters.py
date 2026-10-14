@@ -241,6 +241,25 @@ def _publish_master_pair(
         backup.unlink(missing_ok=True)
 
 
+def calibration_optic_id(header: dict[str, object]) -> str | None:
+    """Resolve explicit lens provenance; missing legacy provenance stays unknown."""
+    value = header.get("OPTICID")
+    optic = value.strip().casefold() if isinstance(value, str) and value.strip() else None
+    if optic is not None:
+        optic = {"main": "tele", "primary": "tele", "secondary": "wide"}.get(optic, optic)
+    wide = header.get("WIDECAM")
+    wide_optic = "wide" if wide == 1 else "tele" if wide == 0 else None
+    if optic is not None and wide_optic is not None and optic != wide_optic:
+        raise CalibrationMasterError("conflicting optic provenance")
+    return optic if optic is not None else wide_optic
+
+
+def calibration_optics_match(header: dict[str, object], optic_id: str | None) -> bool:
+    """Legacy unknown masters remain Tele-only, never explicit Wide."""
+    candidate = calibration_optic_id(header)
+    return (candidate or "tele") == (optic_id or "tele")
+
+
 def build_calibration_master(
     *,
     frame_type: FrameType,
@@ -262,12 +281,15 @@ def build_calibration_master(
     gains = {header.get("GAIN") for header in headers}
     exposures = {header.get("EXPTIME") for header in headers}
     filters = {header.get("FILTER") for header in headers}
-    optics = {header.get("OPTICID") for header in headers}
+    optics = {calibration_optic_id(header) for header in headers}
+    if len({optic or "tele" for optic in optics}) != 1:
+        raise CalibrationMasterError("source optic ids do not match")
+    master_optic = next((optic for optic in optics if optic is not None), None)
     if len(gains) != 1:
         raise CalibrationMasterError("source gains do not match")
     if len(exposures) != 1:
         raise CalibrationMasterError("source exposure times do not match")
-    if frame_type is FrameType.FLAT and (len(filters) != 1 or len(optics) != 1):
+    if frame_type is FrameType.FLAT and len(filters) != 1:
         raise CalibrationMasterError("flat filters or optic ids do not match")
     pedestal_sources: tuple[Path, ...] = ()
     pedestal_integration: StackResult | None = None
@@ -290,7 +312,9 @@ def build_calibration_master(
             raise CalibrationMasterError(
                 "flat master generation needs compatible bias frames at the same gain"
             )
-        biases, _ = _sources(bias_paths)
+        biases, bias_headers = _sources(bias_paths)
+        if any(not calibration_optics_match(header, master_optic) for header in bias_headers):
+            raise CalibrationMasterError("bias optic ids do not match flat optic")
         if biases[0].shape != sources[0].shape:
             raise CalibrationMasterError("bias and flat dimensions do not match")
         pedestal_integration = _integrate(biases)
@@ -356,7 +380,7 @@ def build_calibration_master(
         telescope_name="Photon Commander calibration master",
         ssc_version=ssc_version,
         device_firmware=None,
-        optic_id=str(first["OPTICID"]) if "OPTICID" in first else None,
+        optic_id=master_optic,
         flat_source=str(first["FLATSRC"]) if "FLATSRC" in first else None,
         bin_x=_consistent_int(headers, "XBINNING"),
         bin_y=_consistent_int(headers, "YBINNING"),
