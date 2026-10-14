@@ -4073,6 +4073,7 @@ class CaptureService:
                     now.strftime("%Y-%m-%d %H:%M:%S %Z"),
                 ),
                 version=f"wide:{self._wide_rtsp_version}",
+                image_version=f"wide:{self._wide_rtsp_version}",
                 header_text="Seestar S30 Wide Camera",
             )
         run = self._live_stack.run
@@ -4122,6 +4123,15 @@ class CaptureService:
                 if self._settings.streaming.wide_camera_picture_in_picture
                 else version
             ),
+            # Overlay clocks and queue notices change independently of pixels.
+            # Dither boundaries can republish integration without accepting a
+            # new light, so they belong to the content key as well.
+            image_version=(
+                f"stack:{id(self._live_stack)}:{run.output_path}:{run.sequence}:"
+                f"{accepted}:{len(run.dither_group_boundaries)}:"
+                f"{False if config is None else config.auto_crop}"
+            ),
+            picture_in_picture_version=f"wide:{self._wide_rtsp_version}",
             header_text=header,
             picture_in_picture_pixels=(
                 self._wide_rtsp_pixels

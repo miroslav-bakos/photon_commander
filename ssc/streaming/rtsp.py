@@ -12,6 +12,7 @@ import re
 import shutil
 import struct
 import subprocess
+import threading
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -45,6 +46,8 @@ class RtspFrame:
     header_text: str | None = None
     picture_in_picture_pixels: np.ndarray | None = None
     picture_in_picture_bayer_pattern: str | None = None
+    image_version: str | None = None
+    picture_in_picture_version: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,6 +98,12 @@ class RtspStreamer:
         self._sequence = random.randrange(0, 65536)
         self._timestamp = random.randrange(0, 2**32)
         self._ssrc = random.randrange(1, 2**32)
+        self._display_cache: tuple[object, np.ndarray] | None = None
+        self._inset_cache: tuple[object, np.ndarray] | None = None
+        self._preview_lock = threading.Lock()
+        self._preview_state_lock = threading.Lock()
+        self._preview_generation = 0
+        self._preview_cache: tuple[tuple[bytes, ...], bytes] | None = None
 
     @property
     def status(self) -> RtspStatus:
@@ -143,10 +152,16 @@ class RtspStreamer:
         except OSError as exc:
             self._config = None
             raise RtspError(f"could not listen on {config.host}:{config.port}: {exc}") from exc
+        self._last_encoded_at = 0.0
+        self._display_cache = self._inset_cache = None
         self._task = self._task_factory(self._broadcast_loop())
         return self.status
 
     async def stop(self) -> RtspStatus:
+        with self._preview_state_lock:
+            self._preview_generation += 1
+            self._preview_cache = None
+            self._nals = ()
         task, self._task = self._task, None
         if task is not None:
             task.cancel()
@@ -166,6 +181,7 @@ class RtspStreamer:
         self._nals = ()
         self._encoded_version = None
         self._encoder = None
+        self._display_cache = self._inset_cache = None
         return self.status
 
     def preview_png(self) -> bytes:
@@ -175,9 +191,28 @@ class RtspStreamer:
         the provider again, so the browser shows the same source, crop and
         overlays as VLC/OBS.
         """
-        if not self._nals:
-            raise RtspError("the stream has not encoded a frame yet")
-        payload = b"".join(b"\x00\x00\x00\x01" + nal for nal in self._nals)
+        with self._preview_lock:
+            with self._preview_state_lock:
+                nals = self._nals
+                generation = self._preview_generation
+                cached = self._preview_cache
+            if not nals:
+                raise RtspError("the stream has not encoded a frame yet")
+            if cached is not None and cached[0] == nals:
+                return cached[1]
+            rendered = self._decode_preview(nals)
+            with self._preview_state_lock:
+                if generation != self._preview_generation:
+                    raise RtspError("the stream changed while decoding its preview")
+                # A normal refresh may overtake this valid request. Return its
+                # access unit without installing it as the new frame's cache.
+                if nals == self._nals:
+                    self._preview_cache = (nals, rendered)
+            return rendered
+
+    @staticmethod
+    def _decode_preview(nals: tuple[bytes, ...]) -> bytes:
+        payload = b"".join(b"\x00\x00\x00\x01" + nal for nal in nals)
         completed = subprocess.run(
             [
                 "ffmpeg",
@@ -219,7 +254,8 @@ class RtspStreamer:
                         nals = self._split_annex_b(encoded)
                         if not nals:
                             raise RtspError("ffmpeg produced no H.264 NAL units")
-                        self._nals = nals
+                        with self._preview_state_lock:
+                            self._nals = nals
                         self._encoded_version = encoding_version
                         self._encoder = encoder
                         self._last_error = None
@@ -239,7 +275,7 @@ class RtspStreamer:
                     encoding_version = frame.version
                     self._last_encoded_at = now
                     encoding = asyncio.create_task(
-                        asyncio.to_thread(self._encode, frame, self._config)
+                        asyncio.to_thread(self._encode_cached, frame, self._config)
                     )
 
                 # Encoding a refreshed 1920x1080 image can take several seconds.
@@ -250,9 +286,13 @@ class RtspStreamer:
                 await asyncio.sleep(1.0 / self._config.fps)
         finally:
             if encoding is not None:
-                encoding.cancel()
-                with contextlib.suppress(asyncio.CancelledError):
-                    await encoding
+                # Cancelling to_thread cannot stop its native worker. Retain
+                # ownership until it exits before stop clears cached arrays.
+                while not encoding.done():
+                    with contextlib.suppress(asyncio.CancelledError, Exception):
+                        await asyncio.shield(encoding)
+                if not encoding.cancelled():
+                    encoding.exception()
 
     @staticmethod
     def _escape_drawtext(text: str) -> str:
@@ -301,10 +341,28 @@ class RtspStreamer:
         ] = resized
         return result
 
-    @classmethod
-    def _encode(cls, frame: RtspFrame, config: RtspConfig) -> tuple[bytes, str]:
-        rgb = cls._display_rgb(frame.pixels, frame.bayer_pattern)
+    def _encode_cached(self, frame: RtspFrame, config: RtspConfig) -> tuple[bytes, str]:
+        def key(pixels: np.ndarray, pattern: str | None, version: str | None) -> object:
+            content = ("frame", frame.version) if version is None else ("image", version)
+            return content, pattern, pixels.shape, pixels.dtype.str
+
+        base_key = key(frame.pixels, frame.bayer_pattern, frame.image_version)
+        if self._display_cache is None or self._display_cache[0] != base_key:
+            self._display_cache = (base_key, self._display_rgb(frame.pixels, frame.bayer_pattern))
+        rgb = self._display_cache[1]
         if frame.picture_in_picture_pixels is not None:
+            inset_key = key(frame.picture_in_picture_pixels, frame.picture_in_picture_bayer_pattern, frame.picture_in_picture_version)
+            if self._inset_cache is None or self._inset_cache[0] != inset_key:
+                self._inset_cache = (inset_key, self._display_rgb(frame.picture_in_picture_pixels, frame.picture_in_picture_bayer_pattern))
+            rgb = self._add_picture_in_picture(rgb, self._inset_cache[1])
+        else:
+            self._inset_cache = None
+        return self._encode(frame, config, prepared_rgb=rgb)
+
+    @classmethod
+    def _encode(cls, frame: RtspFrame, config: RtspConfig, *, prepared_rgb: np.ndarray | None = None) -> tuple[bytes, str]:
+        rgb = prepared_rgb if prepared_rgb is not None else cls._display_rgb(frame.pixels, frame.bayer_pattern)
+        if prepared_rgb is None and frame.picture_in_picture_pixels is not None:
             inset = cls._display_rgb(
                 frame.picture_in_picture_pixels, frame.picture_in_picture_bayer_pattern
             )

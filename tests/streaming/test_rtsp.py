@@ -4,6 +4,9 @@ import shutil
 import struct
 import subprocess
 import time
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
+from threading import Event
 
 import numpy as np
 import pytest
@@ -140,7 +143,7 @@ async def test_frame_refresh_does_not_pause_cached_broadcast(
     calls = 0
 
     def slow_encode(
-        _cls: type[RtspStreamer], _frame_value: RtspFrame, _config: RtspConfig
+        _cls: type[RtspStreamer], _frame_value: RtspFrame, _config: RtspConfig, **_kwargs: object
     ) -> tuple[bytes, str]:
         time.sleep(0.4)
         return b"\x00\x00\x00\x01\x65new", "test"
@@ -246,3 +249,185 @@ async def test_ffmpeg_client_can_decode_the_rtsp_stream(unused_tcp_port: int) ->
         assert process.returncode == 0, stderr.decode(errors="replace")
     finally:
         await streamer.stop()
+
+
+def test_prepared_rgb_reuses_content_but_refreshes_inset_and_image(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = []
+    original = RtspStreamer._display_rgb
+    def display(pixels, pattern):
+        calls.append((pixels.shape, pattern))
+        return original(pixels, pattern)
+    monkeypatch.setattr(RtspStreamer, "_display_rgb", staticmethod(display))
+    raw_inputs = []
+    def encode(command, **kwargs):
+        raw_inputs.append(kwargs["input"])
+        return subprocess.CompletedProcess(command, 0, b"encoded", b"")
+    monkeypatch.setattr(subprocess, "run", encode)
+    streamer = RtspStreamer(_frame)
+    worker = getattr(streamer, "_encode_cached", streamer._encode)
+    frame = replace(_frame(), image_version="stack:1", picture_in_picture_pixels=np.full((10, 20, 3), 80, dtype=np.uint8), picture_in_picture_version="wide:1")
+    config = RtspConfig(width=320, height=180)
+    worker(frame, config)
+    worker(replace(frame, version="clock:2"), config)
+    assert len(calls) == 2
+    assert raw_inputs[0] == raw_inputs[1]
+    worker(replace(frame, version="clock:3", picture_in_picture_version="wide:2"), config)
+    assert len(calls) == 3
+    worker(replace(frame, version="clock:4", image_version="stack:2"), config)
+    assert len(calls) == 5  # base changed; inset returns to wide:1.
+    reference, _ = streamer._encode(frame, config)
+    assert reference == b"encoded" and raw_inputs[-1] == raw_inputs[0]
+
+
+def test_prepared_rgb_fallback_uses_frame_version_and_render_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = []
+    monkeypatch.setattr(RtspStreamer, "_display_rgb", staticmethod(lambda pixels, pattern: calls.append(pattern) or np.zeros((*pixels.shape[:2], 3), dtype=np.uint8)))
+    monkeypatch.setattr(subprocess, "run", lambda command, **kwargs: subprocess.CompletedProcess(command, 0, b"encoded", b""))
+    streamer = RtspStreamer(_frame)
+    worker = getattr(streamer, "_encode_cached", streamer._encode)
+    frame = _frame()
+    config = RtspConfig()
+    worker(frame, config)
+    worker(replace(frame, version="changed"), config)
+    assert len(calls) == 2
+    stable = replace(frame, image_version="same", pixels=np.zeros((10, 10), dtype=np.uint16), bayer_pattern="RGGB")
+    worker(stable, config)
+    worker(replace(stable, bayer_pattern="BGGR"), config)
+    worker(replace(stable, pixels=np.zeros((20, 10), dtype=np.uint16)), config)
+    assert len(calls) == 5
+
+
+def test_preview_single_flight_keys_exact_access_unit_without_version(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = []
+    entered, release = Event(), Event()
+    def decode(command, **kwargs):
+        calls.append(kwargs["input"])
+        entered.set()
+        assert release.wait(2)
+        return subprocess.CompletedProcess(command, 0, b"png:" + kwargs["input"], b"")
+    monkeypatch.setattr(subprocess, "run", decode)
+    streamer = RtspStreamer(_frame)
+    streamer._nals = (b"one",)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(streamer.preview_png)
+        assert entered.wait(2)
+        second = pool.submit(streamer.preview_png)
+        release.set()
+        assert first.result() == second.result() == b"png:\x00\x00\x00\x01one"
+    assert len(calls) == 1
+    streamer._nals = (b"two",)
+    assert streamer.preview_png() == b"png:\x00\x00\x00\x01two"
+    assert len(calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_stop_drains_encode_before_clearing_prepared_arrays(monkeypatch: pytest.MonkeyPatch) -> None:
+    entered, release = Event(), Event()
+    calls = []
+    original = RtspStreamer._display_rgb
+    monkeypatch.setattr(RtspStreamer, "_display_rgb", staticmethod(lambda pixels, pattern: calls.append(1) or original(pixels, pattern)))
+    def encode(_cls, _frame, _config, **kwargs):
+        entered.set()
+        assert release.wait(2)
+        return b"\x00\x00\x00\x01\x65new", "test"
+    monkeypatch.setattr(RtspStreamer, "_encode", classmethod(encode))
+    frame = replace(_frame(), image_version="stable")
+    streamer = RtspStreamer(lambda: frame)
+    streamer._config = RtspConfig(fps=5, update_interval_s=0)
+    streamer._task = asyncio.create_task(streamer._broadcast_loop())
+    assert await asyncio.to_thread(entered.wait, 2)
+    stopping = asyncio.create_task(streamer.stop())
+    await asyncio.sleep(0.02)
+    assert not stopping.done()
+    assert streamer._display_cache is not None
+    release.set()
+    await stopping
+    assert streamer._display_cache is None and streamer._inset_cache is None
+    assert streamer._nals == ()
+    streamer._encode_cached(frame, RtspConfig())
+    assert len(calls) == 2  # identical content is prepared again after stop.
+
+
+@pytest.mark.asyncio
+async def test_preview_cannot_publish_after_stop_and_rebuilds_same_access_unit(monkeypatch: pytest.MonkeyPatch) -> None:
+    entered, release = Event(), Event()
+    calls = []
+    def decode(command, **kwargs):
+        calls.append(1)
+        entered.set()
+        assert release.wait(2)
+        return subprocess.CompletedProcess(command, 0, b"png", b"")
+    monkeypatch.setattr(subprocess, "run", decode)
+    streamer = RtspStreamer(_frame)
+    streamer._nals = (b"same",)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        pending = pool.submit(streamer.preview_png)
+        assert entered.wait(2)
+        await streamer.stop()
+        # A restarted stream may emit identical bytes; generation still differs.
+        streamer._nals = (b"same",)
+        release.set()
+        with pytest.raises(RuntimeError, match="changed"):
+            pending.result()
+    assert streamer._preview_cache is None
+    streamer._nals = (b"same",)
+    assert streamer.preview_png() == b"png"
+    assert len(calls) == 2
+
+
+def test_cached_encoding_matches_uncached_pixels_for_changed_base_and_inset(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured = []
+    def encode(command, **kwargs):
+        captured.append((command, kwargs["input"]))
+        return subprocess.CompletedProcess(command, 0, b"encoded", b"")
+    monkeypatch.setattr(subprocess, "run", encode)
+    streamer = RtspStreamer(_frame)
+    config = RtspConfig(width=320, height=180)
+    inset = _frame().pixels[:30, :60].copy()
+    first = replace(_frame(), image_version="stack:1", picture_in_picture_pixels=inset, picture_in_picture_version="wide:1")
+    frames = [first, replace(first, version="clock:2"),
+              replace(first, version="clock:3", picture_in_picture_pixels=inset[:, ::-1], picture_in_picture_version="wide:2"),
+              replace(first, version="clock:4", pixels=first.pixels[:, ::-1], image_version="stack:2")]
+    for frame in frames:
+        streamer._encode_cached(frame, config)
+        cached = captured[-1]
+        streamer._encode(frame, config)
+        assert captured[-1] == cached  # both raw RGB bytes and exact FFmpeg options.
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("socket_enabled")
+async def test_restart_prepares_same_version_again(monkeypatch: pytest.MonkeyPatch, unused_tcp_port: int) -> None:
+    calls = []
+    original = RtspStreamer._display_rgb
+    monkeypatch.setattr(RtspStreamer, "_display_rgb", staticmethod(lambda pixels, pattern: calls.append(1) or original(pixels, pattern)))
+    monkeypatch.setattr(subprocess, "run", lambda command, **kwargs: subprocess.CompletedProcess(command, 0, b"encoded", b""))
+    streamer = RtspStreamer(lambda: None)
+    config = RtspConfig(host="127.0.0.1", port=unused_tcp_port)
+    frame = replace(_frame(), image_version="unchanged")
+    try:
+        await streamer.start(config)
+        streamer._encode_cached(frame, config)
+        await streamer.stop()
+        await streamer.start(config)
+        streamer._encode_cached(frame, config)
+        assert len(calls) == 2
+    finally:
+        await streamer.stop()
+
+
+def test_normal_refresh_during_preview_returns_valid_old_frame_without_caching(monkeypatch: pytest.MonkeyPatch) -> None:
+    streamer = RtspStreamer(_frame)
+    old_nals, new_nals = (b"old",), (b"new",)
+    streamer._nals = old_nals
+    def decode(nals):
+        assert nals == old_nals
+        with streamer._preview_state_lock:
+            streamer._nals = new_nals
+        return b"valid old PNG"
+    monkeypatch.setattr(streamer, "_decode_preview", decode)
+    assert streamer.preview_png() == b"valid old PNG"
+    assert streamer._preview_cache is None
+    monkeypatch.setattr(streamer, "_decode_preview", lambda nals: b"new PNG")
+    assert streamer.preview_png() == b"new PNG"
+    assert streamer._preview_cache == (new_nals, b"new PNG")
