@@ -71,7 +71,7 @@ class CaptureFrameRecord:
     height: int
     status: str
     created_at: datetime
-    optic_role: Literal["tele", "wide"] = "tele"
+    optic_role: Literal["tele", "wide"] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -342,7 +342,7 @@ class CaptureRepository:
         """Read a persisted item in acquisition order without mixing other runs."""
         statuses = "('complete', 'writing')" if include_writing else "('complete')"
         rows = await self._database.fetch_all(
-            f"{_SELECT} WHERE run_id = ? AND block_id = ? AND optic_role = 'tele' AND status IN {statuses} "
+            f"{_SELECT} WHERE run_id = ? AND block_id = ? AND COALESCE(optic_role, 'tele') = 'tele' AND status IN {statuses} "
             "ORDER BY date_obs, id", (run_id, block_id),
         )
         return [_record_of(row) for row in rows]
@@ -388,7 +388,7 @@ class CaptureRepository:
         rows = await self._database.fetch_all(
             "SELECT f.id, f.run_id, f.block_id, f.object, f.frame_type, f.status, f.exposure_s, s.outcome "
             "FROM capture_frame f LEFT JOIN capture_stack_outcome s ON s.frame_id = f.id "
-            f"WHERE f.run_id IN ({placeholders}) AND f.optic_role = 'tele' ORDER BY f.id",
+            f"WHERE f.run_id IN ({placeholders}) AND COALESCE(f.optic_role, 'tele') = 'tele' ORDER BY f.id",
             tuple(run_ids),
         )
         return [
@@ -417,7 +417,7 @@ class CaptureRepository:
             "COUNT(CASE WHEN f.status = 'complete' AND s.outcome = 'error' THEN 1 END) AS errors, "
             "COUNT(CASE WHEN f.status = 'complete' AND f.frame_type = 'light' AND s.outcome IS NULL THEN 1 END) AS unmeasured, "
             "SUM(CASE WHEN f.status = 'complete' AND s.outcome = 'accepted' THEN f.exposure_s END) AS accepted_integration "
-            "FROM capture_frame f LEFT JOIN capture_stack_outcome s ON s.frame_id = f.id WHERE f.run_id = ? AND f.optic_role = 'tele'",
+            "FROM capture_frame f LEFT JOIN capture_stack_outcome s ON s.frame_id = f.id WHERE f.run_id = ? AND COALESCE(f.optic_role, 'tele') = 'tele'",
             (run_id,),
         )
         assert row is not None
@@ -446,7 +446,7 @@ class CaptureRepository:
         does."""
         row = await self._database.fetch_one(
             "SELECT COUNT(*) AS n FROM capture_frame WHERE run_id = ? AND block_id = ? "
-            "AND status = 'complete' AND optic_role = 'tele' "
+            "AND status = 'complete' AND COALESCE(optic_role, 'tele') = 'tele' "
             "AND (frame_index IS NULL OR EXISTS (SELECT 1 FROM capture_frame w "
             "WHERE w.run_id = capture_frame.run_id AND w.block_id = capture_frame.block_id "
             "AND w.frame_index = capture_frame.frame_index AND w.optic_role = 'wide' AND w.status = 'complete'))",
@@ -471,7 +471,7 @@ def _record_of(row: aiosqlite.Row) -> CaptureFrameRecord:
         height=int(row["height"]),
         status=str(row["status"]),
         created_at=datetime.fromisoformat(str(row["created_at"])),
-        optic_role=cast(Literal["tele", "wide"], str(row["optic_role"])),
+        optic_role=None if row["optic_role"] is None else cast(Literal["tele", "wide"], str(row["optic_role"])),
     )
 
 

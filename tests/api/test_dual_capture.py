@@ -393,3 +393,18 @@ async def test_polar_alignment_background_gateway_motion_can_acquire_guard():
     await asyncio.wait_for(commands.polar_alignment(), 1)
     commands.set_calibration_runner(background_runner)
     await asyncio.wait_for(commands.capture_calibration(), 1)
+
+
+async def test_legacy_unknown_optic_is_not_fabricated_as_tele(repo, tmp_path):
+    from ssc.api.routes.capture import _frame_model
+    tele, wide = camera(), camera()
+    await pair(repo, tmp_path, tele, wide)
+    record = await repo.dual_member("run", "lights", 0, "tele")
+    await repo._database.execute("UPDATE capture_frame SET optic_role = NULL, frame_index = NULL WHERE id = ?", (record.id,))
+    legacy = await repo.get_frame(record.id)
+    assert legacy.optic_role is None
+    assert _frame_model(legacy).optic_id is None
+    assert await repo.count_committed(run_id="run", block_id="lights") == 1
+    assert (await repo.run_summary("run")).saved_frames == 1
+    assert len(await repo.historical_frames(["run"])) == 1
+    assert len(await repo.list_block_frames("run", "lights")) == 1

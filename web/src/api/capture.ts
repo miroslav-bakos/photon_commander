@@ -181,7 +181,7 @@ export interface CaptureState {
  * (see this file's header) — optional for the same reason `CaptureState`'s
  * is. */
 export interface CaptureFrame {
-  optic_id?: "tele" | "wide";
+  optic_id?: "tele" | "wide" | null;
   id: number;
   path?: string;
   object_name: string | null;

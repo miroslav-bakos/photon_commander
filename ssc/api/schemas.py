@@ -2612,7 +2612,7 @@ class CaptureFrameModel(Response):
     """One catalogued frame (``ssc.store.capture.CaptureFrameRecord``)."""
 
     id: int
-    optic_id: Literal["tele", "wide"] = "tele"
+    optic_id: Literal["tele", "wide"] | None = None
     path: str
     object_name: str | None = None
     filter_name: str | None = None

@@ -11757,13 +11757,19 @@
             "title": "Id"
           },
           "optic_id": {
-            "type": "string",
-            "enum": [
-              "tele",
-              "wide"
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "tele",
+                  "wide"
+                ]
+              },
+              {
+                "type": "null"
+              }
             ],
-            "title": "Optic Id",
-            "default": "tele"
+            "title": "Optic Id"
           },
           "path": {
             "type": "string",
