@@ -99,29 +99,28 @@ export function NightAltitudeChart({
   // same "don't trap the scroll" fix already applied to the sky map's
   // iframes, here for a one-axis chart instead of a two-axis pan/zoom.
   const svgRef = useRef<SVGSVGElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const layoutRoute = useLayoutRoute();
   const cardHeight = useLayoutStore((state) => state.saved.tabs[layoutRoute.tab]?.cards["planning.timeline"]?.height);
   const [view, setView] = useState<TimelineView>("daily");
   const annualAltitude = useAnnualAltitudeQuery(view === "yearly" ? annualAltitudeRequest : null);
   useLayoutEffect(() => {
-    const svg = svgRef.current;
-    if (svg === null || typeof ResizeObserver === "undefined") return;
+    const viewport = viewportRef.current;
+    if (viewport === null || typeof ResizeObserver === "undefined") return;
     const update = () => {
-      const width = svg.getBoundingClientRect().width;
+      const width = viewport.getBoundingClientRect().width;
       if (width > 0) setChartWidth(width);
     };
     update();
     const observer = new ResizeObserver(update);
-    observer.observe(svg);
+    observer.observe(viewport);
     return () => { observer.disconnect(); };
-  }, [view]);
+  }, []);
   // The card's editor height grows the plotted altitude lane, rather than
-  // leaving an empty area beneath a fixed SVG. Keep the logical SVG aspect
-  // ratio matched to its measured CSS width so labels do not stretch.
-  const chartHeight = cardHeight === undefined ? undefined : Math.max(80, cardHeight - 100);
-  const laneHeight = chartHeight === undefined
-    ? LANE_HEIGHT_PX
-    : Math.max(80, chartHeight - (HEIGHT - LANE_HEIGHT_PX));
+  // leaving an empty area beneath a fixed SVG. Both views keep an explicit
+  // height and measured width: width changes must not resize the altitude lane.
+  const chartHeight = cardHeight === undefined ? HEIGHT : Math.max(HEIGHT - LANE_HEIGHT_PX + 80, cardHeight - 100);
+  const laneHeight = chartHeight - (HEIGHT - LANE_HEIGHT_PX);
   const laneBottom = LANE_TOP_PX + laneHeight;
   const eventLabelBaseY = laneBottom + 16;
   const totalHeight = eventLabelBaseY + EVENT_LABEL_ROWS * EVENT_LABEL_ROW_PX + 2;
@@ -208,13 +207,14 @@ export function NightAltitudeChart({
           options={[{ value: "daily", label: "Daily" }, { value: "yearly", label: "Yearly" }]} />
       </div>
 
+      <div ref={viewportRef}>
       {view === "daily" ? (
         <>
           <svg
             ref={svgRef}
             viewBox={`0 0 ${String(axisPx)} ${String(totalHeight)}`}
-            className="block w-full select-none"
-            style={{ touchAction: "pan-y", ...(chartHeight === undefined ? {} : { height: chartHeight }) }}
+            className="block w-full shrink-0 select-none"
+            style={{ touchAction: "pan-y", height: chartHeight }}
             role="img"
             aria-label="This target's altitude and the Moon's altitude across the session, over twilight-shaded background bands, with astronomical dusk/dawn and moonrise/moonset marked. Hover or drag to read the values at a given time."
             onPointerMove={handlePointerMove}
@@ -373,8 +373,10 @@ export function NightAltitudeChart({
           error={annualAltitude.isError}
           errorMessage={annualAltitude.error instanceof Error ? annualAltitude.error.message : undefined}
           chartHeight={chartHeight}
+          axisPx={axisPx}
         />
       )}
+      </div>
     </Card>
   );
 }
@@ -413,19 +415,22 @@ function AnnualAltitudeChart({
   error,
   errorMessage,
   chartHeight,
+  axisPx,
 }: {
   data?: AnnualAltitudeResponse;
   pending: boolean;
   error: boolean;
   errorMessage?: string;
-  chartHeight?: number;
+  chartHeight: number;
+  axisPx: number;
 }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [pointerNight, setPointerNight] = useState<AnnualAltitudeNightModel | null>(null);
   const laneTop = LANE_TOP_PX;
-  const laneHeight = chartHeight === undefined ? LANE_HEIGHT_PX : Math.max(120, chartHeight - 54);
+  const laneHeight = chartHeight - (HEIGHT - LANE_HEIGHT_PX);
   const laneBottom = laneTop + laneHeight;
-  const height = laneBottom + 28;
+  const height = chartHeight;
+  const xForNight = (index: number, count: number) => annualX(index, count) * axisPx / AXIS_PX;
   const nights = data?.nights ?? [];
   const usable = nights.filter((night) => annualDarkPeakAltitude(night) !== null);
   const peakPoints = usable
@@ -434,14 +439,15 @@ function AnnualAltitudeChart({
       const peak = annualDarkPeakAltitude(night);
       return peak === null
         ? ""
-        : `${annualX(index, nights.length).toFixed(1)},${annualY(peak, laneTop, laneBottom).toFixed(1)}`;
+        : `${xForNight(index, nights.length).toFixed(1)},${annualY(peak, laneTop, laneBottom).toFixed(1)}`;
     })
     .filter((point) => point !== "")
     .join(" ");
   const monthTicks = nights
     .map((night, index) => ({ night, index, day: new Date(night.window_start).getUTCDate() }))
     .filter((tick) => tick.index === 0 || tick.day === 1);
-  const nowX = annualNowX(nights);
+  const unscaledNowX = annualNowX(nights);
+  const nowX = unscaledNowX === null ? null : unscaledNowX * axisPx / AXIS_PX;
 
   const updatePointer = (event: ReactPointerEvent<SVGSVGElement>) => {
     const rect = svgRef.current?.getBoundingClientRect();
@@ -450,46 +456,37 @@ function AnnualAltitudeChart({
     setPointerNight(nearestAnnualNight(nights, px));
   };
 
-  if (error) {
-    return (
-      <p className="rounded border border-danger bg-surface-raised px-2 py-1 text-xs text-danger">
-        {errorMessage ?? "Yearly altitude request failed."}
-      </p>
-    );
-  }
-  if (pending || data === undefined) {
-    return (
-      <p className="rounded border border-border bg-surface-raised px-2 py-1 text-xs text-fg-muted">
-        {pending ? "Loading yearly altitude…" : "Pick a target to see yearly altitude."}
-      </p>
-    );
-  }
+  const status = error
+    ? errorMessage ?? "Yearly altitude request failed."
+    : pending ? "Loading yearly altitude…"
+      : data === undefined ? "Pick a target to see yearly altitude." : null;
 
   return (
     <>
+      <div className="relative">
       <svg
         ref={svgRef}
-        viewBox={`0 0 ${String(AXIS_PX)} ${String(height)}`}
-        className="block w-full select-none"
-        style={{ touchAction: "pan-y", ...(chartHeight === undefined ? {} : { height: chartHeight }) }}
+        viewBox={`0 0 ${String(axisPx)} ${String(height)}`}
+        className="block w-full shrink-0 select-none"
+        style={{ touchAction: "pan-y", height: chartHeight }}
         role="img"
         aria-label="This target's highest altitude during astronomical darkness for each night across the year. No Moon curves are shown in the yearly view."
         onPointerMove={updatePointer}
         onPointerDown={updatePointer}
         onPointerLeave={() => { setPointerNight(null); }}
       >
-        <rect x={0} y={laneTop} width={AXIS_PX} height={laneHeight} fill="var(--ssc-bg)" opacity={0.35} />
+        <rect x={0} y={laneTop} width={axisPx} height={laneHeight} fill="var(--ssc-bg)" opacity={0.35} />
         {[0, 30, 60, 90].map((deg) => {
           const y = annualY(deg, laneTop, laneBottom);
           return (
             <g key={deg}>
-              <line x1={0} y1={y} x2={AXIS_PX} y2={y} stroke="var(--ssc-border)" strokeWidth={deg === 0 ? 1 : 0.5} />
+              <line x1={0} y1={y} x2={axisPx} y2={y} stroke="var(--ssc-border)" strokeWidth={deg === 0 ? 1 : 0.5} />
               <text x={2} y={y - 2} fill="var(--ssc-fg-muted)" style={{ font: FONT }}>{`${String(deg)}°`}</text>
             </g>
           );
         })}
         {monthTicks.map(({ night, index }) => {
-          const x = annualX(index, nights.length);
+          const x = xForNight(index, nights.length);
           return (
             <g key={night.window_start}>
               <line x1={x} y1={laneTop} x2={x} y2={laneBottom} stroke="var(--ssc-border)" strokeOpacity={0.5} />
@@ -501,7 +498,7 @@ function AnnualAltitudeChart({
         })}
         {usable.map((night) => {
           const index = nights.indexOf(night);
-          const x = annualX(index, nights.length);
+          const x = xForNight(index, nights.length);
           const peak = annualDarkPeakAltitude(night);
           if (peak === null) return null;
           const hours = night.hours_above_limit ?? 0;
@@ -515,16 +512,16 @@ function AnnualAltitudeChart({
               y2={annualY(peak, laneTop, laneBottom)}
               stroke="var(--ssc-accent)"
               strokeOpacity={opacity}
-              strokeWidth={Math.max(1, AXIS_PX / Math.max(1, nights.length) - 0.5)}
+              strokeWidth={Math.max(1, axisPx / Math.max(1, nights.length) - 0.5)}
             />
           );
         })}
         {peakPoints !== "" && <polyline fill="none" stroke="var(--ssc-accent)" strokeOpacity={0.95} strokeWidth={1.4} points={peakPoints} />}
         <line
           x1={0}
-          y1={annualY(data.min_altitude_deg, laneTop, laneBottom)}
-          x2={AXIS_PX}
-          y2={annualY(data.min_altitude_deg, laneTop, laneBottom)}
+          y1={annualY((data?.min_altitude_deg ?? 0), laneTop, laneBottom)}
+          x2={axisPx}
+          y2={annualY((data?.min_altitude_deg ?? 0), laneTop, laneBottom)}
           stroke="var(--ssc-warning)"
           strokeDasharray="4 3"
         />
@@ -538,7 +535,7 @@ function AnnualAltitudeChart({
               stroke="var(--ssc-accent)"
               strokeWidth={2}
             />
-            <text x={Math.min(nowX + 4, AXIS_PX - 20)} y={laneTop + 10} fill="var(--ssc-accent)" style={{ font: FONT }}>
+            <text x={Math.min(nowX + 4, axisPx - 20)} y={laneTop + 10} fill="var(--ssc-accent)" style={{ font: FONT }}>
               NOW
             </text>
           </g>
@@ -546,16 +543,16 @@ function AnnualAltitudeChart({
         {pointerNight !== null && (
           <g>
             <line
-              x1={annualX(nights.indexOf(pointerNight), nights.length)}
+              x1={xForNight(nights.indexOf(pointerNight), nights.length)}
               y1={laneTop}
-              x2={annualX(nights.indexOf(pointerNight), nights.length)}
+              x2={xForNight(nights.indexOf(pointerNight), nights.length)}
               y2={laneBottom}
               stroke="var(--ssc-fg)"
               strokeOpacity={0.75}
             />
             {annualDarkPeakAltitude(pointerNight) !== null && (
               <circle
-                cx={annualX(nights.indexOf(pointerNight), nights.length)}
+                cx={xForNight(nights.indexOf(pointerNight), nights.length)}
                 cy={annualY(annualDarkPeakAltitude(pointerNight) ?? 0, laneTop, laneBottom)}
                 r={2.5}
                 fill="var(--ssc-accent)"
@@ -564,6 +561,8 @@ function AnnualAltitudeChart({
           </g>
         )}
       </svg>
+      {status !== null && <p role={error ? "alert" : "status"} className={`absolute inset-0 flex items-center justify-center rounded border bg-surface-raised px-2 py-1 text-xs ${error ? "border-danger text-danger" : "border-border text-fg-muted"}`}>{status}</p>}
+      </div>
       <div className="min-h-6 rounded border border-border bg-surface-raised px-2 py-0.5 text-[9px]">
         {pointerNight === null ? (
           <p className="text-fg-muted">Hover, or drag on touch, to read the yearly altitude summary.</p>
@@ -577,7 +576,7 @@ function AnnualAltitudeChart({
               Dark peak {pointerNight.peak_altitude_deg === null || pointerNight.peak_altitude_deg === undefined ? "—" : `${pointerNight.peak_altitude_deg.toFixed(0)}° ${formatClock(pointerNight.peak_when ?? pointerNight.max_when)}`}
             </span>
             <span className="tabular-nums text-fg-muted">
-              Above {data.min_altitude_deg.toFixed(0)}°: {pointerNight.hours_above_limit === null || pointerNight.hours_above_limit === undefined ? "—" : `${pointerNight.hours_above_limit.toFixed(1)} h`}
+              Above {(data?.min_altitude_deg ?? 0).toFixed(0)}°: {pointerNight.hours_above_limit === null || pointerNight.hours_above_limit === undefined ? "—" : `${pointerNight.hours_above_limit.toFixed(1)} h`}
             </span>
           </div>
         )}

@@ -68,45 +68,14 @@ import { VisibilityPanel } from "./VisibilityPanel";
 
 const DEFAULT_MAX_PA_STEP_DEG = 0.5;
 const DEFAULT_BOUNDARY_SAMPLES = 360;
-/** Fallback only, for the moment between resolving a target and the framing
- * response arriving. Once geometry is known the view is sized from it — see
- * `fitFovDeg`. */
+/** Initial view only; subsequent camera changes preserve the user's zoom. */
 const DEFAULT_GOTO_FOV_DEG = 6;
-
-/** How much sky to show around the widest thing being drawn. Framing the frame
- * exactly would put its edges on the viewport border, where they read as the
- * edge of the map rather than the edge of the sensor. */
-const FIT_MARGIN = 1.5;
-
-/** Bounds outside which a frame is not usefully visible in the current view:
- * larger than the viewport, or a speck in the middle of it. Between them the
- * view is left alone, so switching lens visibly changes the size of the frame
- * instead of the map silently rescaling to match and looking like nothing
- * happened but the zoom. */
-const REFIT_TOO_BIG = 1.1;
-const REFIT_TOO_SMALL = 0.12;
 
 function annualAltitudeAnchor(twilightStart: Date): Date {
   const localMidnight = fromDateLocalValue(toDateLocalValue(twilightStart));
   if (localMidnight === null) return twilightStart;
   localMidnight.setHours(12, 0, 0, 0);
   return localMidnight;
-}
-
-/**
- * A view wide enough to contain everything the overlay draws.
- *
- * The previous fixed 3 deg was narrower than the S30 Pro's own 3.99 deg tele
- * frame, so the rectangle's own edges fell outside the viewport and the
- * feature rendered correctly but invisibly. In alt-az the swept envelope is
- * wider still — a 38.6 deg rotation sweeps the frame diagonal — so the fit has
- * to follow the diagonal, not the width.
- */
-function fitFovDeg(widthDeg: number, heightDeg: number, rotates: boolean): number {
-  const diagonal = Math.hypot(widthDeg, heightDeg);
-  // A rotating frame sweeps a disc of its own diagonal; a fixed one only needs
-  // to contain the rectangle itself.
-  return (rotates ? diagonal : Math.max(widthDeg, heightDeg)) * FIT_MARGIN;
 }
 
 function targetCoordinateKey(raH: number, decDeg: number): string {
@@ -534,64 +503,13 @@ export function PlanningTab({ active = true }: { active?: boolean }) {
       skipGotoForDraggedTargetRef.current = null;
       return;
     }
-    backendRef.current?.goto(target.raH * 15, target.decDeg, DEFAULT_GOTO_FOV_DEG);
+    backendRef.current?.goto(target.raH * 15, target.decDeg, viewFovRef.current ?? DEFAULT_GOTO_FOV_DEG);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target?.raH, target?.decDeg]);
 
-  // The live field of view, so a re-fit can be conditional rather than
-  // unconditional. Kept in a ref: it changes on every pan and zoom and must
-  // not re-render the tab or restart the effect below.
+  // Position, lens, mount and mosaic edits never own the camera zoom.
+  // Keep the latest user view for target recentering without triggering renders.
   const viewFovRef = useRef<number | null>(null);
-  const fittedForTargetRef = useRef<string | null>(null);
-  const skipNextFitForWarmMapRef = useRef<string | null>(null);
-
-  // Fit the view to the geometry, but only when it actually needs fitting.
-  //
-  // A new target is always framed. A lens or mount-mode change on the SAME
-  // target is not: re-fitting there scales the viewport in step with the
-  // frame, so the rectangle keeps the same size on screen and switching lens
-  // looks like it only zoomed the map. The frame is left to change size
-  // against a stable view, which is the point of choosing a lens — unless the
-  // new frame is bigger than the viewport or a speck inside it, where leaving
-  // the view alone would show nothing useful.
-  const fitGeometry = framing.data?.geometry;
-  useEffect(() => {
-    if (target === null || fitGeometry === undefined) return;
-    // A mosaic is wider than one frame: n panels at (1 - overlap) spacing plus
-    // one frame's worth of edge. Fitting the single-frame geometry left the
-    // outer panels off-screen, which looks identical to them not being drawn.
-    const spanFactor = (count: number) => 1 + (count - 1) * (1 - mosaicSpec.overlapPct / 100);
-    const wanted = fitFovDeg(
-      fitGeometry.width_deg * spanFactor(mosaicSpec.raNum),
-      fitGeometry.height_deg * spanFactor(mosaicSpec.decNum),
-      mount === "altaz",
-    );
-    const targetKey = targetCoordinateKey(target.raH, target.decDeg);
-    if (skipNextFitForWarmMapRef.current === targetKey) {
-      skipNextFitForWarmMapRef.current = null;
-      fittedForTargetRef.current = targetKey;
-      return;
-    }
-    const isNewTarget = fittedForTargetRef.current !== targetKey;
-    const current = viewFovRef.current;
-    const unusable =
-      current === null || wanted > current * REFIT_TOO_BIG || wanted < current * REFIT_TOO_SMALL;
-
-    if (isNewTarget || unusable) {
-      backendRef.current?.goto(target.raH * 15, target.decDeg, wanted);
-      fittedForTargetRef.current = targetKey;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    target?.raH,
-    target?.decDeg,
-    fitGeometry?.width_deg,
-    fitGeometry?.height_deg,
-    mount,
-    mosaicSpec.raNum,
-    mosaicSpec.decNum,
-    mosaicSpec.overlapPct,
-  ]);
 
   const response = framing.data;
   // A coordinate-mode change invalidates every existing framing shape. The
@@ -683,8 +601,6 @@ export function PlanningTab({ active = true }: { active?: boolean }) {
     if (currentTarget === null) return;
     const targetKey = targetCoordinateKey(currentTarget.raH, currentTarget.decDeg);
     skipGotoForDraggedTargetRef.current = targetKey;
-    skipNextFitForWarmMapRef.current = targetKey;
-    fittedForTargetRef.current = targetKey;
   }, []);
 
   if (location === null) {
@@ -742,8 +658,7 @@ export function PlanningTab({ active = true }: { active?: boolean }) {
               onWarmViewRestore={handleWarmSkyMapViewRestore}
               onBackendReady={(backend) => {
                 backendRef.current = backend;
-                // Track the live field of view so the fit effect can tell
-                // whether the frame is still usefully visible.
+                // Preserve the current zoom whenever a target is recentered.
                 backend?.onViewChange((v) => {
                   viewFovRef.current = v.fovDeg;
                 });
@@ -768,12 +683,9 @@ export function PlanningTab({ active = true }: { active?: boolean }) {
                   const movedTargetKey = targetCoordinateKey(movedTarget.raH, movedTarget.decDeg);
                   // The map already recentered this position through its
                   // continuous pan camera before reporting the exact dropped
-                  // centre. Mark the ordinary target-change and geometry-fit
-                  // paths satisfied so neither sends a discontinuous `goto`
-                  // that re-seeds ALT/AZ or replaces the deliberate drop with
-                  // a fresh six-degree view.
+                  // centre. Skip the ordinary target-change path so it
+                  // does not send a discontinuous `goto` that re-seeds ALT/AZ.
                   skipGotoForDraggedTargetRef.current = movedTargetKey;
-                  fittedForTargetRef.current = movedTargetKey;
                   setTarget(movedTarget);
                 });
               }}

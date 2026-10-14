@@ -364,7 +364,7 @@ export function SkyMap({
     // then replaces the iframe node while this component stays mounted. The
     // new frame starts empty, so restore its camera and all current layers.
     const previousView = view;
-    if (target !== null && (previousView === null || previousView.fovDeg >= 60)) {
+    if (target !== null && (previousView === null)) {
       backend.goto(target.raDeg, target.decDeg, target.fovFittedSizeDeg ?? 6);
     } else if (previousView !== null) {
       backend.goto(previousView.ra, previousView.dec, previousView.fovDeg);

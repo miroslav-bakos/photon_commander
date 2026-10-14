@@ -18,11 +18,15 @@ vi.mock("./GlobalOperationBanner", () => ({ GlobalOperationBanner: () => null })
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Shell", () => {
-  it("places credits after planning inside the scrollable main, outside persistent chrome", () => {
+  it("reserves desktop space for credits while only Planning panels scroll", () => {
     render(<Shell><p>Map contents</p></Shell>);
     const main = screen.getByRole("main");
     const credits = screen.getByTestId("map-credits");
     expect(main).toContainElement(credits);
+    expect(main).toHaveClass("overflow-y-auto", "md:overflow-y-hidden");
+    const planning = screen.getByText("Map contents").parentElement;
+    expect(planning).toHaveClass("min-h-full", "shrink-0", "md:min-h-0", "md:flex-1", "md:shrink");
+    expect(planning).not.toHaveClass("md:h-full");
     expect(screen.getByText("Map contents").compareDocumentPosition(credits) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(main).not.toContainElement(screen.getByTestId("connections-footer"));
   });

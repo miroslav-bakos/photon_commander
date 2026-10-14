@@ -21,9 +21,10 @@ import { PlanningTab } from "./PlanningTab";
 import { usePlanningUiStore } from "./planningUiStore";
 import { renderWithQueryClient } from "../../test/queryClient";
 
-const { mockSkyMapGoto, mockSkyMapSetOverlay } = vi.hoisted(() => ({
+const { mockSkyMapGoto, mockSkyMapSetOverlay, mockView } = vi.hoisted(() => ({
   mockSkyMapGoto: vi.fn(() => Promise.resolve()),
   mockSkyMapSetOverlay: vi.fn(),
+  mockView: { fovDeg: 4.25 },
 }));
 
 vi.mock("../../skymap/SkyMap", () => ({
@@ -45,7 +46,7 @@ vi.mock("../../skymap/SkyMap", () => ({
         onClick={() => {
           let moved: ((raDeg: number, decDeg: number) => void) | undefined;
           onBackendReady?.({
-            onViewChange: (callback) => { callback({ fovDeg: 4.25 }); },
+            onViewChange: (callback) => { callback({ fovDeg: mockView.fovDeg }); },
             onFovMoved: (callback) => {
               moved = callback;
             },
@@ -366,7 +367,8 @@ describe("PlanningTab", () => {
     expect(usePlanningUiStore.getState().startAnchorDate).toEqual(deliberate);
   });
 
-  it("accepts the renderer-recentered frame drag without issuing a projection-resetting goto", async () => {
+  it.each([0.05, 120])("preserves manual zoom %s on frame drop and subsequent target selection", async (fovDeg) => {
+    mockView.fovDeg = fovDeg;
     mockUseConnectionStore.mockImplementation((selector: (s: { snapshot: StateSnapshot | null }) => unknown) =>
       selector({ snapshot: withLocationSnapshot }),
     );
@@ -391,6 +393,7 @@ describe("PlanningTab", () => {
     );
 
     mockSkyMapGoto.mockClear();
+    mockSkyMapSetOverlay.mockClear();
     fireEvent.click(screen.getByRole("button", { name: "Move blue frame" }));
 
     await waitFor(() => {
@@ -408,8 +411,12 @@ describe("PlanningTab", () => {
       magnitude: 1.6,
     });
     expect(mockSkyMapGoto).not.toHaveBeenCalled();
-    expect(usePlanningUiStore.getState().mount).toBe("altaz");
     expect(mockSkyMapSetOverlay).not.toHaveBeenCalledWith([]);
+    act(() => {
+      usePlanningUiStore.getState().setTarget({ ...usePlanningUiStore.getState().target!, name: "M31", raH: 0.712, decDeg: 41.269 });
+    });
+    expect(mockSkyMapGoto).toHaveBeenLastCalledWith(0.712 * 15, 41.269, fovDeg);
+    expect(usePlanningUiStore.getState().mount).toBe("altaz");
   });
 
   it("clears the EQ overlay immediately when switching to Alt/Az", () => {

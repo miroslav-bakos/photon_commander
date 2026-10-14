@@ -262,19 +262,21 @@ describe("SkyMap display options", () => {
     expect(frame).toHaveStyle({ colorScheme: "dark" });
   });
 
-  it("reports the restored camera when a warm iframe is reattached", async () => {
+  it.each([0.05, 120])("preserves zoom %s when a warm iframe is reattached with a target", async (fovDeg) => {
     stubFetch();
     const onWarmViewRestore = vi.fn();
     const first = renderWithQueryClient(<SkyMap onWarmViewRestore={onWarmViewRestore} />);
     await waitFor(() => { expect(hoisted.onViewChangeRef.current).not.toBeNull(); });
 
-    const restoredView = { ra: 42, dec: -5, fovDeg: 12 };
+    const restoredView = { ra: 42, dec: -5, fovDeg };
     act(() => {
       hoisted.onViewChangeRef.current?.(restoredView);
     });
     first.unmount();
 
-    renderWithQueryClient(<SkyMap onWarmViewRestore={onWarmViewRestore} />);
+    hoisted.goto.mockClear();
+    renderWithQueryClient(<SkyMap target={{ label: "M31", raDeg: 10, decDeg: 41, fovFittedSizeDeg: 2 }} onWarmViewRestore={onWarmViewRestore} />);
+    expect(hoisted.goto).toHaveBeenLastCalledWith(42, -5, fovDeg);
 
     await waitFor(() => {
       expect(onWarmViewRestore).toHaveBeenCalledWith(restoredView);

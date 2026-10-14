@@ -74,8 +74,8 @@ export function Shell({ children }: { children: ReactNode }) {
       {mobileHeader ? <WorkflowSubnav compact docked /> : <WorkflowSubnav />}
       <GlobalOperationBanner />
       <div className="flex min-h-0 flex-1 flex-col">
-        <main id="main" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain px-4 py-4 sm:pb-6">
-          {planning ? <div className="flex min-h-full shrink-0 flex-col md:h-full md:min-h-0">{children}</div> : children}
+        <main id="main" className={`relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain px-4 py-4 sm:pb-6 ${planning ? "md:overflow-y-hidden" : ""}`}>
+          {planning ? <div className="flex min-h-full shrink-0 flex-col md:min-h-0 md:flex-1 md:shrink">{children}</div> : children}
           <SkyMapCreditsFooter />
         </main>
         <ConnectionsFooter docked={mobileHeader} />
