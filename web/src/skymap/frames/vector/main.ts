@@ -505,7 +505,7 @@ function drawShape(shape: FovShape): void {
 
 function render(): void {
   const frameStart = window.__skymapFrameTimesMs !== undefined ? performance.now() : null;
-  window.__skymapImageryDrawCallsLastFrame = imageryLayer.draw(currentViewport());
+  window.__skymapImageryDrawCallsLastFrame = imageryLayer.draw(currentViewport(), overlayShapes.find((shape) => shape.kind === "rect" && shape.style.role === "primary"));
   ctx.save();
   // The themed background is the host page's own `<body>` colour
   // (`applyHostTheme.ts` sets it directly from the same `bg` query param);

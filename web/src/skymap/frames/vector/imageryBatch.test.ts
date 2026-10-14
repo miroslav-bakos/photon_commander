@@ -266,3 +266,24 @@ describe("buildImageryBatches: also batches a HiPS tile-mesh builder unchanged",
     expect(batches[0]?.indices.length).toBeLessThanOrEqual(4 * SUBDIVISIONS * SUBDIVISIONS * 6);
   });
 });
+
+describe("ancestor image sampling", () => {
+  it("maps the child mesh through the parent quadrant and atlas inset without a vertical flip", () => {
+    const tile = residentTilesFor(6, 1)[0];
+    if (tile === undefined) throw new Error("Expected tile");
+    const normal = buildImageryBatches(VIEWPORT, [tile], 1, DEFAULT_ATLAS_SLOTS_PER_ROW, buildTileMeshFracGrid)[0];
+    const sampled = buildImageryBatches(VIEWPORT, [{ ...tile, uvRect: { u0: .5, v0: .25, u1: .75, v1: .5 } }], 1, DEFAULT_ATLAS_SLOTS_PER_ROW, buildTileMeshFracGrid)[0];
+    if (normal === undefined || sampled === undefined) throw new Error("Expected batches");
+    expect(sampled.positions).toEqual(normal.positions);
+    expect(sampled.indices).toEqual(normal.indices);
+    const left = (normal.uvs[0] ?? 0);
+    const top = (normal.uvs[1] ?? 0);
+    const width = (normal.uvs[2] ?? 0) - left;
+    const height = (normal.uvs[5] ?? 0) - top;
+    expect(sampled.uvs[0]).toBeCloseTo(left + width * .5);
+    expect(sampled.uvs[1]).toBeCloseTo(top + height * .25);
+    expect(sampled.uvs[6]).toBeCloseTo(left + width * .75);
+    expect(sampled.uvs[7]).toBeCloseTo(top + height * .5);
+    expect(sampled.tileCount).toBe(1);
+  });
+});

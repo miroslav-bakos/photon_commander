@@ -27,10 +27,19 @@ import type { Viewport } from "../../projection";
 import { everyGridVertexOnNearHemisphere, filteredTileMeshTriangleIndices, tileMeshTriangleIndices, type TileMeshGrid } from "./tileMesh";
 import { atlasSlotUvRect, type AtlasSlot } from "./tileAtlas";
 
+export interface TileUvRect {
+  u0: number;
+  v0: number;
+  u1: number;
+  v1: number;
+}
+
 export interface ResidentTile<T> {
   key: string;
   tile: T;
   slot: AtlasSlot;
+  /** Portion of the resident image sampled by this tile’s own mesh. */
+  uvRect?: TileUvRect;
 }
 
 export interface ImageryBatch {
@@ -99,8 +108,9 @@ export function buildImageryBatches<T>(
         // as "tiles rows shifted", "wrong direction nor shape" and "whole
         // rows are sideways". Confirmed by rendering M42 headlessly before
         // and after: bands present, then gone (`scripts/skymap-render.mjs`).
-        const localU = i / subdivisions;
-        const localV = j / subdivisions;
+        const sample = resident.uvRect;
+        const localU = sample === undefined ? i / subdivisions : sample.u0 + (i / subdivisions) * (sample.u1 - sample.u0);
+        const localV = sample === undefined ? j / subdivisions : sample.v0 + (j / subdivisions) * (sample.v1 - sample.v0);
         const vi = (vertexBase + idx) * 2;
         positions[vi] = grid.screenX[idx] ?? 0;
         positions[vi + 1] = grid.screenY[idx] ?? 0;

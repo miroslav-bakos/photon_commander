@@ -6,6 +6,7 @@ interface RequestJob {
   image: HTMLImageElement;
   url: string;
   active: boolean;
+  priority: number;
   load: HTMLImageElement["onload"];
   error: HTMLImageElement["onerror"];
 }
@@ -25,15 +26,21 @@ export class ImageRequestDispatcher {
     try { return work(); } finally { this.batching -= 1; this.pump(); }
   }
 
-  request(image: HTMLImageElement, url: string): void {
-    if (this.jobs.has(image)) return;
-    const job: RequestJob = { image, url, active: false, load: image.onload, error: image.onerror };
+  request(image: HTMLImageElement, url: string, priority = 0): void {
+    const existing = this.jobs.get(image);
+    if (existing !== undefined) {
+      if (!existing.active) existing.priority = priority;
+      return;
+    }
+    const job: RequestJob = { image, url, priority, active: false, load: image.onload, error: image.onerror };
     this.jobs.set(image, job);
-    image.onload = (event) => this.complete(job, () => job.load?.call(image, event));
-    image.onerror = (event) => this.complete(job, () => job.error?.call(image, event));
+    image.onload = (event) => { this.complete(job, () => job.load?.call(image, event)); };
+    image.onerror = (event) => { this.complete(job, () => job.error?.call(image, event)); };
     this.queued.push(job);
     this.pump();
   }
+
+  isActive(image: HTMLImageElement): boolean { return this.jobs.get(image)?.active === true; }
 
   cancelMany(images: readonly HTMLImageElement[]): void {
     this.batch(() => {
@@ -61,8 +68,15 @@ export class ImageRequestDispatcher {
   private pump(): void {
     if (this.batching > 0) return;
     while (this.active < this.limit && this.queued.length > 0) {
-      // Latest viewport requests precede older still-visible queued tiles.
-      const job = this.queued.pop();
+      // Lower priorities win globally across imagery layers. For equal
+      // priorities retain latest-viewport-first ordering.
+      let best = this.queued.length - 1;
+      for (let index = best - 1; index >= 0; index -= 1) {
+        const candidate = this.queued[index];
+        const selected = this.queued[best];
+        if (candidate !== undefined && selected !== undefined && candidate.priority < selected.priority) best = index;
+      }
+      const [job] = this.queued.splice(best, 1);
       if (job === undefined || this.jobs.get(job.image) !== job) continue;
       job.active = true;
       this.active += 1;

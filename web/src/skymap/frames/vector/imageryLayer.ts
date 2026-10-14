@@ -65,8 +65,10 @@
  */
 import { isRestrictedImagesetName } from "../../surveys";
 import { screenToWorld, type Viewport } from "../../projection";
-import type { CutoutLayerPiece, LayerSelection, SkySurvey, SurveyCredit } from "../../types";
+import type { CutoutLayerPiece, FovShape, LayerSelection, SkySurvey, SurveyCredit } from "../../types";
 import { buildCutoutMesh } from "./cutoutMesh";
+import { imageryTilePriority } from "./imageryPriority";
+import { resolveMercatorFallback, resolveHipsFallback, residentMercatorDescendants, residentHipsDescendants } from "./tileFallback";
 import { imageryImageRequests } from "./imageRequests";
 import { buildImageryBatches, type ResidentTile } from "./imageryBatch";
 import { buildHipsTileMeshGrid, hipsTileUrl, pickHipsOrder, visibleHipsTiles, type HipsTileKey } from "./hipsTiles";
@@ -160,6 +162,7 @@ export class TileSource {
   private readonly gl: WebGLRenderingContext;
   private readonly atlas: TileAtlasAllocator;
   private readonly pending = new Map<string, HTMLImageElement>();
+  private readonly loadedKeys = new Set<string>();
   private destroyed = false;
   private readonly errored = new Set<string>();
   private frame = 0;
@@ -203,12 +206,12 @@ export class TileSource {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   }
 
-  setFrame(frame: number, wantedKeys?: ReadonlySet<string>): void {
+  setFrame(frame: number, wantedKeys?: ReadonlySet<string>, retainActiveKeys?: ReadonlySet<string>): void {
     this.frame = frame;
     if (wantedKeys === undefined) return;
     const obsolete: HTMLImageElement[] = [];
     for (const [key, image] of this.pending) {
-      if (wantedKeys.has(key)) continue;
+      if (wantedKeys.has(key) || (retainActiveKeys?.has(key) === true && imageryImageRequests.isActive(image))) continue;
       this.pending.delete(key);
       obsolete.push(image);
     }
@@ -229,14 +232,24 @@ export class TileSource {
    * host). No retry/backoff on failure, same as the spike: a tile that
    * 404s or times out is simply never drawn, an honest gap rather than a
    * wrong pixel. */
-  ensureRequested(tileKey: string, url: string, onReady: () => void): void {
-    if (this.destroyed || this.atlas.has(tileKey) || this.pending.has(tileKey) || this.errored.has(tileKey)) return;
+  hasResident(tileKey: string): boolean { return this.atlas.has(tileKey); }
+
+  residentKeys(): Iterable<string> { return this.loadedKeys; }
+
+  settled(tileKey: string): boolean { return this.atlas.has(tileKey) || this.errored.has(tileKey); }
+
+  ensureRequested(tileKey: string, url: string, onReady: () => void, priority = 0): void {
+    if (this.destroyed || this.atlas.has(tileKey) || this.errored.has(tileKey)) return;
+    const pending = this.pending.get(tileKey);
+    if (pending !== undefined) { imageryImageRequests.request(pending, url, priority); return; }
     const image = new Image();
     this.pending.set(tileKey, image);
     image.onload = () => {
       if (this.destroyed || this.pending.get(tileKey) !== image) return;
       this.pending.delete(tileKey);
-      const { slot } = this.atlas.acquire(tileKey, this.frame);
+      const { slot, evicted } = this.atlas.acquire(tileKey, this.frame);
+      if (evicted !== null) this.loadedKeys.delete(evicted);
+      this.loadedKeys.add(tileKey);
       // Always resample to exactly ATLAS_TILE_PX square first (see this
       // class's own doc comment) — a no-op resize for a Mercator tile that
       // already arrives at that size, a real downsample for a 512px HiPS
@@ -260,8 +273,9 @@ export class TileSource {
       if (this.destroyed || this.pending.get(tileKey) !== image) return;
       this.pending.delete(tileKey);
       this.errored.add(tileKey);
+      onReady(); // A failed preview must not hold the detail phase indefinitely.
     };
-    imageryImageRequests.request(image, url);
+    imageryImageRequests.request(image, url, priority);
   }
 
   destroy(): void {
@@ -270,6 +284,7 @@ export class TileSource {
     imageryImageRequests.cancelMany([...this.pending.values()]);
     this.gl.deleteTexture(this.texture);
     this.atlas.reset();
+    this.loadedKeys.clear();
     this.pending.clear();
     this.errored.clear();
   }
@@ -425,7 +440,7 @@ export interface ImageryLayer {
    * host `render()`, before the overlay shapes. Returns the number of
    * `gl.drawElements` calls issued, for a manual measurement harness;
    * production code has no reason to read it. */
-  draw(viewport: Viewport): number;
+  draw(viewport: Viewport, focus?: FovShape): number;
   resize(widthPx: number, heightPx: number, dpr: number): void;
   destroy(): void;
 }
@@ -607,7 +622,7 @@ export function createImageryLayer(
    * `render()` (`main.ts`), the same opt-in-cost-nothing pattern as
    * `window.__skymapFrameTimesMs`.
    */
-  function draw(viewport: Viewport): number {
+  function draw(viewport: Viewport, focus?: FovShape): number {
     frameCounter += 1;
     let drawCalls = 0;
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -643,6 +658,22 @@ export function createImageryLayer(
       return tiles;
     };
 
+    // Cover every selected visible survey at preview resolution before any
+    // finer downloads start. Errors release the gate so failed previews can
+    // recover through detail tiles rather than freezing the whole map.
+    const previewReady = activeLayers.filter((layer) => layer.opacity > 0).every((layer) => {
+      const source = sourceFor(layer.survey.id);
+      if (layer.survey.scheme === "mercator") {
+        const detailLevel = Math.min(mercatorZoom, layer.survey.maxOrder);
+        if (visibleMercatorFor(detailLevel).every((tile) => source.hasResident(mercatorTileKeyString(tile)))) return true;
+        const z = Math.max(0, detailLevel - 2);
+        return visibleMercatorFor(z).every((tile) => source.settled(mercatorTileKeyString(tile)));
+      }
+      const detailLevel = Math.min(hipsOrder, layer.survey.maxOrder);
+      if (visibleHipsFor(detailLevel, layer.survey.frame).every((tile) => source.hasResident(hipsTileKeyString(tile)))) return true;
+      const order = Math.max(0, detailLevel - 2);
+      return visibleHipsFor(order, layer.survey.frame).every((tile) => source.settled(hipsTileKeyString(tile)));
+    });
     imageryImageRequests.batch(() => {
     for (const layer of activeLayers) {
       const layerOpacity = layer.opacity;
@@ -657,16 +688,24 @@ export function createImageryLayer(
       if (layer.survey.scheme === "mercator") {
         const layerZoom = Math.min(mercatorZoom, layer.survey.maxOrder);
         const layerTiles = visibleMercatorFor(layerZoom);
-        source.setFrame(frameCounter, new Set(layerTiles.map(mercatorTileKeyString)));
+        const preview = layerTiles.every((tile) => source.hasResident(mercatorTileKeyString(tile))) ? [] : visibleMercatorFor(Math.max(0, layerZoom - 2));
+        source.setFrame(frameCounter, new Set((previewReady ? [...preview, ...layerTiles] : preview).map(mercatorTileKeyString)), new Set(layerTiles.map(mercatorTileKeyString)));
+        for (const tile of preview) {
+          if (source.residentSlot(mercatorTileKeyString(tile)) === null) source.ensureRequested(mercatorTileKeyString(tile), mercatorTileUrl(layer.survey.tileUrlTemplate, tile), onTileReady,
+            imageryTilePriority(viewport, buildTileMeshFracGrid(viewport, tile, 2), focus));
+        }
         const resident: ResidentTile<TileKey>[] = [];
         for (const tile of layerTiles) {
           const key = mercatorTileKeyString(tile);
-          const slot = source.residentSlot(key);
-          if (slot !== null) {
-            resident.push({ key, tile, slot });
-          } else {
-            source.ensureRequested(key, mercatorTileUrl(layer.survey.tileUrlTemplate, tile), onTileReady);
+          const fallback = resolveMercatorFallback(tile, (candidate) => source.residentSlot(candidate) !== null);
+          const slot = fallback === null ? null : source.residentSlot(fallback.key);
+          if (slot !== null && fallback !== null) resident.push({ key, tile, slot, uvRect: fallback.uvRect });
+          else for (const cached of residentMercatorDescendants(tile, source.residentKeys())) {
+            const cachedSlot = source.residentSlot(cached.key);
+            if (cachedSlot !== null) resident.push({ key: cached.key, tile: cached.tile, slot: cachedSlot });
           }
+          if (previewReady && fallback?.key !== key) source.ensureRequested(key, mercatorTileUrl(layer.survey.tileUrlTemplate, tile), onTileReady,
+            1_000_000 + imageryTilePriority(viewport, buildTileMeshFracGrid(viewport, tile, 2), focus));
         }
         if (resident.length === 0) continue;
         const batches = buildImageryBatches(viewport, resident, SUBDIVISIONS, source.slotsPerRow, buildTileMeshFracGrid);
@@ -676,16 +715,24 @@ export function createImageryLayer(
         // activeLayers, so this is the HiPS branch, not a fallback.
         const layerOrder = Math.min(hipsOrder, layer.survey.maxOrder);
         const layerTiles = visibleHipsFor(layerOrder, layer.survey.frame);
-        source.setFrame(frameCounter, new Set(layerTiles.map(hipsTileKeyString)));
+        const preview = layerTiles.every((tile) => source.hasResident(hipsTileKeyString(tile))) ? [] : visibleHipsFor(Math.max(0, layerOrder - 2), layer.survey.frame);
+        source.setFrame(frameCounter, new Set((previewReady ? [...preview, ...layerTiles] : preview).map(hipsTileKeyString)), new Set(layerTiles.map(hipsTileKeyString)));
+        for (const tile of preview) {
+          if (source.residentSlot(hipsTileKeyString(tile)) === null) source.ensureRequested(hipsTileKeyString(tile), hipsTileUrl(layer.survey.tileUrlTemplate, tile), onTileReady,
+            imageryTilePriority(viewport, buildHipsTileMeshGrid(viewport, tile, 2, layer.survey.frame), focus));
+        }
         const resident: ResidentTile<HipsTileKey>[] = [];
         for (const tile of layerTiles) {
           const key = hipsTileKeyString(tile);
-          const slot = source.residentSlot(key);
-          if (slot !== null) {
-            resident.push({ key, tile, slot });
-          } else {
-            source.ensureRequested(key, hipsTileUrl(layer.survey.tileUrlTemplate, tile), onTileReady);
+          const fallback = resolveHipsFallback(tile, (candidate) => source.residentSlot(candidate) !== null);
+          const slot = fallback === null ? null : source.residentSlot(fallback.key);
+          if (slot !== null && fallback !== null) resident.push({ key, tile, slot, uvRect: fallback.uvRect });
+          else for (const cached of residentHipsDescendants(tile, source.residentKeys())) {
+            const cachedSlot = source.residentSlot(cached.key);
+            if (cachedSlot !== null) resident.push({ key: cached.key, tile: cached.tile, slot: cachedSlot });
           }
+          if (previewReady && fallback?.key !== key) source.ensureRequested(key, hipsTileUrl(layer.survey.tileUrlTemplate, tile), onTileReady,
+            1_000_000 + imageryTilePriority(viewport, buildHipsTileMeshGrid(viewport, tile, 2, layer.survey.frame), focus));
         }
         if (resident.length === 0) continue;
         const mesh = (vp: Viewport, tile: HipsTileKey, subdivisions: number) =>
