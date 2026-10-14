@@ -246,7 +246,7 @@ function MobileTabNav({ docked = false }: { docked?: boolean }) {
     <nav
       aria-label="Main"
       data-docked={docked ? "true" : undefined}
-      className={`ssc-mobile-tabbar ${docked ? "relative mx-2 my-2 shrink-0" : "fixed inset-x-2 bottom-[env(safe-area-inset-bottom)]"} z-10 grid h-[3.5rem] grid-cols-5 items-stretch`}
+      className={`ssc-primary-nav ssc-mobile-tabbar ${docked ? "relative mx-2 my-2 shrink-0" : "fixed inset-x-2 bottom-[env(safe-area-inset-bottom)]"} z-10 grid h-[3.5rem] grid-cols-5 items-stretch`}
     >
       {PRIMARY_TABS.map((tab) => (
         <TabLink
@@ -272,7 +272,7 @@ export function TabNav({ docked = false }: { docked?: boolean }) {
   if (isMobile) return <MobileTabNav docked={docked} />;
 
   return (
-    <nav aria-label="Main" className="flex flex-nowrap border-0 shadow-none">
+    <nav aria-label="Main" className="ssc-primary-nav flex flex-nowrap border-0 shadow-none">
       {PRIMARY_TABS.map((tab) => (
         <TabLink
           key={tab.to}

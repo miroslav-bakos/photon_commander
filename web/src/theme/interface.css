@@ -337,20 +337,21 @@
 }
 
 /* Desktop primary navigation shares its header, without a second glass frame. */
-.app-shell nav[aria-label="Main"]:not(.ssc-mobile-tabbar) {
+.app-shell nav.ssc-primary-nav:not(.ssc-mobile-tabbar),
+.app-shell .ssc-toolbar nav {
   background: transparent;
   border: 0;
   box-shadow: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
-.app-shell nav[aria-label="Main"]:not(.ssc-mobile-tabbar) .ssc-nav-link {
+.app-shell nav.ssc-primary-nav:not(.ssc-mobile-tabbar) .ssc-nav-link {
   box-shadow: none;
 }
 
 /* A narrow desktop window keeps the compact dock, without the phone frame. */
 @media (hover: hover) and (pointer: fine) {
-  .app-shell nav[aria-label="Main"].ssc-mobile-tabbar {
+  .app-shell nav.ssc-primary-nav.ssc-mobile-tabbar {
     border: 0;
     box-shadow: none;
     background: transparent;
