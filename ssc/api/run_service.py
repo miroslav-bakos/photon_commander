@@ -814,23 +814,34 @@ class RunService:
         while self._clock.now() < deadline:  # noqa: ASYNC110 - independent wall-clock deadline
             await asyncio.sleep(min(1.0, (deadline - self._clock.now()).total_seconds()))
         await self._safety_record(record, "intent", "dawn cutoff overrides all panel recovery")
-        await self._runs.journal.append(JournalRecord(at=self._clock.now(), run_id=record.run_id,
-            kind=RecordKind.CONTROL, control=ControlKind.STOP, reason="dawn safety cutoff"))
-        self._dawn_stopped.add(record.run_id)
+        guarded_ids = {record.run_id}
         if self._active is not None:
-            self._dawn_stopped.add(self._active.run_id)
-            if self._active.run_id != record.run_id:
+            guarded_ids.add(self._active.run_id)
+        self._dawn_stopped.update(guarded_ids)
+        for run_id in guarded_ids:
+            current = await self._runs.get(run_id)
+            if current.status not in _ENDED_LIFECYCLES:
                 await self._runs.journal.append(JournalRecord(at=self._clock.now(),
-                    run_id=self._active.run_id, kind=RecordKind.CONTROL,
-                    control=ControlKind.STOP, reason="independent dawn safety cutoff"))
+                    run_id=run_id, kind=RecordKind.CONTROL,
+                    control=ControlKind.STOP, reason="dawn safety cutoff"))
         if self._task is not None and not self._task.done():
             self._task.cancel()
             done, _pending = await asyncio.wait({self._task}, timeout=60)
             for task in done:
                 with contextlib.suppress(asyncio.CancelledError, Exception):
                     task.result()
-        await self._runs.set_status(record.run_id, RunLifecycle.STOPPED,
-            ended_reason="dawn safety cutoff; park and Dark verification pending")
+        # Safety obligations outlive science execution. Never rewrite an
+        # already terminal run's actual outcome with a later hardware retry.
+        # Re-read after cancellation: executor shutdown may have finalized it.
+        for run_id in guarded_ids:
+            current = await self._runs.get(run_id)
+            if current.status not in _ENDED_LIFECYCLES:
+                await self._runs.set_status(run_id, RunLifecycle.STOPPED,
+                    ended_at=self._clock.now(), ended_reason="dawn safety cutoff")
+                visible = self._state.snapshot.run
+                if visible is not None and visible.run_id == run_id:
+                    await self._publish_from_journal(await self._runs.get(run_id),
+                        lifecycle=RunLifecycle.STOPPED)
         if self._safety_prepare is not None:
             await self._safety_record(record, "prepare_intent", "bounded capture cleanup before park")
             try:
@@ -864,10 +875,6 @@ class RunService:
                 message=message, raised_at=self._clock.now())))
             if not errors:
                 await self._safety_record(record, "completed", message)
-                await self._runs.set_status(record.run_id, RunLifecycle.STOPPED,
-                    ended_reason="dawn safety: park and Dark verified")
-                await self._publish_from_journal(record,
-                    ended_reason="dawn safety: park and Dark verified")
                 pending = await self._runs.list_dawn_safety_pending()
                 if pending:
                     self._dawn_task = None

@@ -76,7 +76,7 @@ from ssc.api.external_tools import ConfiguredAstap
 from ssc.api.tasks import TaskRegistry
 from ssc.astro.events import Ephemeris, Site
 from ssc.astro.frames import EquatorialCoord, MountFrame, mount_site
-from ssc.astro.framing import altitude_deg, azimuth_deg
+from ssc.astro.framing import Profile, altitude_deg, azimuth_deg
 from ssc.astro.polar import (
     DegeneracyReason,
     DegenerateGeometryError,
@@ -354,7 +354,9 @@ class SettableDevice(Device, Protocol):
 
 
 class AstroSource(Protocol):
-    """The one thing this module needs of ``ssc.api.astro_service.AstroService``."""
+    """Ephemeris and bundled geometry supplied by the astronomy service."""
+
+    profiles: dict[str, Profile]
 
     @property
     def ephemeris(self) -> Ephemeris | None: ...
@@ -1907,9 +1909,32 @@ class PolarAlignmentService:
             solve_frame = bin_2x2_for_solving(frame)
             await _write_solver_frame(fits_path, solve_frame)
             self._set_point(index, status=PolarAlignmentPointStatus.SOLVING)
-            return await self._solve_with_hints(fits_path)
+            return await self._solve_with_hints(fits_path, solve_frame=solve_frame)
 
-    async def _solve_with_hints(self, fits_path: Path) -> PlateSolveResult:
+    def _profile_field_height(self, frame: RawFrame) -> float | None:
+        # Solver-mode captures omit optical telemetry to avoid per-exposure
+        # network reads. Use only the explicitly selected hardware profile,
+        # and only when this primary camera's dimensions match its tele sensor.
+        # Software 2x2 binning changes pixel scale, not the field of view.
+        profile_id = self._state.snapshot.settings.hardware_profile_id
+        profile = self._astro.profiles.get(profile_id) if profile_id else None
+        if profile is None or frame.pixels.ndim != 2:
+            return None
+        optic = next((optic for optic in profile.optics if optic.id == "tele"), None)
+        if optic is None:
+            return None
+        sensor = optic.sensor
+        if frame.pixels.shape not in {
+            (sensor.h_px, sensor.w_px), (sensor.h_px // 2, sensor.w_px // 2),
+        }:
+            return None
+        return math.degrees(2 * math.atan(
+            sensor.h_px * sensor.pixel_um * 1e-3 / (2 * optic.focal_length_mm)
+        ))
+
+    async def _solve_with_hints(
+        self, fits_path: Path, *, solve_frame: RawFrame | None = None,
+    ) -> PlateSolveResult:
         if self._solve is not astap_solve:
             return await self._solve(fits_path)
         mount = self._state.snapshot.mount
@@ -1919,9 +1944,11 @@ class PolarAlignmentService:
             and mount.ra_j2000_h is not None and mount.dec_j2000_deg is not None):
             position = (mount.ra_j2000_h, mount.dec_j2000_deg)
         field = self._state.snapshot.camera_fov
+        height_deg = None if field is None else field.height_deg
+        if height_deg is None and solve_frame is not None:
+            height_deg = self._profile_field_height(solve_frame)
         solver = astap_solve if self._configured_solver is None else self._configured_solver.solve
-        return await solver(fits_path, position_hint=position,
-                                 field_height_deg=None if field is None else field.height_deg)
+        return await solver(fits_path, position_hint=position, field_height_deg=height_deg)
 
     def _exposure_context(self, object_name: str = "polar-alignment") -> ExposureContext:
         device = self._state.snapshot.device
@@ -1976,10 +2003,10 @@ class PolarAlignmentService:
                     exposure_duration_s=None,
                 )
             if solve_timeout_s is None:
-                return await self._solve_with_hints(fits_path)
+                return await self._solve_with_hints(fits_path, solve_frame=solve_frame)
             try:
                 async with asyncio.timeout(solve_timeout_s):
-                    return await self._solve_with_hints(fits_path)
+                    return await self._solve_with_hints(fits_path, solve_frame=solve_frame)
             except TimeoutError:
                 raise SolveTimedOutError(
                     SolveIssue.TIMED_OUT,

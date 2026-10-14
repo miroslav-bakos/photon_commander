@@ -1198,6 +1198,14 @@ class AlpacaDeviceGateway:
         }
         values = await asyncio.gather(*(read(getter, member) for getter, member in specs.values()))
         telemetry = dict(zip(specs, values, strict=True))
+        # Native drivers can briefly omit RA/Dec just after an asynchronous
+        # dither. Reacquire the entire position/motion group once before
+        # publishing a partial sample that would reset the 30-second settle
+        # proof. Never carry forward an earlier position or freshen its clock.
+        required = ("ra_hours", "dec_deg", "tracking", "slewing", "equatorial_system")
+        if any(telemetry[name] is None for name in required[:4]):
+            retry = await asyncio.gather(*(read(*specs[name]) for name in required))
+            telemetry.update(zip(required, retry, strict=True))
         telemetry["tracking_rate"] = _tracking_rate_name(telemetry["tracking_rate"])
         telemetry["equatorial_system"] = _equatorial_system_name(telemetry["equatorial_system"])
         return MountState(polled_at=polled_at, stale=False, capabilities=self._mount_capabilities, **telemetry)

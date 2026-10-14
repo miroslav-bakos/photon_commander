@@ -107,12 +107,14 @@ async def test_dawn_stops_blocked_executor_and_dark_even_if_park_fails(tmp_path,
             records = await journal.read_all(record.run_id)
             assert calls == ['park', 'Dark']
             assert any(entry.effect and entry.effect.args.get('stage') == 'completed' for entry in records)
-            assert (await service._runs.get(record.run_id)).ended_reason == "dawn safety: park and Dark verified"
+            assert (await service._runs.get(record.run_id)).ended_reason == "dawn safety cutoff"
         assert any(entry.control is ControlKind.STOP for entry in records)
         assert not any(entry.effect and entry.effect.name is EffectName.EXPOSE_FRAME for entry in records)
         with pytest.raises(RunNightExpiredError):
             service._check_dawn_cutoff(record)
-        assert (await service._runs.get(record.run_id)).status is RunLifecycle.STOPPED
+        stored = await service._runs.get(record.run_id)
+        assert stored.status is RunLifecycle.STOPPED
+        assert stored.ended_at == service._clock.now()
     finally:
         await service._tasks.cancel_all()
         await db.aclose()
@@ -335,4 +337,69 @@ async def test_bounded_safety_failure_is_owned_by_watchdog_not_logged_as_crash(t
                        for record in caplog.records)
     finally:
         await service._tasks.cancel_all()
+        await db.aclose()
+
+
+@pytest.mark.parametrize('available', [False, True])
+@pytest.mark.parametrize('lifecycle', [RunLifecycle.STOPPED, RunLifecycle.COMPLETED, RunLifecycle.FAILED])
+async def test_terminal_metadata_survives_dawn_retry_and_sqlite_reopen(tmp_path, available, lifecycle):
+    from ssc.store.database import open_database
+    from ssc.store.runs import RunRepository
+
+    db, service, record, journal = await service_fixture(tmp_path)
+    ended_at = BASE_UTC + timedelta(minutes=15)
+    reason = 'owner stopped after capture failure'
+    await service._runs.set_status(record.run_id, lifecycle,
+        ended_at=ended_at, ended_reason=reason)
+    # A newer run owns the displayed state; an old safety obligation must not
+    # replace it when its hardware verification eventually succeeds.
+    newer = await service._runs.create(run_id='newer-visible', plan=record.plan,
+        plan_revision=64, schedule=record.schedule, started_at=ended_at + timedelta(minutes=1))
+    await service._runs.set_status(newer.run_id, RunLifecycle.COMPLETED,
+        ended_at=ended_at + timedelta(minutes=2), ended_reason='newer complete')
+    service._active = None
+    await service._publish_from_journal(newer, lifecycle=RunLifecycle.COMPLETED)
+    visible = service._state.snapshot.run
+
+    class Device:
+        async def ensure_safety_parked(self):
+            pass
+
+        async def set_filter(self, position):
+            assert position == 'Dark'
+
+    service._device = Device() if available else None
+    service._dawn_safety_enabled = True
+    service._clock.advance(8 * 3600)
+    try:
+        await service._arm_dawn_safety(record)
+        if available:
+            await asyncio.wait_for(service._dawn_task, timeout=2)
+        else:
+            for _ in range(100):
+                entries = await journal.read_all(record.run_id)
+                if any(entry.effect and entry.effect.args.get('stage') == 'dark_failed'
+                       for entry in entries):
+                    break
+                await asyncio.sleep(.01)
+            else:
+                pytest.fail('unavailable hardware was not recorded as failed')
+        stored = await service._runs.get(record.run_id)
+        assert (stored.status, stored.ended_at, stored.ended_reason) == (
+            lifecycle, ended_at, reason)
+        entries = await journal.read_all(record.run_id)
+        assert not any(entry.control is ControlKind.STOP for entry in entries)
+        assert service._state.snapshot.run == visible
+    finally:
+        await service._tasks.cancel_all()
+        await db.aclose()
+    db = await open_database(tmp_path / 'supervisor.sqlite')
+    try:
+        repo = RunRepository(db)
+        stored = await repo.get(record.run_id)
+        assert (stored.status, stored.ended_at, stored.ended_reason) == (
+            lifecycle, ended_at, reason)
+        pending = await repo.list_dawn_safety_pending()
+        assert [row.run_id for row in pending] == ([] if available else [record.run_id])
+    finally:
         await db.aclose()

@@ -1475,3 +1475,88 @@ async def test_mount_telemetry_reads_overlap_but_bound_driver_load(monkeypatch: 
     assert sample.polled_at == started
     assert sample.tracking is True
     assert sample.slewing is False
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("recovers", [True, False])
+async def test_mount_poll_rechecks_transient_missing_coordinates_before_publishing(recovers: bool) -> None:
+    """One firmware property failure must not reset a healthy dither interval."""
+    from collections import Counter
+
+    gateway = object.__new__(AlpacaDeviceGateway)
+    gateway._mount_capabilities = None
+    calls: Counter[str] = Counter()
+
+    async def read(member: str) -> Any:
+        calls[member] += 1
+        if member == "rightascension":
+            return 10.0 if recovers and calls[member] > 1 else None
+        if member == "declination":
+            return 20.0
+        if member in {"tracking", "atpark", "athome", "slewing"}:
+            return member == "tracking"
+        return 0
+
+    gateway._get_float = read
+    gateway._get_bool = read
+    gateway._get_int = read
+    started = datetime.now(UTC) - timedelta(seconds=2)
+    sample = await gateway._read_mount_telemetry(started)
+    assert calls["rightascension"] == 2
+    # Re-read the complete position pair together, never fill from an old sample.
+    assert calls["declination"] == 2
+    assert sample.ra_hours == (10.0 if recovers else None)
+    assert sample.dec_deg == 20.0
+    assert sample.polled_at == started
+    assert calls["slewing"] == 2
+    assert calls["tracking"] == 2
+    assert max(calls.values()) == 2
+
+
+@pytest.mark.asyncio
+async def test_transient_coordinate_read_does_not_restart_post_dither_stability() -> None:
+    from collections import Counter
+
+    from ssc.api.capture_orchestrator import CaptureService
+    from ssc.state.events import MountChanged
+    from ssc.state.models import StateSnapshot
+    from ssc.state.store import StateStore
+
+    at = datetime(2026, 10, 13, 20, 9, 43, tzinfo=UTC)
+    gateway = object.__new__(AlpacaDeviceGateway)
+    gateway._mount_capabilities = None
+    calls: Counter[str] = Counter()
+
+    async def read(member: str) -> Any:
+        calls[member] += 1
+        if member == "rightascension":
+            # A single missing firmware field every few telemetry ticks,
+            # followed immediately by a valid reading from the stopped mount.
+            return None if calls[member] % 11 == 0 else 10.0
+        if member == "declination":
+            return 20.0
+        if member in {"tracking", "atpark", "athome", "slewing"}:
+            return member == "tracking"
+        return 0
+
+    gateway._get_float = read
+    gateway._get_bool = read
+    gateway._get_int = read
+    state = StateStore(StateSnapshot(server_started_at=at))
+    service = object.__new__(CaptureService)
+    service._state = state
+    elapsed = 0
+
+    async def poll(_delay_s: float) -> None:
+        nonlocal elapsed
+        elapsed += 1
+        sample = await gateway._read_mount_telemetry(at + timedelta(seconds=elapsed))
+        # This fixture's driver coordinates are already J2000.
+        sample = sample.model_copy(update={"ra_j2000_h": sample.ra_hours,
+                                           "dec_j2000_deg": sample.dec_deg})
+        state.apply(MountChanged(mount=sample))
+
+    service._sleep = poll
+    service._monotonic = lambda: float(elapsed)
+    await service._wait_for_dither_settle(target_j2000=(10.0, 20.0), after_polled_at=at)
+    assert elapsed == 31  # the full required 30-second stable interval, once

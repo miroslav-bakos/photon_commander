@@ -401,6 +401,7 @@ class _FakeAstro:
     def __init__(self, ephemeris: Ephemeris | None, error: str | None = None) -> None:
         self.ephemeris = ephemeris
         self.ephemeris_error = error
+        self.profiles = {}
 
 
 def _initial_mount_state(*, ra_h: float, dec_deg: float) -> MountState:
@@ -2203,3 +2204,49 @@ async def test_cancelled_solver_capture_drains_fits_writer_before_cleanup(
     with pytest.raises(asyncio.CancelledError):
         await task
     assert not paths[0].parent.exists()
+
+
+@pytest.mark.parametrize("shape,profile_id,expected", [
+    ((3840, 2160), "zwo-s30pro", 3.98616),
+    ((1920, 1080), "zwo-s30pro", 3.98616),
+    ((1080, 1920), "zwo-s30pro", None),  # rotated/ROI is not this sensor
+    ((960, 540), "zwo-s30pro", None),
+    ((1920, 1080), "unknown", None),
+    ((1920, 1080), None, None),
+])
+async def test_default_pa_solver_profile_fov_without_camera_telemetry(
+    ephemeris: Ephemeris, monkeypatch: pytest.MonkeyPatch,
+    shape: tuple[int, int], profile_id: str | None, expected: float | None,
+    tmp_path: Path,
+) -> None:
+    from types import SimpleNamespace
+
+    import ssc.api.polar_alignment_service as module
+    from ssc.astro.framing import load_profile
+    from ssc.state.events import SettingsChanged
+
+    mount = FakeMountControl(_state_with_mount(_initial_mount_state(ra_h=1, dec_deg=5)))
+    solver = ScriptedSolver()
+    solver.expect_success(1, 5)
+    service, state = _build_service(ephemeris=ephemeris, mount=mount, solver=solver)
+    service._astro.profiles = {"zwo-s30pro": load_profile(Path("data/profiles/zwo-s30pro.toml"))}
+    state.apply(SettingsChanged(settings=state.snapshot.settings.model_copy(update={
+        "hardware_profile_id": profile_id,
+    })))
+    hints = []
+
+    async def astap(path: Path, **options) -> PlateSolveResult:
+        hints.append(options)
+        return await solver(path)
+
+    monkeypatch.setattr(module, "astap_solve", astap)
+    service._solve = astap
+    frame = SimpleNamespace(pixels=np.empty(shape, dtype=np.uint8))
+    fits_path = tmp_path / "frame.fits"
+    fits_path.touch()
+    await service._solve_with_hints(fits_path, solve_frame=frame)
+    height = hints[0]["field_height_deg"]
+    if expected is None:
+        assert height is None
+    else:
+        assert height == pytest.approx(expected, abs=0.0001)
