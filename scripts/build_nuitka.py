@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -63,6 +64,42 @@ def validate_inputs() -> None:
         raise SystemExit(f"build-nuitka: required runtime assets are missing:\n  {formatted}")
 
 
+def build_jobs() -> int:
+    explicit = os.environ.get("SSC_BUILD_JOBS")
+    if explicit is not None:
+        if not re.fullmatch(r"[1-9][0-9]*", explicit):
+            raise SystemExit("build-nuitka: SSC_BUILD_JOBS must be a positive integer")
+        return int(explicit)
+    if os.name != "posix" or platform.system() != "Linux" or platform.machine() not in {"aarch64", "arm64"}:
+        return 2
+    try:
+        available_kib = next(int(line.split()[1]) for line in Path("/proc/meminfo").read_text().splitlines()
+                             if line.startswith("MemAvailable:"))
+    except (OSError, ValueError, StopIteration):
+        return 2
+    # Observed largest GCC workers used ~800 MiB. Budget 1 GiB per worker
+    # and retain 2 GiB for the OS, backend and compiler coordination.
+    return max(1, min(os.cpu_count() or 1, 4, (available_kib // 1024 - 2048) // 1024))
+
+
+def compiler_environment() -> dict[str, str]:
+    env = os.environ.copy()
+    appliance = Path(env.get("SSC_APPLIANCE_ROOT", "/mnt/photon/Photon"))
+    binary = appliance / "tools/build-cache/bin/ccache"
+    cache = env.get("SSC_BUILD_CACHE_DIR")
+    if cache is None and binary.is_file():
+        cache = str(appliance / "shared/cache/nuitka")
+    if cache:
+        env.setdefault("NUITKA_CACHE_DIR", cache)
+        env.setdefault("NUITKA_CACHE_DIR_CCACHE", env.get("CCACHE_DIR", str(Path(env["NUITKA_CACHE_DIR"]) / "ccache")))
+        env.setdefault("CCACHE_DIR", env["NUITKA_CACHE_DIR_CCACHE"])
+        env.setdefault("CCACHE_BASEDIR", str(ROOT))
+        env.setdefault("CCACHE_COMPILERCHECK", "content")
+        if binary.is_file():
+            env.setdefault("NUITKA_CCACHE_BINARY", str(binary))
+    return env
+
+
 def nuitka_command() -> list[str]:
     command = [
         sys.executable,
@@ -74,7 +111,8 @@ def nuitka_command() -> list[str]:
         "--remove-output",
         "--update-check=never",
         "--assume-yes-for-downloads",
-        f"--jobs={os.environ.get('SSC_BUILD_JOBS', '2')}",
+        f"--jobs={build_jobs()}",
+        f"--report={BUILD_ROOT.parent / 'nuitka-report.xml'}",
         "--include-package=ssc",
         "--include-package=keyring.backends",
         "--include-package-data=skyfield",
@@ -133,7 +171,7 @@ def build(output: Path, *, private_appliance: bool, skip_license_check: bool) ->
 
     build_version = version()
     shutil.rmtree(BUILD_ROOT, ignore_errors=True)
-    subprocess.run(nuitka_command(), cwd=ROOT, check=True)
+    subprocess.run(nuitka_command(), cwd=ROOT, env=compiler_environment(), check=True)
 
     generated = BUILD_ROOT / "entrypoint.dist"
     if not generated.is_dir() or not (generated / executable_name()).is_file():
