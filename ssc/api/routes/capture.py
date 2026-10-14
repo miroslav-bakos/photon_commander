@@ -47,6 +47,7 @@ from ssc.api.capture_orchestrator import (
     CaptureDurationOutOfRangeError,
     CaptureFolderNotConfiguredError,
     CaptureFrameNotReadyError,
+    CaptureQualityBusyError,
     CaptureTimezoneUnknownError,
 )
 from ssc.api.capture_service import ExposureNotAvailableError
@@ -1327,6 +1328,8 @@ async def get_archive_quality(
     del session
     try:
         quality = await services.capture.get_archive_quality(key)
+    except CaptureQualityBusyError as exc:
+        raise HTTPException(status_code=503, detail=str(exc), headers={"Retry-After": "2"}) from exc
     except CaptureFolderNotConfiguredError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     except ArchivePathError as exc:
@@ -1432,6 +1435,8 @@ async def get_frame_quality(
     del session
     try:
         quality = await services.capture.get_frame_quality(frame_id)
+    except CaptureQualityBusyError as exc:
+        raise HTTPException(status_code=503, detail=str(exc), headers={"Retry-After": "2"}) from exc
     except CaptureFrameNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except CaptureFrameNotReadyError as exc:

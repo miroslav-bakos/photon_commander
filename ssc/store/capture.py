@@ -104,6 +104,24 @@ class CaptureRepository:
     def __init__(self, database: Database) -> None:
         self._database = database
 
+    async def get_quality_cache(self, path: Path, identity: str) -> str | None:
+        row = await self._database.fetch_one(
+            "SELECT quality_json FROM capture_quality_cache WHERE path = ? AND identity = ?",
+            (str(path), identity),
+        )
+        return None if row is None else str(row["quality_json"])
+
+    async def put_quality_cache(self, path: Path, identity: str, payload: str) -> None:
+        await self._database.execute(
+            "INSERT INTO capture_quality_cache(path, identity, quality_json, updated_at) VALUES (?, ?, ?, ?) "
+            "ON CONFLICT(path) DO UPDATE SET identity=excluded.identity, quality_json=excluded.quality_json, updated_at=excluded.updated_at",
+            (str(path), identity, payload, datetime.now(tz=UTC).isoformat()),
+        )
+        await self._database.execute(
+            "DELETE FROM capture_quality_cache WHERE path IN "
+            "(SELECT path FROM capture_quality_cache ORDER BY updated_at DESC, path LIMIT -1 OFFSET 4096)"
+        )
+
     async def path_exists(self, path: Path) -> bool:
         row = await self._database.fetch_one(
             "SELECT 1 FROM capture_frame WHERE path = ? LIMIT 1", (str(path),)

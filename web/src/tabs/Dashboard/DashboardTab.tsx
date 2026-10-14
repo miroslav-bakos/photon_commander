@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (C) 2026 Miroslav Bakoš
 
-import { timedApiFetch } from "../../performance/diagnostics";
 import { useEffect, type CSSProperties, type ReactNode } from "react";
-import { useQueries } from "@tanstack/react-query";
+import { useRecentFrameQualities } from "./useRecentFrameQualities";
 import { useNavigate } from "react-router-dom";
 import {
   CalendarClock,
@@ -25,7 +24,6 @@ import {
   useCaptureFramesQuery,
   useCaptureState,
   useLiveStackQuery,
-  type CaptureFrameQuality,
 } from "../../api/capture";
 import { useAutofocusStateQuery, useFocuserPositionQuery } from "../../api/focuser";
 import { useFilterWheelQuery } from "../../api/filterwheel";
@@ -182,12 +180,6 @@ function mountHeadline(mount: ReturnType<typeof useMountState>): string {
   return mount.tracking === true ? "Tracking" : mount.tracking === false ? "Not tracking" : "Status unknown";
 }
 
-async function fetchQuality(frameId: number): Promise<CaptureFrameQuality> {
-  const response = await timedApiFetch(new Request(new URL(`/api/capture/frames/${String(frameId)}/quality`, window.location.origin), { credentials: "same-origin" }));
-  if (!response.ok) throw new Error(`Quality request failed (${String(response.status)})`);
-  return response.json() as Promise<CaptureFrameQuality>;
-}
-
 export function DashboardTab() {
   const snapshot = useConnectionStore((state) => state.snapshot);
   const mountReading = useMountState();
@@ -229,14 +221,12 @@ export function DashboardTab() {
   const ditherStatus = queryStatus(dither);
 
   const recentFrames = frames.data?.frames.slice(0, 10) ?? [];
-  const recentQualities = useQueries({
-    queries: recentFrames.map((frame) => ({
-      queryKey: ["capture", "frame-quality", frame.id] as const,
-      queryFn: () => fetchQuality(frame.id),
-      staleTime: Number.POSITIVE_INFINITY,
-      retry: false,
-    })),
-  });
+  // Finish the latest-frame read first; its shared key reuses that result
+  // when it also belongs to the recent ten rather than issuing it twice.
+  const recentQualities = useRecentFrameQualities(
+    recentFrames.map((frame) => frame.id),
+    capture?.last_frame_id == null || lastQuality.data !== undefined || lastQuality.isError,
+  );
   const qualityValues = recentQualities.flatMap((query) => query.data === undefined ? [] : [query.data]);
   const averageHfr = mean(qualityValues.map((quality) => quality.hfr_px));
   const averageFwhm = mean(qualityValues.map((quality) => quality.fwhm_px));

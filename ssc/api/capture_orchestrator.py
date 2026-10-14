@@ -50,9 +50,11 @@ import os
 import random
 import shutil
 import tempfile
+import threading
 import time
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass, replace
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final, Literal, Protocol, cast
@@ -616,6 +618,93 @@ def initial_capture_state(
     )
 
 
+class CaptureQualityBusyError(Exception):
+    """The bounded quality-analysis queue is full; callers may retry later."""
+
+
+# Separate from asyncio's general I/O pool. One CPU-heavy raw-FITS analysis
+# globally, even while old/new CaptureService instances overlap at shutdown.
+_QUALITY_COMPUTE_LOCK = threading.Lock()
+_QUALITY_ALGORITHM_VERSION = 1
+_QUALITY_MAX_PENDING = 16
+
+
+def _quality_identity(path: Path) -> str:
+    stat = path.stat()
+    return f"{_QUALITY_ALGORITHM_VERSION}:{stat.st_dev}:{stat.st_ino}:{stat.st_size}:{stat.st_mtime_ns}:{stat.st_ctime_ns}"
+
+
+class _FrameQualityCache:
+    def __init__(self, repo: CaptureRepository) -> None:
+        self._repo = repo
+        self._worker = ThreadPoolExecutor(max_workers=1, thread_name_prefix="frame-quality")
+        self._pending: dict[tuple[Path, str], asyncio.Task[FrameQuality]] = {}
+        self._lock = asyncio.Lock()
+        self._closed = False
+
+    async def get(self, path: Path) -> FrameQuality:
+        if self._closed:
+            raise CaptureQualityBusyError("Frame quality analysis is shutting down; retry shortly.")
+        path = await asyncio.to_thread(path.resolve)
+        identity = await asyncio.to_thread(_quality_identity, path)
+        payload = await self._repo.get_quality_cache(path, identity)
+        if payload is not None:
+            # Validate on every warm read too: never serve a deleted/replaced file.
+            if await asyncio.to_thread(_quality_identity, path) == identity:
+                return FrameQuality(**json.loads(payload))
+            raise CaptureFrameNotReadyError("frame changed while reading cached quality; retry")
+        key = (path, identity)
+        task = self._pending.get(key)
+        if task is None:
+            if self._closed or len(self._pending) >= _QUALITY_MAX_PENDING:
+                raise CaptureQualityBusyError("Frame quality analysis is busy; retry shortly.")
+            task = asyncio.create_task(self._compute(path, identity), name="frame-quality")
+            self._pending[key] = task
+
+            def finished(done: asyncio.Task[FrameQuality]) -> None:
+                self._pending.pop(key, None)
+                if not done.cancelled():
+                    done.exception()
+
+            task.add_done_callback(finished)
+        return await asyncio.shield(task)
+
+    async def _compute(self, path: Path, identity: str) -> FrameQuality:
+        async with self._lock:
+            # Another request/service may have completed this file while queued.
+            payload = await self._repo.get_quality_cache(path, identity)
+            if payload is not None and await asyncio.to_thread(_quality_identity, path) == identity:
+                return FrameQuality(**json.loads(payload))
+            if await asyncio.to_thread(_quality_identity, path) != identity:
+                raise CaptureFrameNotReadyError("frame changed before quality analysis; retry")
+            def measure() -> FrameQuality:
+                with _QUALITY_COMPUTE_LOCK:
+                    return _measure_frame_quality(path.read_bytes())
+
+            future = asyncio.get_running_loop().run_in_executor(self._worker, measure)
+            try:
+                quality = await asyncio.shield(future)
+            except asyncio.CancelledError:
+                # Cancelling an asyncio waiter cannot stop its CPU thread. Keep
+                # the permit until it really finishes, including during shutdown.
+                with contextlib.suppress(Exception):
+                    await asyncio.shield(future)
+                raise
+            if await asyncio.to_thread(_quality_identity, path) != identity:
+                raise CaptureFrameNotReadyError("frame changed during quality analysis; retry")
+            await self._repo.put_quality_cache(path, identity, json.dumps(asdict(quality)))
+            return quality
+
+    async def aclose(self) -> None:
+        self._closed = True
+        pending = tuple(self._pending.values())
+        for task in pending:
+            task.cancel()
+        await asyncio.gather(*pending, return_exceptions=True)
+        # All submitted work has finished; shutdown cannot block the loop.
+        self._worker.shutdown(wait=False, cancel_futures=True)
+
+
 class CaptureService:
     """Drives ``ssc.api.capture_service`` from a request, publishing the
     ``capture`` snapshot section around it. See the module docstring."""
@@ -665,6 +754,7 @@ class CaptureService:
         self._filterwheel = filterwheel
         self._focuser = focuser
         self._repo = repo
+        self._quality_cache = _FrameQualityCache(repo)
         self._settings = settings
         self._state = state
         self._tasks = tasks
@@ -3685,7 +3775,8 @@ class CaptureService:
         return status
 
     async def aclose(self) -> None:
-        """Release stream processes before the task registry is cancelled."""
+        """Drain quality work and streams before the database/task registry closes."""
+        await self._quality_cache.aclose()
         await self._youtube.stop()
         if self._rtsp.status.active:
             await self.stop_live_stack_rtsp()
@@ -4471,8 +4562,10 @@ class CaptureService:
         ensure_preview_safe(path)
         if path.suffix.casefold() not in FITS_SUFFIXES:
             raise ArchivePathError("star quality is available for FITS images only")
-        raw = await asyncio.to_thread(path.read_bytes)
-        return await asyncio.to_thread(_measure_frame_quality, raw)
+        try:
+            return await self._quality_cache.get(path)
+        except (FileNotFoundError, CaptureFrameNotReadyError) as exc:
+            raise ArchivePathError(str(exc)) from exc
 
     async def get_frame_image(self, frame_id: int, *, thumbnail: bool) -> bytes:
         """A rendered PNG of a catalogued frame's own FITS bytes — a full
@@ -4516,16 +4609,18 @@ class CaptureService:
         :class:`ssc.store.capture.CaptureFrameNotFoundError` for an unknown
         id, :class:`CaptureFrameNotReadyError` for a frame whose row is still
         ``'writing'``. The whole decode/debayer/detect pipeline runs off the
-        event loop via `asyncio.to_thread`, for the same reason
-        :meth:`get_frame_image` does.
+        event loop in a dedicated bounded worker, with persistent raw-FITS
+        metrics reused only while file identity and algorithm version match.
         """
         record = await self._repo.get_frame(frame_id)
         if record.status != "complete":
             raise CaptureFrameNotReadyError(
                 f"capture frame {frame_id} is {record.status!r}, not yet complete"
             )
-        raw = await self._read_complete_frame_bytes(record)
-        return await asyncio.to_thread(_measure_frame_quality, raw)
+        try:
+            return await self._quality_cache.get(record.path)
+        except FileNotFoundError as exc:
+            raise CaptureFrameNotFoundError(f"capture frame {frame_id} file is missing: {record.path}") from exc
 
     async def _read_complete_frame_bytes(self, record: CaptureFrameRecord) -> bytes:
         try:

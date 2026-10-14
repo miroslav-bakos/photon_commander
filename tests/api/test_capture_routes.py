@@ -2075,3 +2075,51 @@ def test_fresh_capture_service_cannot_claim_retained_stack_saved(paired: TestCli
         with pytest.raises(LiveStackError, match='missing after restart'):
             await service.stop_scheduled_live_stack(require_retained=True)
     paired.portal.call(scenario)
+
+
+def test_quality_cache_persists_across_capture_service_instances(paired: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from ssc.api import capture_orchestrator
+    from ssc.capture.quality import FrameQuality
+
+    _configure_folder(paired, tmp_path)
+    services, service = _install_capture_service(paired, camera=None)
+    path = tmp_path / "cached-quality.fits"
+    path.write_bytes(b"fits")
+    calls: list[bytes] = []
+    monkeypatch.setattr(capture_orchestrator, "_measure_frame_quality", lambda raw: calls.append(raw) or FrameQuality(3, 1.5, 3.2, None, None, 100, 2))
+
+    async def plant() -> int:
+        repo = CaptureRepository(services.database)
+        frame_id = await repo.begin_frame(path=path, date_obs=datetime(2026, 9, 10, tzinfo=UTC), object_name="M42", filter_name="LP", frame_type="light", exposure_s=30, gain=200, ccd_temp_c=None, width=4, height=4)
+        await repo.complete_frame(frame_id)
+        return frame_id
+
+    frame_id = paired.portal.call(plant)  # type: ignore[attr-defined]
+    endpoint = f"/api/capture/frames/{frame_id}/quality"
+    first = paired.get(endpoint)
+    assert first.status_code == 200, first.text
+    assert paired.get(endpoint).json() == first.json()
+    assert paired.get("/api/capture/archive/quality", params={"key": path.name}).json() == first.json()
+    paired.portal.call(service.aclose)  # type: ignore[attr-defined]
+    _install_capture_service(paired, camera=None)
+    assert paired.get(endpoint).json() == first.json()
+    assert calls == [b"fits"]
+    path.write_bytes(b"new fits bytes")
+    assert paired.get(endpoint).status_code == 200
+    assert len(calls) == 2
+    path.unlink()
+    assert paired.get(endpoint).status_code == 404
+
+
+@pytest.mark.parametrize("endpoint", ["/api/capture/frames/1/quality", "/api/capture/archive/quality?key=frame.fits"])
+def test_quality_queue_busy_returns_retryable_503(paired: TestClient, monkeypatch: pytest.MonkeyPatch, endpoint: str) -> None:
+    from ssc.api.capture_orchestrator import CaptureQualityBusyError
+
+    _services, service = _install_capture_service(paired, camera=None)
+    async def busy(_key):
+        raise CaptureQualityBusyError("quality busy")
+    monkeypatch.setattr(service, "get_frame_quality", busy)
+    monkeypatch.setattr(service, "get_archive_quality", busy)
+    response = paired.get(endpoint)
+    assert response.status_code == 503, response.text
+    assert response.headers["retry-after"] == "2"

@@ -985,14 +985,16 @@ export function useSolveCaptureFrameMutation() {
 export function useCaptureFrameQualityQuery(frameId: number | null | undefined) {
   return useQuery({
     queryKey: ["capture", "frame-quality", frameId ?? null] as const,
-    queryFn: async () =>
+    queryFn: async ({ signal }) =>
       unwrap(
-        call(`/api/capture/frames/${String(frameId)}/quality`) as Promise<{
+        call(`/api/capture/frames/${String(frameId)}/quality`, { signal }) as Promise<{
           data?: CaptureFrameQuality;
           error?: unknown;
           response: Response;
         }>,
       ),
+    staleTime: Number.POSITIVE_INFINITY,
+    retry: false,
     enabled: frameId !== null && frameId !== undefined,
   });
 }

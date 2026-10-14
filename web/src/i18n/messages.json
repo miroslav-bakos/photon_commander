@@ -1,4 +1,24 @@
 {
+  "Frame quality analysis is busy; retry shortly.": [
+    "Analýza kvality snímok je vyťažená; skús to o chvíľu.",
+    "Analýza kvality snímků je vytížená; zkus to za chvíli."
+  ],
+  "Frame quality analysis is shutting down; retry shortly.": [
+    "Analýza kvality snímok sa ukončuje; skús to o chvíľu.",
+    "Analýza kvality snímků se ukončuje; zkus to za chvíli."
+  ],
+  "frame changed while reading cached quality; retry": [
+    "Snímka sa počas čítania uloženej kvality zmenila; skús to znova.",
+    "Snímek se během čtení uložené kvality změnil; zkus to znovu."
+  ],
+  "frame changed before quality analysis; retry": [
+    "Snímka sa pred analýzou kvality zmenila; skús to znova.",
+    "Snímek se před analýzou kvality změnil; zkus to znovu."
+  ],
+  "frame changed during quality analysis; retry": [
+    "Snímka sa počas analýzy kvality zmenila; skús to znova.",
+    "Snímek se během analýzy kvality změnil; zkus to znovu."
+  ],
   "Autofocus filter cannot be checked until the wheel reports its positions; execution verifies the selected position before focusing.": [
     "Filter zaostrovania sa nedá overiť, kým koliesko nenahlási svoje polohy; pred zaostrovaním sa overí zvolená poloha.",
     "Filtr zaostřování nelze ověřit, dokud kolo nenahlásí své polohy; před zaostřením se ověří zvolená poloha."
