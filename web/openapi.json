@@ -11589,7 +11589,8 @@
                 "type": "string",
                 "enum": [
                   "tele",
-                  "wide"
+                  "wide",
+                  "both"
                 ]
               },
               {

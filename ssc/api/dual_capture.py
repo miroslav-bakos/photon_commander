@@ -6,9 +6,10 @@ from __future__ import annotations
 import asyncio
 import json
 import math
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from dataclasses import replace
+from datetime import datetime
 from pathlib import Path
 from typing import cast
 from zoneinfo import ZoneInfo
@@ -102,12 +103,13 @@ async def capture_pair(
     run_id: str, block_id: str, frame_index: int, duration_s: float,
     gain: int, context: ExposureContext, folder: Path, filename_template: str,
     tz: ZoneInfo,
+    on_started: Callable[[datetime], None] | None = None,
 ) -> int:
     async with repo.dual_capture_lock:
         return await _capture_pair_locked(tele=tele, wide=wide, telescope=telescope,
             filterwheel=filterwheel, focuser=focuser, repo=repo, run_id=run_id,
             block_id=block_id, frame_index=frame_index, duration_s=duration_s,
-            gain=gain, context=context, folder=folder, filename_template=filename_template, tz=tz)
+            gain=gain, context=context, folder=folder, filename_template=filename_template, tz=tz, on_started=on_started)
 
 
 async def _capture_pair_locked(
@@ -116,6 +118,7 @@ async def _capture_pair_locked(
     run_id: str, block_id: str, frame_index: int, duration_s: float,
     gain: int, context: ExposureContext, folder: Path, filename_template: str,
     tz: ZoneInfo,
+    on_started: Callable[[datetime], None] | None = None,
 ) -> int:
     """Save missing pair members only; never return before both cameras are Idle."""
     if telescope is None:
@@ -151,14 +154,16 @@ async def _capture_pair_locked(
                 raise DualCaptureError(f"saved {role} companion frame is missing; preserving its identity")
             existing[role] = record.id
 
+    if "wide" not in existing:
+        put = getattr(wide, "put", None)
+        if put is None:
+            raise DualCaptureError("Wide gain control is unavailable")
+        await put("gain", Gain=gain)
+    started: dict[str, datetime] = {}
+
     async def member(role: str, camera: CameraDevice) -> int:
         if role in existing:
             return existing[role]
-        if role == "wide":
-            put = getattr(camera, "put", None)
-            if put is None:
-                raise DualCaptureError("Wide gain control is unavailable")
-            await put("gain", Gain=gain)
         await repo.dual_issued(run_id, block_id, frame_index, role, mark=True)
         owned = True  # A transport failure after dispatch leaves ambiguous ownership.
         try:
@@ -169,6 +174,9 @@ async def _capture_pair_locked(
                 owned = False  # Explicit rejection never grants camera ownership.
                 await repo.settle_dual_member(run_id, block_id, frame_index, role)
                 raise
+            started[role] = started_at
+            if len(started) == 2 and on_started is not None:
+                on_started(min(started.values()))
             frame_id = await capture_one_exposure(
                 camera=camera, telescope=telescope if role == "tele" else None,
                 filterwheel=filterwheel if role == "tele" else None,

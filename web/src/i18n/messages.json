@@ -1,4 +1,36 @@
 {
+  "Both exposure mode supports light frames only; use manual calibration for other frame types": [
+    "Spoločná expozícia podporuje iba light snímky; pre ostatné typy použi manuálnu kalibráciu",
+    "Společná expozice podporuje pouze light snímky; pro ostatní typy použij ruční kalibraci"
+  ],
+  "Both mode supports LIGHT only; use manual calibration for other frame types": [
+    "Režim Obe podporuje iba LIGHT; pre ostatné typy použi manuálnu kalibráciu",
+    "Režim Obě podporuje pouze LIGHT; pro ostatní typy použij ruční kalibraci"
+  ],
+  "Both mode requires Tele, Wide and mount availability": [
+    "Režim Obe vyžaduje dostupnosť Tele, Wide a montáže",
+    "Režim Obě vyžaduje dostupnost Tele, Wide a montáže"
+  ],
+  "Both mode requires a stopped mount": [
+    "Režim Obe vyžaduje zastavenú montáž",
+    "Režim Obě vyžaduje zastavenou montáž"
+  ],
+  "Both mode requires both cameras to report Idle": [
+    "Režim Obe vyžaduje, aby obe kamery hlásili nečinnosť",
+    "Režim Obě vyžaduje, aby obě kamery hlásily nečinnost"
+  ],
+  "Tele gain is unavailable; choose an explicit gain for Both mode": [
+    "Gain Tele nie je dostupný; pre režim Obe zadaj gain",
+    "Gain Tele není dostupný; pro režim Obě zadej gain"
+  ],
+  "Tele and Wide expose together for up to 60 seconds. Files are saved separately; Wide preview is paused during paired capture.": [
+    "Tele a Wide exponujú súčasne najviac 60 sekúnd. Súbory sa ukladajú oddelene; Wide náhľad sa počas spoločného snímania pozastaví.",
+    "Tele a Wide exponují současně nejvýše 60 sekund. Soubory se ukládají odděleně; Wide náhled se během společného snímání pozastaví."
+  ],
+  "Both cameras require an exposure of at most 60 seconds. Choose Tele for a longer exposure.": [
+    "Obe kamery vyžadujú expozíciu najviac 60 sekúnd. Pre dlhšiu expozíciu vyber Tele.",
+    "Obě kamery vyžadují expozici nejvýše 60 sekund. Pro delší expozici vyber Tele."
+  ],
   "Both": [
     "Obe",
     "Obě"
@@ -11139,5 +11171,13 @@
   "saved plan changed while preparing resume; retry Resume": [
     "Počas prípravy obnovenia sa uložený plán zmenil; zopakuj obnovenie.",
     "Během přípravy obnovení se uložený plán změnil; zopakuj obnovení."
+  ],
+  "Stop the active observing plan before starting manual Both acquisition": [
+    "Pred manuálnym snímaním oboma kamerami zastav aktívny pozorovací plán",
+    "Před ručním snímáním oběma kamerami zastav aktivní pozorovací plán"
+  ],
+  "Cancelled Both preparation left mount motion unconfirmed": [
+    "Po zrušení prípravy oboch kamier nie je potvrdené zastavenie montáže",
+    "Po zrušení přípravy obou kamer není potvrzeno zastavení montáže"
   ]
 }

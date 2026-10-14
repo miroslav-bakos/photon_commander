@@ -163,7 +163,8 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
   const isBias = frameType === "bias";
   const isDark = frameType === "dark";
   const isFlat = frameType === "flat";
-  const durationValid = isBias || isFlat || (durationText.trim() !== "" && Number.isFinite(durationS) && durationS > 0);
+  const pairedLightTooLong = opticId === "both" && frameType === "light" && durationS > 60;
+  const durationValid = isBias || isFlat || (durationText.trim() !== "" && Number.isFinite(durationS) && durationS > 0 && !pairedLightTooLong);
   const gainNumber = gainText.trim() === "" ? null : Number(gainText);
   const gainValid = gainText.trim() === "" || (Number.isFinite(gainNumber) && Number.isInteger(gainNumber));
   const calibrationCount = Number(calibrationCountText);
@@ -192,7 +193,7 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
   const inProgress = captureState?.in_progress === true;
   const looping = captureState?.loop_active === true;
   const cameraBusy = inProgress || looping || startExposure.isPending || startCalibration.isPending || captureState?.calibration?.status === "running";
-  const cameraValid = opticId === "tele" || ((opticId === "wide" || (opticId === "both" && frameType !== "light")) && wideAvailable);
+  const cameraValid = opticId === "tele" || ((opticId === "wide" || opticId === "both") && wideAvailable);
   const includesWide = opticId === "wide" || opticId === "both";
   const needsCover = includesWide && (isDark || isBias);
   const wideCalibration = needsCover && !coveredLensConfirmed;
@@ -222,7 +223,7 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
       object: isDark || isBias ? null : objectText.trim() === "" ? null : objectText.trim(),
       frame_type: frameType,
       capture_mode: "single",
-      optic_id: opticId === "wide" ? "wide" : "tele",
+      optic_id: opticId === "both" ? "both" : opticId === "wide" ? "wide" : "tele",
       ...(isFlat ? { flat_source: flatSource } : {}),
     };
   }
@@ -274,7 +275,7 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
 
       <div className="mb-3">
         <SegmentedControl label="Capture camera" value={opticId}
-          options={[{ value: "tele", label: "Tele" }, { value: "wide", label: "Wide", disabled: !wideAvailable }, ...(frameType !== "light" ? [{ value: "both", label: "Both", disabled: !wideAvailable }] : [])]}
+          options={[{ value: "tele", label: "Tele" }, { value: "wide", label: "Wide", disabled: !wideAvailable }, { value: "both", label: "Both", disabled: !wideAvailable }]}
           disabled={cameraBusy}
           onChange={(camera) => { setCoveredLensConfirmed(false); updateCaptureForm({ opticId: camera }); }} />
         {!wideAvailable && <p className="mt-1 text-xs text-fg-muted">Wide camera requires a confirmed hardware profile with Wide support.</p>}
@@ -283,7 +284,9 @@ export function CapturePanel({ frameType: controlledFrameType, onFrameTypeChange
             onChange={(event) => { setCoveredLensConfirmed(event.target.checked); }} />
           Wide lens is fully covered with an opaque cap. The Tele Dark filter does not cover Wide.
         </label>}
-        {opticId === "both" && <p className="mt-1 text-xs text-fg-muted">Calibration sets run separately for Tele and Wide. Keep both lenses prepared until completion.</p>}
+        {opticId === "both" && frameType !== "light" && <p className="mt-1 text-xs text-fg-muted">Calibration sets run separately for Tele and Wide. Keep both lenses prepared until completion.</p>}
+        {opticId === "both" && frameType === "light" && <p role="status" className="mt-1 text-xs text-fg-muted">Tele and Wide expose together for up to 60 seconds. Files are saved separately; Wide preview is paused during paired capture.</p>}
+        {pairedLightTooLong && <p role="alert" className="mt-1 text-xs text-warning">Both cameras require an exposure of at most 60 seconds. Choose Tele for a longer exposure.</p>}
         {wideDitherBlocked && <p role="status" className="mt-1 text-xs text-warning">Disable dithering in Capture options before starting a Wide loop; its pixel scale is not calibrated.</p>}
       </div>
 

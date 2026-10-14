@@ -34,7 +34,9 @@ never awaited here: once ``StartExposure`` has been accepted,
 catalogue) to a task the caller does not wait on, and returns ``202``. That
 split is exactly what ``ssc.api.capture_service.begin_exposure`` was pulled
 out of :func:`~ssc.api.capture_service.drive_exposure` to make possible
-without commanding ``StartExposure`` twice.
+without commanding ``StartExposure`` twice. Manual Both instead accepts an
+owned background job after preflight; its stage stays unset until both cameras
+acknowledge StartExposure, and later failures remain visible in capture state.
 """
 
 from __future__ import annotations
@@ -76,6 +78,7 @@ from ssc.api.capture_service import (
     exposure_metadata_fallbacks,
     light_flag,
 )
+from ssc.api.dual_capture import capture_pair, dual_motion_guard
 from ssc.api.external_tools import ConfiguredAstap
 from ssc.api.plans_service import PlanTimezoneUnknownError, resolve_timezone
 from ssc.api.tasks import TaskRegistry
@@ -793,6 +796,8 @@ class CaptureService:
         self._dither_object_name: str | None = None
         self._center_reference: PlateSolveResult | None = None
         self._manual_camera_wide = False
+        self._manual_both_active = False
+        self._manual_both_motion_error: str | None = None
         self._live_stack: LiveStackEngine | None = None
         self._live_stack_seen: set[Path] = set()
         self._live_stack_pending_sizes: dict[Path, int] = {}
@@ -958,12 +963,15 @@ class CaptureService:
         optic_id: str | None = None,
         flat_source: str | None = None,
     ) -> CaptureState:
-        """Validate and command ``StartExposure`` synchronously (all of it a
-        fast Alpaca round trip — module docstring), then hand the poll/read/
-        write/catalogue tail to a background task and return. Raises one of
+        """Validate an exposure and own its completion in a background task.
+
+        Tele/Wide command StartExposure synchronously; Both defers the pair
+        and remains preparing until both physical start acknowledgements. Raises one of
         this module's own errors, or :class:`ExposureNotAvailableError`
         (``ssc.api.capture_service``), for the route to map to a status.
         """
+        if optic_id is not None and optic_id.casefold() == "both":
+            self._check_manual_both_run_ownership()
         if self._section.loop_active:
             raise CaptureAlreadyRunningError(
                 "a capture loop is already running; stop it before starting another capture"
@@ -991,6 +999,8 @@ class CaptureService:
         frame_limit: int | None = None,
     ) -> CaptureState:
         """Start a repeating capture job owned entirely by this process."""
+        if optic_id is not None and optic_id.casefold() == "both":
+            self._check_manual_both_run_ownership()
         await self._recover_failed_exposure()
         if self._section.in_progress or self._section.loop_active:
             raise CaptureAlreadyRunningError("a capture or capture loop is already running")
@@ -1018,9 +1028,10 @@ class CaptureService:
                 flat_source=spec.flat_source,
                 loop_automation=True,
             )
-        except Exception:
+        except BaseException:
             self._capture_loop = None
             self._publish(loop_active=False)
+            self._release_manual_both()
             raise
 
     def stop_capture_loop(self) -> CaptureState:
@@ -1041,18 +1052,35 @@ class CaptureService:
         flat_source: str | None,
         loop_automation: bool,
     ) -> CaptureState:
+        loop_spec = self._capture_loop if loop_automation else None
         folder = self._settings.capture.folder
         if folder is None:
             raise CaptureFolderNotConfiguredError(
                 "no capture folder is configured; set one in Settings > Capture "
                 "before starting a capture"
             )
+        both = optic_id is not None and optic_id.casefold() == "both"
+        if both:
+            self._check_manual_both_run_ownership()
+        if both and frame_type is not FrameType.LIGHT:
+            raise ExposureNotAvailableError("Both mode supports LIGHT only; use manual calibration for other frame types")
         wide = optic_id is not None and optic_id.casefold() == "wide"
         camera = self._wide_camera if wide else self._camera
         if camera is None:
             raise CaptureDeviceUnavailableError(
                 f"this ssc-core hosts no {'Wide' if wide else 'Tele'} camera, so a capture cannot be started"
             )
+        if both:
+            if self._wide_camera is None or self._telescope is None:
+                raise CaptureDeviceUnavailableError("Both mode requires Tele, Wide and mount availability")
+            for member in (camera, self._wide_camera):
+                minimum, maximum = await self._read_limits(member)
+                if member is self._wide_camera:
+                    maximum = min(maximum, 60.0)
+                if not math.isfinite(duration_s) or not minimum <= duration_s <= maximum:
+                    raise CaptureDurationOutOfRangeError(duration_s, minimum, maximum)
+            # Reject unsupported settings before gain, filter, dither or Start.
+            self._resolve_template_timezone("%TARGET%/%DATEOFCAPTURE%")
         if wide and frame_type in {FrameType.DARK, FrameType.BIAS}:
             raise ExposureNotAvailableError(
                 "Wide dark/bias capture is unavailable: no verified Wide shutter or dark filter"
@@ -1068,10 +1096,16 @@ class CaptureService:
                 "disable dithering before starting a Wide loop"
             )
         await self._recover_failed_exposure()
+        if both and loop_automation and (not self._section.loop_active or self._capture_loop is not loop_spec):
+            self._release_manual_both()
+            return self._section
         if self._wide_preview_busy():
             raise CaptureAlreadyRunningError(
                 "camera acquisition is already running; only one exposure runs at a time"
             )
+        if both:
+            self._manual_both_active = True
+            self.refresh_wide_stream_policy()
         # Claimed synchronously, with no ``await`` between the check above
         # and this — closes the race a second near-simultaneous request
         # would otherwise find open (module docstring: mutation here is
@@ -1087,6 +1121,21 @@ class CaptureService:
         )
         try:
             await self.prepare_main_capture()
+            if both:
+                self._check_manual_both_run_ownership()
+                assert self._wide_camera is not None and self._telescope is not None
+                await _ensure_connected(self._telescope)
+                if await self._telescope.get("slewing") is not False:
+                    raise CaptureAlreadyRunningError("Both mode requires a stopped mount")
+                for member in (camera, self._wide_camera):
+                    camera_state = await member.get("camerastate")
+                    if type(camera_state) is not int or camera_state != 0:
+                        raise CaptureAlreadyRunningError("Both mode requires both cameras to report Idle")
+                if gain is None:
+                    current_gain = await camera.get("gain")
+                    if type(current_gain) is not int or current_gain < 0:
+                        raise CaptureDeviceUnavailableError("Tele gain is unavailable; choose an explicit gain for Both mode")
+                    gain = current_gain
             minimum_s, maximum_s = await self._read_limits(camera)
             # A physical camera cannot expose for literal zero time. The API's
             # zero is an explicit bias sentinel; resolve it to this camera's
@@ -1103,6 +1152,9 @@ class CaptureService:
             tz = self._resolve_template_timezone(f"{template}/{filename_template}")
             if gain is not None:
                 await camera.put("gain", Gain=gain)
+                if both:
+                    assert self._wide_camera is not None
+                    await self._wide_camera.put("gain", Gain=gain)
             if frame_type in {FrameType.BIAS, FrameType.DARK}:
                 await self._select_dark_filter_if_available()
             capture_number = self._light_sequence
@@ -1144,7 +1196,14 @@ class CaptureService:
                 )
                 dither_applied = True
                 self._manual_dither_group_index += 1
-            started_at = await begin_exposure(
+            if both and loop_automation and (not self._section.loop_active or self._capture_loop is not loop_spec):
+                # Stop while the next pair was still preparing never dispatches
+                # another physical exposure. An already spawned pair drains.
+                self._publish(in_progress=False, stage=None, duration_s=None, started_at=None,
+                              object_name=None, frame_type=None, gain=None)
+                self._release_manual_both()
+                return self._section
+            started_at = None if both else await begin_exposure(
                 camera=camera,
                 telescope=self._telescope,
                 filterwheel=None if wide else self._filterwheel,
@@ -1152,6 +1211,22 @@ class CaptureService:
                 light=light_flag(frame_type),
                 now=self._now,
             )
+        except asyncio.CancelledError:
+            if both:
+                if self._section.stage is CaptureStage.DITHERING:
+                    try:
+                        if self._dither_abort is not None:
+                            await asyncio.shield(self._dither_abort())
+                        if self._telescope is None or await self._telescope.get("slewing") is not False:
+                            self._manual_both_motion_error = "Cancelled Both preparation left mount motion unconfirmed"
+                    except Exception as exc:
+                        self._manual_both_motion_error = f"Cancelled Both preparation requires motion cleanup: {exc}"
+                self._capture_loop = None
+                self._publish(in_progress=False, loop_active=False, stage=None, duration_s=None,
+                              started_at=None, object_name=None, frame_type=None, gain=None,
+                              last_error=self._manual_both_motion_error)
+                self._release_manual_both()
+            raise
         except Exception:
             self._publish(
                 in_progress=False,
@@ -1162,6 +1237,7 @@ class CaptureService:
                 frame_type=None,
                 gain=None,
             )
+            self._release_manual_both()
             raise
 
         # Different optics have different boresights. Keep failed requests
@@ -1176,7 +1252,7 @@ class CaptureService:
         # running and for how long (module docstring: stage/duration_s/etc.
         # describe *this* exposure and are cleared together in `_finish`).
         self._publish(
-            stage=CaptureStage.EXPOSING,
+            stage=None if both else CaptureStage.EXPOSING,
             duration_s=actual_duration_s,
             started_at=started_at,
             object_name=object_name,
@@ -1188,7 +1264,7 @@ class CaptureService:
             self._light_sequence += 1
         self._sequence += 1
         context = replace(
-            self._context(object_name, optic_id=optic_id or "tele", flat_source=flat_source),
+            self._context(object_name, optic_id="tele" if both else optic_id or "tele", flat_source=flat_source),
             wide_camera=wide,
             dither_group_id=(
                 f"{self._manual_dither_group_id}:{self._manual_dither_group_index}"
@@ -1212,6 +1288,8 @@ class CaptureService:
                 dither_applied=dither_applied,
                 center_after_drift=loop_automation,
                 loop_automation=loop_automation,
+                paired_gain=gain if both else None,
+                paired_run_id=f"manual-dual-{uuid4().hex}" if both else None,
             ),
             name=f"capture-exposure-{self._sequence}",
         )
@@ -2857,7 +2935,7 @@ class CaptureService:
         *,
         camera: GainSettableCamera,
         wide: bool,
-        started_at: datetime,
+        started_at: datetime | None,
         duration_s: float,
         context: ExposureContext,
         frame_type: FrameType,
@@ -2869,6 +2947,8 @@ class CaptureService:
         dither_applied: bool,
         center_after_drift: bool,
         loop_automation: bool,
+        paired_gain: int | None = None,
+        paired_run_id: str | None = None,
     ) -> None:
         def on_stage(stage: CaptureStage) -> None:
             # Synchronous callback (`_publish` never awaits) — safe to call
@@ -2878,26 +2958,38 @@ class CaptureService:
             self._publish(stage=stage)
 
         try:
-            frame_id = await capture_one_exposure(
-                camera=camera,
-                telescope=self._telescope,
-                filterwheel=None if wide else self._filterwheel,
-                focuser=None if wide else self._focuser,
-                repo=self._repo,
-                folder=folder,
-                duration_s=duration_s,
-                context=context,
-                frame_type=frame_type,
-                folder_template=folder_template,
-                filename_template=filename_template,
-                tz=tz,
-                sequence=sequence,
-                started_at=started_at,
-                now=self._now,
-                sleep=self._sleep,
-                on_stage=on_stage,
-                unsupported_members=self.metadata_capabilities(wide=wide),
-            )
+            if paired_run_id is not None:
+                assert self._wide_camera is not None and paired_gain is not None
+                def on_started(at: datetime) -> None:
+                    self._publish(stage=CaptureStage.EXPOSING, started_at=at)
+                frame_id = await capture_pair(
+                    tele=camera, wide=self._wide_camera, telescope=self._telescope,
+                    filterwheel=self._filterwheel, focuser=self._focuser, repo=self._repo,
+                    run_id=paired_run_id, block_id="manual-light", frame_index=sequence,
+                    duration_s=duration_s, gain=paired_gain, context=context, folder=folder,
+                    filename_template=filename_template, tz=tz, on_started=on_started,
+                )
+            else:
+                frame_id = await capture_one_exposure(
+                    camera=camera,
+                    telescope=self._telescope,
+                    filterwheel=None if wide else self._filterwheel,
+                    focuser=None if wide else self._focuser,
+                    repo=self._repo,
+                    folder=folder,
+                    duration_s=duration_s,
+                    context=context,
+                    frame_type=frame_type,
+                    folder_template=folder_template,
+                    filename_template=filename_template,
+                    tz=tz,
+                    sequence=sequence,
+                    started_at=started_at,
+                    now=self._now,
+                    sleep=self._sleep,
+                    on_stage=on_stage,
+                    unsupported_members=self.metadata_capabilities(wide=wide),
+                )
             center = self._settings.capture
             if (
                 center_after_drift
@@ -2916,15 +3008,35 @@ class CaptureService:
                         self._center_reference.coord.ra_h,
                         self._center_reference.coord.dec_deg,
                     )
+        except asyncio.CancelledError:
+            if paired_run_id is not None:
+                self._capture_loop = None
+                self._publish(in_progress=False, loop_active=False, stage=None, started_at=None, duration_s=None)
+                self._release_manual_both()
+            raise
         except Exception as exc:
             _log.exception("capture exposure failed")
             if loop_automation:
                 self._capture_loop = None
             self._failed_exposure_camera = camera
+            pair_idle = False
+            if paired_run_id is not None:
+                try:
+                    assert self._wide_camera is not None
+                    states = [await member.get("camerastate") for member in (camera, self._wide_camera)]
+                    pair_idle = (all(type(value) is int and value == 0 for value in states)
+                                 and not await self._repo.pending_dual_owned(paired_run_id, "tele")
+                                 and not await self._repo.pending_dual_owned(paired_run_id, "wide"))
+                except Exception:
+                    pair_idle = False
+                if pair_idle:
+                    self._failed_exposure_camera = None
+                else:
+                    self._wide_cleanup_error = f"Paired acquisition cleanup unconfirmed: {type(exc).__name__}: {exc}"
             self._publish(
-                in_progress=True,
+                in_progress=not pair_idle,
                 loop_active=False if loop_automation else self._section.loop_active,
-                last_error=f"{type(exc).__name__}: {exc}; camera idle unconfirmed; acquisition blocked",
+                last_error=(f"{type(exc).__name__}: {exc}" if pair_idle else f"{type(exc).__name__}: {exc}; camera idle unconfirmed; acquisition blocked"),
                 stage=None,
                 duration_s=None,
                 started_at=None,
@@ -2932,6 +3044,7 @@ class CaptureService:
                 frame_type=None,
                 gain=None,
             )
+            self._release_manual_both()
             return
         completed = self._section.loop_completed_frames + (1 if loop_automation else 0)
         self._publish(
@@ -2947,11 +3060,13 @@ class CaptureService:
             gain=None,
             loop_completed_frames=completed,
         )
+        self._release_manual_both()
         spec = self._capture_loop
         if loop_automation and self._section.loop_active and spec is not None:
             if spec.frame_limit is not None and completed >= spec.frame_limit:
                 self._capture_loop = None
                 self._publish(loop_active=False)
+                self._release_manual_both()
                 return
             try:
                 await self._request_exposure(
@@ -2970,6 +3085,7 @@ class CaptureService:
                     loop_active=False,
                     last_error=f"{type(exc).__name__}: {exc}",
                 )
+                self._release_manual_both()
 
     def _drift_pixels(self, solved: PlateSolveResult, *, dither_applied: bool) -> float | None:
         """Return uncommanded drift; an intentional dither establishes a new baseline."""
@@ -3871,15 +3987,45 @@ class CaptureService:
         finally:
             self._wide_policy_transition = False
 
+    def _check_manual_both_run_ownership(self) -> None:
+        run = self._state.snapshot.run
+        if run is not None and run.status in {"running", "paused", "interrupted"}:
+            raise CaptureAlreadyRunningError("Stop the active observing plan before starting manual Both acquisition")
+
+    def _release_manual_both(self) -> None:
+        self._manual_both_active = False
+        self.refresh_wide_stream_policy()
+
+    def _wide_stream_reserved(self) -> bool:
+        spec = self._capture_loop
+        return (self._settings.capture.wide_companion_enabled or self._manual_both_active
+                or (spec is not None and spec.optic_id == "both"))
+
+    async def _recover_dual_orphans(self) -> None:
+        if getattr(self, "_manual_both_active", False):
+            return  # This process still owns its live pair; ordinary busy checks reject admission.
+        # An AF/PA caller may already hold the motion guard after clearing
+        # intents. Avoid reacquiring that non-reentrant guard when none remain.
+        if getattr(self, "_manual_both_motion_error", None) is not None:
+            if self._telescope is None or await self._telescope.get("slewing") is not False:
+                raise CaptureAlreadyRunningError(self._manual_both_motion_error)
+            self._manual_both_motion_error = None
+        if await self._repo.pending_dual_runs():
+            try:
+                async with dual_motion_guard(repo=self._repo, tele=self._camera, wide=self._wide_camera):
+                    pass
+            except Exception as exc:
+                raise CaptureAlreadyRunningError(f"Paired camera cleanup is unverified: {exc}") from exc
+
     def refresh_wide_stream_policy(self) -> None:
-        if self._settings.capture.wide_companion_enabled:
+        if self._wide_stream_reserved():
             # Never replay an obsolete Wide preview as a live camera feed.
             self._wide_rtsp_pixels = None
         else:
             self._ensure_wide_rtsp_polling()
 
     def _ensure_wide_rtsp_polling(self) -> None:
-        if self._settings.capture.wide_companion_enabled:
+        if self._wide_stream_reserved():
             return
         config = self._rtsp.status.config
         mount = self._state.snapshot.mount
@@ -3929,6 +4075,7 @@ class CaptureService:
                     self._publish(last_error=None)
 
     async def _recover_failed_exposure(self, *, during_recovery: bool = False) -> None:
+        await self._recover_dual_orphans()
         if getattr(self, "_scheduled_recovery_active", False) and not during_recovery:
             raise CaptureAlreadyRunningError("Scheduled recovery owns the camera")
         lock = getattr(self, "_failed_exposure_recovery_lock", None)
@@ -4076,12 +4223,14 @@ class CaptureService:
         await self.prepare_main_capture()
 
     async def prepare_main_capture(self) -> None:
+        await self._recover_dual_orphans()
         await self._recover_failed_exposure()
         await self.drain_wide_preview()
         if self._auxiliary_camera_busy():
             raise CaptureAlreadyRunningError("Autofocus or polar alignment owns the camera")
 
     async def prepare_auxiliary_capture(self) -> None:
+        await self._recover_dual_orphans()
         await self._recover_failed_exposure()
         if self._section.in_progress:
             raise LiveStackError("Main capture is active; auxiliary acquisition cannot start")
@@ -4090,12 +4239,12 @@ class CaptureService:
             raise LiveStackError("Main capture started while waiting for Wide preview")
 
     async def _capture_wide_rtsp_frame(self) -> None:
-        if self._settings.capture.wide_companion_enabled or self._wide_preview_busy():
+        if self._wide_stream_reserved() or self._wide_preview_busy():
             # Native camera/1 shares capture resources with camera/0.
             # Preserve the last preview; science acquisition has priority.
             return
         async with self._wide_capture_lock:
-            if not self._settings.capture.wide_companion_enabled and not self._wide_preview_busy():
+            if not self._wide_stream_reserved() and not self._wide_preview_busy():
                 if getattr(self, "_wide_cleanup_error", None) is not None:
                     raise LiveStackError(self._wide_cleanup_error)
                 async with asyncio.timeout(WIDE_STREAM_MAX_EXPOSURE_S + 8):
@@ -4200,7 +4349,7 @@ class CaptureService:
     async def _poll_wide_rtsp(self) -> None:
         failures = 0
         while self._rtsp.status.active:
-            if self._settings.capture.wide_companion_enabled:
+            if self._wide_stream_reserved():
                 return
             config = self._rtsp.status.config
             mount = self._state.snapshot.mount
@@ -4244,7 +4393,7 @@ class CaptureService:
             or self._live_stack is None
             or self._live_stack.pixels is None
         ):
-            if self._settings.capture.wide_companion_enabled or self._wide_rtsp_pixels is None:
+            if self._wide_stream_reserved() or self._wide_rtsp_pixels is None:
                 return None
             now = self._stream_local_time()
             temperature = (
@@ -4315,7 +4464,7 @@ class CaptureService:
             version=(
                 f"{version}:wide:{self._wide_rtsp_version}"
                 if (self._settings.streaming.wide_camera_picture_in_picture
-                    and not self._settings.capture.wide_companion_enabled)
+                    and not self._wide_stream_reserved())
                 else version
             ),
             # Overlay clocks and queue notices change independently of pixels.
@@ -4331,7 +4480,7 @@ class CaptureService:
             picture_in_picture_pixels=(
                 self._wide_rtsp_pixels
                 if (self._settings.streaming.wide_camera_picture_in_picture
-                    and not self._settings.capture.wide_companion_enabled)
+                    and not self._wide_stream_reserved())
                 else None
             ),
             picture_in_picture_bayer_pattern=self._wide_rtsp_bayer_pattern,

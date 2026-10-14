@@ -2223,13 +2223,15 @@ class CaptureExposureRequest(Request):
     gain: int | None = Field(default=200, ge=0)
     object: str | None = None
     frame_type: FrameType
-    optic_id: Literal["tele", "wide"] | None = None
+    optic_id: Literal["tele", "wide", "both"] | None = None
     flat_source: Literal["panel", "sky"] | None = None
     capture_mode: Literal["single", "loop"] = "single"
     frame_limit: int | None = Field(default=None, ge=1)
 
     @model_validator(mode="after")
     def frame_limit_requires_loop(self) -> CaptureExposureRequest:
+        if self.optic_id == "both" and self.frame_type is not FrameType.LIGHT:
+            raise ValueError("Both exposure mode supports light frames only; use manual calibration for other frame types")
         if self.frame_limit is not None and self.capture_mode != "loop":
             raise ValueError("frame_limit requires capture_mode=loop")
         return self

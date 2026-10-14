@@ -10,7 +10,7 @@
  *   Settings), not a dead button;
  * - a 409's `detail` is shown verbatim.
  */
-import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { CaptureState } from "../api/capture";
@@ -621,6 +621,28 @@ describe("Capture camera selection", () => {
     cleanup();
     renderPanel();
     expect(screen.getByRole("radio", { name: "Wide" })).toHaveAttribute("aria-checked", "true");
+  });
+
+  it.each(["Capture", "Loop"])("sends Both light cameras to %s without disabling shared Tele dithering", async (action) => {
+    const bodies = prepare(true, true);
+    await waitFor(() => { expect(screen.getByRole("radio", { name: "Both" })).toBeEnabled(); });
+    fireEvent.click(screen.getByRole("radio", { name: "Both" }));
+    expect(screen.getByText(/Tele and Wide expose together/)).toBeInTheDocument();
+    expect(screen.queryByText(/Calibration sets run separately/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: action })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: action }));
+    await waitFor(() => { expect(bodies).toHaveLength(1); });
+    expect(bodies[0]).toMatchObject({ optic_id: "both", frame_type: "light", capture_mode: action === "Loop" ? "loop" : "single" });
+  });
+
+  it("refuses a longer Both light exposure instead of silently shortening Wide", async () => {
+    prepare(true);
+    await waitFor(() => { expect(screen.getByRole("radio", { name: "Both" })).toBeEnabled(); });
+    fireEvent.click(screen.getByRole("radio", { name: "Both" }));
+    act(() => { useCaptureFormStore.getState().update({ durationText: "61" }); });
+    expect(screen.getByRole("alert")).toHaveTextContent("at most 60 seconds");
+    expect(screen.getByRole("button", { name: "Capture" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Loop" })).toBeDisabled();
   });
 
   it("locks camera selection between loop frames", async () => {

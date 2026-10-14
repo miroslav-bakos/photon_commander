@@ -5361,7 +5361,7 @@ export interface components {
             object?: string | null;
             frame_type: components["schemas"]["ssc__capture__frame__FrameType"];
             /** Optic Id */
-            optic_id?: ("tele" | "wide") | null;
+            optic_id?: ("tele" | "wide" | "both") | null;
             /** Flat Source */
             flat_source?: ("panel" | "sky") | null;
             /**
