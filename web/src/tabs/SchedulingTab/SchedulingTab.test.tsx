@@ -34,7 +34,7 @@ afterEach(() => { useLayoutStore.getState().resetAll(); });
 
 const record: PlanRecord = {
   document: {
-    schema_version: 7,
+    schema_version: 8,
     id: "p1",
     name: "Night of 2026-08-28",
     items: [

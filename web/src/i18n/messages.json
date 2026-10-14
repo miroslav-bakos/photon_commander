@@ -1,4 +1,12 @@
 {
+  "Autofocus filter cannot be checked until the wheel reports its positions; execution verifies the selected position before focusing.": [
+    "Filter zaostrovania sa nedá overiť, kým koliesko nenahlási svoje polohy; pred zaostrovaním sa overí zvolená poloha.",
+    "Filtr zaostřování nelze ověřit, dokud kolo nenahlásí své polohy; před zaostřením se ověří zvolená poloha."
+  ],
+  "autofocus filter {filter} is not one of the wheel positions ({positions})": [
+    "Filter zaostrovania {filter} nie je medzi polohami kolieska ({positions})",
+    "Filtr zaostřování {filter} není mezi polohami kola ({positions})"
+  ],
   "Applying plan changes": [
     "Aplikujem zmeny plánu",
     "Používám změny plánu"
@@ -8723,6 +8731,10 @@
   "“Until the block ends” needs this item to have its own end (duration, or an event) — without one there is no window to fill.": [
     "„Do konca bloku“ vyžaduje vlastný koniec položky (trvanie alebo udalosť) — bez neho neexistuje časové okno.",
     "„Do konce bloku“ vyžaduje vlastní konec položky (trvání nebo událost) — bez něj neexistuje časové okno."
+  ],
+  "Choose a filter-wheel position for autofocus. Left unchanged, autofocus uses the position already in place.": [
+    "Vyberte pozíciu filtračného kolesa pre automatické zaostrenie. Bez zmeny sa použije aktuálna pozícia.",
+    "Vyberte pozici filtrového kola pro automatické zaostření. Beze změny se použije aktuální pozice."
   ],
   "Choose a filter-wheel position. Left unchanged, this block images through the position already in place.": [
     "Vyberte pozíciu filtračného kolesa. Bez zmeny bude blok snímať cez aktuálnu pozíciu.",

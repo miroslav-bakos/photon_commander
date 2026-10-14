@@ -1233,6 +1233,8 @@ def _phases_for(
         if item.end_utc is not None:
             phases.append(SleepPhase(until_utc=item.end_utc))
     elif isinstance(plan_item, AutofocusItem):
+        if plan_item.filter_name is not None:
+            phases.append(_simple_effect(EffectName.SET_FILTER, {"position": plan_item.filter_name}))
         phases.append(
             EffectPhase(
                 effect=EffectCall(

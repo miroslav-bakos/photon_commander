@@ -221,7 +221,7 @@ export function newItem(kind: PlanItemKind, id: string, start: TimeSpec): PlanIt
     case "wait":
       return { ...base, kind, requires_confirmation: true, instructions: "Review the physical adjustment, then Resume to accept and continue." };
     case "autofocus":
-      return { ...base, kind, temperature_trigger_delta_c: null };
+      return { ...base, kind, temperature_trigger_delta_c: null, filter_name: null };
     case "goto_and_stack":
       return {
         ...base,
@@ -334,9 +334,9 @@ export function itemSummary(item: PlanItem): string {
     case "capture_calibration":
       return item.count === null ? item.frame_type : `${String(item.count)} × ${item.frame_type}`;
     case "autofocus":
-      return item.temperature_trigger_delta_c === null || item.temperature_trigger_delta_c === undefined
+      return [item.filter_name, item.temperature_trigger_delta_c === null || item.temperature_trigger_delta_c === undefined
         ? ""
-        : `Δ${String(item.temperature_trigger_delta_c)} °C`;
+        : `Δ${String(item.temperature_trigger_delta_c)} °C`].filter(Boolean).join(" · ");
     default:
       return "";
   }
@@ -790,6 +790,16 @@ const blockGain: NumberFieldDef = {
       ? { ...it, gain: num(v) ?? it.gain }
       : it,
 };
+const autofocusFilterName: SelectFieldDef = {
+  key: "filter_name",
+  type: "select",
+  label: "Filter",
+  dynamic: "filter",
+  allowUnset: true,
+  hint: "Choose a filter-wheel position for autofocus. Left unchanged, autofocus uses the position already in place.",
+  read: (it) => it.kind === "autofocus" ? it.filter_name ?? null : null,
+  write: (it, value) => it.kind === "autofocus" ? { ...it, filter_name: str(value) || null } : it,
+};
 const filterName: SelectFieldDef = {
   key: "filter_name",
   type: "select",
@@ -987,7 +997,7 @@ export function fieldsFor(item: PlanItem): readonly FieldDef[] {
     case "wait":
       return [waitConfirmation, ...(item.requires_confirmation ? [waitInstructions] : [])];
     case "autofocus":
-      return [autofocusDelta];
+      return [autofocusFilterName, autofocusDelta];
     case "goto_and_stack":
       return [
         targetKindRequired,
@@ -1107,13 +1117,13 @@ export function defaultStartFor(kind: PlanItemKind, isFirst: boolean): TimeSpec 
 }
 
 /** A brand-new, empty plan document. Timestamps are UTC ISO strings, as the
- * server requires (`Plan._require_aware_utc`). `schema_version` 7
+ * server requires (`Plan._require_aware_utc`). `schema_version` 8
  * (`CURRENT_PLAN_SCHEMA_VERSION`, `ssc.plan.models`) is the version that
- * carries `take_exposures` — an older build refuses a document stamped with
- * it, which is the point of the version, not a bug. */
+ * carries the optional autofocus filter selection. Older builds reject
+ * this version rather than silently ignoring the selected filter. */
 export function newPlanDocument(name: string): Plan {
   const now = new Date().toISOString();
-  return { schema_version: 7, id: newId(), name, items: [], created_at: now, updated_at: now };
+  return { schema_version: 8, id: newId(), name, items: [], created_at: now, updated_at: now };
 }
 
 /** A complete, editable reference night. Every safety- or image-critical

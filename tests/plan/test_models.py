@@ -66,7 +66,7 @@ def test_new_imaging_dither_defaults_to_six_preserving_explicit_cadence() -> Non
     assert models.DitherSpec(every_n_frames=5).every_n_frames == 5
 
 
-@pytest.mark.parametrize("version", [0, 8, 99, None, "1"])
+@pytest.mark.parametrize("version", [0, 9, 99, None, "1"])
 def test_parse_plan_refuses_unknown_version(version: object) -> None:
     with pytest.raises(UnknownPlanVersionError, match="schema_version"):
         parse_plan(_plan_dict(schema_version=version))
@@ -118,7 +118,7 @@ def test_a_v2_plan_without_the_new_item_still_loads() -> None:
     """The forward half of the bump: adding an item kind must not strand a
     single stored plan. Nothing about a v2 document changes on the way in."""
     plan = parse_plan(dict(_V2_PLAN_WITH_NO_EXPOSURE_BLOCK))
-    assert plan.schema_version == CURRENT_PLAN_SCHEMA_VERSION == 7
+    assert plan.schema_version == CURRENT_PLAN_SCHEMA_VERSION == 8
     item = plan.items[0]
     assert isinstance(item, GotoAndStackItem)
     assert item.target_name == "NGC 2244"
@@ -156,7 +156,7 @@ def test_a_plan_using_the_exposure_block_is_refused_by_a_build_that_predates_it(
     with pytest.raises(UnknownPlanVersionError) as excinfo:
         models.parse_plan(document)
     message = str(excinfo.value)
-    assert "schema_version 7" in message
+    assert "schema_version 8" in message
     assert "supported: 1, 2" in message
     assert "upgrade SSC" in message
 
@@ -260,3 +260,17 @@ def test_imaging_live_stack_defaults_on_and_accepts_opt_out(kind: str) -> None:
     }
     assert cls(**args).live_stack is True
     assert cls(**args, live_stack=False).live_stack is False
+
+
+@pytest.mark.parametrize("version", [1, 7, 8])
+def test_autofocus_filter_migrates_and_round_trips(version: int) -> None:
+    from ssc.plan.models import AutofocusItem
+
+    document = _plan_dict(items=[{"kind": "autofocus", "id": "focus", "start": {"kind": "asap"}}])
+    document["schema_version"] = version
+    plan = parse_plan(document)
+    assert plan.schema_version == 8
+    assert isinstance(plan.items[0], AutofocusItem)
+    assert plan.items[0].filter_name is None
+    changed = plan.model_copy(update={"items": (plan.items[0].model_copy(update={"filter_name": "LP"}),)})
+    assert parse_plan(changed.model_dump(mode="json")).items[0].filter_name == "LP"

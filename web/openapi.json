@@ -5860,6 +5860,56 @@
         }
       }
     },
+    "/api/skymap/solve-reference": {
+      "post": {
+        "tags": [
+          "skymap"
+        ],
+        "summary": "Solve Reference",
+        "description": "Authenticated raw image body; no multipart parsing before authorization.\n\nThe result only supplies planning coordinates. No exposure, calibration,\ncamera FOV publication, sync or slew is performed.",
+        "operationId": "solve_reference_api_skymap_solve_reference_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/runs": {
       "post": {
         "tags": [
@@ -8121,7 +8171,7 @@
       },
       "AlpacaDevicesState": {
         "additionalProperties": false,
-        "description": "Every device ``ssc-alpaca`` serves, polled on the same tick as mount\ntelemetry (``ssc.main.AlpacaDeviceGateway`` \u2014 not a second loop) so a\ndesktop and a phone never disagree about which devices are connected,\nthe same requirement DESIGN.md's state design exists to satisfy for the\nmount itself.\n\n``stale`` mirrors :attr:`MountState.stale` exactly, including why it is a\nplain field rather than a ``@computed_field`` \u2014 see that docstring.\nRecomputed against wall-clock only at the two moments a client is handed\n\"the truth\" (:func:`refresh_devices_staleness`), never on a live push,\nwhich is always fresh by construction.",
+        "description": "Every device ``ssc-alpaca`` serves, polled on the same tick as mount\ntelemetry (``ssc.main.AlpacaDeviceGateway`` \u2014 not a second loop) so a\ndesktop and a phone never disagree about which devices are connected,\nthe same requirement DESIGN.md's state design exists to satisfy for the\nmount itself.\n\n``stale`` mirrors :attr:`MountState.stale` exactly, including why it is a\nplain field rather than a ``@computed_field`` \u2014 see that docstring.\nThe gateway publishes expiry transitions even when a poll is blocked.\n:func:`refresh_devices_staleness` also refreshes the flag for REST and\nWebSocket snapshots, as for mount telemetry.",
         "properties": {
           "polled_at": {
             "anyOf": [
@@ -8323,6 +8373,11 @@
       },
       "AppearanceRequest": {
         "properties": {
+          "workflow_guide_visible": {
+            "type": "boolean",
+            "title": "Workflow Guide Visible",
+            "default": true
+          },
           "theme": {
             "type": "string",
             "pattern": "^(dark|red|auto)$",
@@ -8360,6 +8415,11 @@
       },
       "AppearanceSettings": {
         "properties": {
+          "workflow_guide_visible": {
+            "type": "boolean",
+            "title": "Workflow Guide Visible",
+            "default": true
+          },
           "theme": {
             "type": "string",
             "title": "Theme",
@@ -9278,6 +9338,18 @@
               }
             ],
             "title": "Temperature Trigger Delta C"
+          },
+          "filter_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filter Name"
           }
         },
         "additionalProperties": false,
@@ -16036,6 +16108,17 @@
               }
             ],
             "title": "Device Gateway"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
           }
         },
         "additionalProperties": false,
@@ -19111,7 +19194,7 @@
       },
       "MountState": {
         "additionalProperties": false,
-        "description": "Where the mount is pointing, what it is doing, and what it can do.\n\nPolled, never pushed (Alpaca has no event channel) \u2014 ``ssc.main``'s\n``AlpacaDeviceGateway`` is the sole writer, publishing a fresh reading\nevery tick while connected. Every scalar is independently ``None`` when\nits member could not be read on that tick; a failed read is never papered\nover with the previous value (CLAUDE.md invariant 7).\n\n``polled_at`` is the last tick that produced *this* reading \u2014 carried\nthrough unmodified while the link is down, rather than reset, so the\nfields keep their last known value and :attr:`stale` is what tells a\nclient to stop trusting them, rather than the snapshot silently going\nblank.\n\n``stale`` is a plain field, deliberately **not** a ``@computed_field``:\n``MountState`` is event-sourced (carried by ``MountChanged`` and folded by\nthe pure reducer) and must stay exactly round-trippable \u2014 the reconnect\ntest in ``tests/api/test_ws_replay.py`` re-validates a replayed snapshot\nwith this same class, and ``extra=\"forbid\"`` refuses a computed field as\ninput even though pydantic happily emits it as output. Whoever constructs\na fresh reading sets ``stale=False`` (it was just taken); staleness that\naccrues *without* a new reading is instead recomputed by\n:func:`refresh_mount_staleness` at the two points a client is handed \"the\ntruth\" \u2014 ``GET /api/state`` and every WS ``snapshot`` frame \u2014 mirroring\nhow DESIGN.md already treats a forced resnapshot as the moment staleness\ngets settled, not any arbitrary read in between.",
+        "description": "Where the mount is pointing, what it is doing, and what it can do.\n\nPolled, never pushed (Alpaca has no event channel) \u2014 ``ssc.main``'s\n``AlpacaDeviceGateway`` is the sole writer, publishing a fresh reading\nevery tick while connected. Every scalar is independently ``None`` when\nits member could not be read on that tick; a failed read is never papered\nover with the previous value (CLAUDE.md invariant 7).\n\n``polled_at`` is the last tick that produced *this* reading \u2014 carried\nthrough unmodified while the link is down, rather than reset, so the\nfields keep their last known value and :attr:`stale` is what tells a\nclient to stop trusting them, rather than the snapshot silently going\nblank.\n\n``stale`` is a plain field, deliberately **not** a ``@computed_field``:\n``MountState`` is event-sourced (carried by ``MountChanged`` and folded by\nthe pure reducer) and must stay exactly round-trippable \u2014 the reconnect\ntest in ``tests/api/test_ws_replay.py`` re-validates a replayed snapshot\nwith this same class, and ``extra=\"forbid\"`` refuses a computed field as\ninput even though pydantic happily emits it as output. Whoever constructs\na fresh reading sets ``stale=False``. The gateway validates its acquisition\ntimestamp before publication and emits a stale transition when a retained\nreading expires, independently of blocked or failed polls. Staleness is\nalso recomputed by :func:`refresh_mount_staleness` for ``GET /api/state``\nand every WS ``snapshot`` frame. Clients render that server decision;\ntheir display clocks cannot override it.",
         "properties": {
           "polled_at": {
             "anyOf": [
@@ -20377,9 +20460,9 @@
         "properties": {
           "schema_version": {
             "type": "integer",
-            "const": 7,
+            "const": 8,
             "title": "Schema Version",
-            "default": 7
+            "default": 8
           },
           "id": {
             "type": "string",
@@ -24522,6 +24605,11 @@
           "auth_required": {
             "default": false,
             "title": "Auth Required",
+            "type": "boolean"
+          },
+          "workflow_guide_visible": {
+            "default": true,
+            "title": "Workflow Guide Visible",
             "type": "boolean"
           },
           "theme": {

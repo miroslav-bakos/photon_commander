@@ -69,6 +69,7 @@ from ssc.astro.units import Deg, Hours, hours_to_deg
 from ssc.plan.models import (
     AbsoluteTimeSpec,
     AsapTimeSpec,
+    AutofocusItem,
     BodyTargetSpec,
     CatalogTargetSpec,
     CometTargetSpec,
@@ -377,6 +378,17 @@ def compile_plan(
     prev_end: datetime | None = None
     for item in plan.items:
         diagnostics: list[Diagnostic] = []
+        if isinstance(item, AutofocusItem) and item.filter_name is not None:
+            if camera_limits is None or not camera_limits.filter_names:
+                diagnostics.append(Diagnostic(
+                    severity=Severity.WARNING, item_id=item.id, code="autofocus_filter_names_unknown",
+                    message="Autofocus filter cannot be checked until the wheel reports its positions; execution verifies the selected position before focusing.",
+                ))
+            elif item.filter_name.casefold() not in {name.casefold() for name in camera_limits.filter_names}:
+                diagnostics.append(Diagnostic(
+                    severity=Severity.ERROR, item_id=item.id, code="unknown_filter_position",
+                    message=f"autofocus filter {item.filter_name!r} is not one of the wheel positions ({', '.join(camera_limits.filter_names)})",
+                ))
         #: Set only where an item's end is *derived* rather than specified — an
         #: exposure block of a fixed count, whose length is its own arithmetic.
         end_resolution: str | None = None

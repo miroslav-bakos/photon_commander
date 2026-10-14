@@ -94,6 +94,7 @@ export function testSnapshot(overrides: Partial<StateSnapshot> = {}): StateSnaps
       background_enabled: false,
       background_opacity_percent: 15,
       horizon_profile_set: false,
+      workflow_guide_visible: true,
     },
     secrets: null,
     notices: [],

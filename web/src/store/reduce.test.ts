@@ -219,6 +219,7 @@ describe("reduce", () => {
           background_enabled: true,
           background_opacity_percent: 24,
           horizon_profile_set: false,
+          workflow_guide_visible: true,
         },
       },
       { type: "location.changed", location: null },

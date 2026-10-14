@@ -802,7 +802,7 @@ export interface paths {
         /**
          * Position
          * @description Live ``Focuser.Position`` and ``Focuser.StepSize``. Both ``None`` when
-         *     not connected or the device did not answer — never guessed (architecture policy
+         *     not connected or the device did not answer — never guessed (CLAUDE.md
          *     invariant 7), so this never raises on an unknown reading the way the
          *     control endpoints below do. Read independently (bead ssc-bkv.10): a
          *     device that answers ``position`` but declares ``stepsize`` unimplemented
@@ -1285,7 +1285,7 @@ export interface paths {
         /**
          * Clear Horizon
          * @description Clear the profile back to *unknown* — never an empty-list "no
-         *     obstructions" (architecture policy invariant 7).
+         *     obstructions" (CLAUDE.md invariant 7).
          */
         delete: operations["clear_horizon_api_settings_horizon_delete"];
         options?: never;
@@ -1829,7 +1829,7 @@ export interface paths {
          * Constellation Boundaries
          * @description Every one of the 88 IAU regions' vertex rings, precessed to J2000
          *     (``ssc.astro.constellations.boundaries_j2000``) so the frontend never
-         *     precesses anything itself (architecture policy, "The engine boundary is
+         *     precesses anything itself (CLAUDE.md, "The engine boundary is
          *     architecture" / skymap-viz.md). A fixed transform of fixed data — no
          *     ``epoch``/``now`` query parameter, because B1875-to-J2000 precession
          *     does not depend on either; the whole response is as static as
@@ -1958,7 +1958,7 @@ export interface paths {
          *
          *     ``instant`` is optional and defaults to now. The wall clock is read *here*,
          *     at the boundary, and passed down as an argument: ``ssc.astro`` never reads
-         *     it (architecture policy invariant 3). The instant used is echoed back in the
+         *     it (CLAUDE.md invariant 3). The instant used is echoed back in the
          *     response so a client that omitted it knows what it got.
          *
          *     Positions are topocentric on the active location, so this needs one — a
@@ -2716,6 +2716,29 @@ export interface paths {
          *     needs control, exactly like clearing a survey or deleting a cutout.
          */
         post: operations["import_cache_api_skymap_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/skymap/solve-reference": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Solve Reference
+         * @description Authenticated raw image body; no multipart parsing before authorization.
+         *
+         *     The result only supplies planning coordinates. No exposure, calibration,
+         *     camera FOV publication, sync or slew is performed.
+         */
+        post: operations["solve_reference_api_skymap_solve_reference_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3739,7 +3762,7 @@ export interface components {
          * AlpacaDeviceItem
          * @description One device ``ssc-alpaca`` currently serves, for the connections footer.
          *
-         *     ``connected`` is genuinely tri-state (architecture policy invariant 7): ``True`` or
+         *     ``connected`` is genuinely tri-state (CLAUDE.md invariant 7): ``True`` or
          *     ``False`` is what the device's own ``Connected`` member answered:
          *     ``None`` means SSC could not ask it at all — a bounded read timed out, or
          *     the request failed in transport — never a guess standing in for either
@@ -3795,9 +3818,9 @@ export interface components {
          *
          *     ``stale`` mirrors :attr:`MountState.stale` exactly, including why it is a
          *     plain field rather than a ``@computed_field`` — see that docstring.
-         *     Recomputed against wall-clock only at the two moments a client is handed
-         *     "the truth" (:func:`refresh_devices_staleness`), never on a live push,
-         *     which is always fresh by construction.
+         *     The gateway publishes expiry transitions even when a poll is blocked.
+         *     :func:`refresh_devices_staleness` also refreshes the flag for REST and
+         *     WebSocket snapshots, as for mount telemetry.
          */
         AlpacaDevicesState: {
             /**
@@ -3892,7 +3915,11 @@ export interface components {
         };
         /** AppearanceRequest */
         AppearanceRequest: {
-            workflow_guide_visible?: boolean;
+            /**
+             * Workflow Guide Visible
+             * @default true
+             */
+            workflow_guide_visible: boolean;
             /**
              * Theme
              * @default dark
@@ -3921,7 +3948,11 @@ export interface components {
         };
         /** AppearanceSettings */
         AppearanceSettings: {
-            workflow_guide_visible?: boolean;
+            /**
+             * Workflow Guide Visible
+             * @default true
+             */
+            workflow_guide_visible: boolean;
             /**
              * Theme
              * @default dark
@@ -4098,7 +4129,7 @@ export interface components {
          *     Lives above the wire-level reconnect ``ssc/seestar/session.py`` already
          *     does — this is the *policy* decision of whether to keep re-issuing
          *     ``connect`` at all, surfaced so the UI can show "retrying in 12s" rather
-         *     than a link that is silently stuck disconnected (architecture policy invariant 7).
+         *     than a link that is silently stuck disconnected (CLAUDE.md invariant 7).
          *
          *     ``suspended`` is the modelled intent of an explicit user disconnect: it is
          *     never inferred from :class:`LinkState`, because a deliberate disconnect and
@@ -4316,6 +4347,8 @@ export interface components {
             kind: "autofocus";
             /** Temperature Trigger Delta C */
             temperature_trigger_delta_c?: number | null;
+            /** Filter Name */
+            filter_name?: string | null;
         };
         /**
          * AutofocusRequest
@@ -4450,7 +4483,7 @@ export interface components {
          * @description One ranked target plus every component that produced its score — see
          *     ``ssc.astro.best_targets.BestTargetCandidate``/``BestTargetScore`` for
          *     what each field means and why it exists; nothing here is a bare number
-         *     with no explanation (architecture policy invariant 7).
+         *     with no explanation (CLAUDE.md invariant 7).
          */
         BestTargetModel: {
             /** Designation */
@@ -5084,7 +5117,7 @@ export interface components {
          *     ``Camera.PixelSizeX`` (microns) and ``Telescope.FocalLength`` (ASCOM:
          *     metres) via the standard small-angle field formula. Published only when
          *     *all four* inputs were actually read from the device — there is no
-         *     half-known field (architecture policy invariant 7): either ``width_deg``/
+         *     half-known field (CLAUDE.md invariant 7): either ``width_deg``/
          *     ``height_deg`` are both known, or this whole section stays ``None`` on
          *     :class:`StateSnapshot` and the sky map keeps its honest marker rather
          *     than drawing a guess.
@@ -5282,11 +5315,11 @@ export interface components {
          * @description ``POST /api/capture/exposure``'s pinned body — see the dispatch
          *     contract. ``duration_s`` is validated against the camera's own
          *     ``ExposureMin``/``ExposureMax`` at request time, not here (those bounds
-         *     are per-device, read live — architecture policy invariant 11's sibling rule).
+         *     are per-device, read live — CLAUDE.md invariant 11's sibling rule).
          *
          *     ``frame_type`` replaces the old ``light: bool`` — a dark and a flat are
          *     both ``light=false``, and the folder template needs to tell them apart
-         *     (architecture policy's capture contract change, 2026-09-10). Today's capture UI
+         *     (CLAUDE.md's capture contract change, 2026-09-10). Today's capture UI
          *     only offers ``light``/``dark``; ``flat``/``bias`` are accepted here too
          *     because the type is a closed, already-settled set — see
          *     ``ssc.capture.frame.FrameType``'s own docstring for why.
@@ -5331,7 +5364,7 @@ export interface components {
         /**
          * CaptureFolderRequest
          * @description ``None`` clears the configured folder back to unset — capture then
-         *     refuses (409) rather than picking somewhere on its own (architecture policy
+         *     refuses (409) rather than picking somewhere on its own (CLAUDE.md
          *     invariant 11's sibling rule for storage).
          */
         CaptureFolderRequest: {
@@ -5402,7 +5435,7 @@ export interface components {
          * @description A catalogued frame's numpy-only HFR/FWHM star metric
          *     (``ssc.capture.quality.FrameQuality``, ``ssc-bkv.8``). ``star_count=0``
          *     means every size field is ``None`` — an empty or starless frame, never a
-         *     fabricated size (architecture policy invariant 7). ``*_arcsec`` fields are
+         *     fabricated size (CLAUDE.md invariant 7). ``*_arcsec`` fields are
          *     ``None`` whenever the frame's FITS header carries no usable pixel
          *     scale, even when the ``*_px`` fields are known.
          */
@@ -5497,7 +5530,7 @@ export interface components {
          *     ``AppConfig.data_dir``. This is the one place SSC writes gigabytes a
          *     night, so a user will want it on a specific external disk, and it must
          *     never silently default to whatever partition holds the app's own
-         *     database (architecture policy invariant 11's sibling rule for storage). Validated
+         *     database (CLAUDE.md invariant 11's sibling rule for storage). Validated
          *     on the way in by :func:`ssc.settings.capture_folder.validate_capture_folder`
          *     — this model itself does no I/O.
          */
@@ -5576,7 +5609,7 @@ export interface components {
          * CaptureStage
          * @description Where the in-flight capture operation actually is, each value backed
          *     by a real device action — never a step that isn't implemented yet
-         *     (architecture policy invariant 7). ``dithering`` includes the post-command mount
+         *     (CLAUDE.md invariant 7). ``dithering`` includes the post-command mount
          *     settle gate; exposure does not start until that gate succeeds.
          * @enum {string}
          */
@@ -5803,7 +5836,7 @@ export interface components {
         /**
          * CompiledItem
          * @description One item, resolved. ``start_utc`` is ``None`` iff the item's start could
-         *     not be resolved (unschedulable — never a guessed time, architecture policy
+         *     not be resolved (unschedulable — never a guessed time, CLAUDE.md
          *     invariant 7). ``end_utc`` is ``None`` if either that is true, or the start
          *     resolved fine but the item's own ``end`` could not (its event never
          *     occurs, or it resolves at or before the start) — same rule, applied to
@@ -5854,7 +5887,7 @@ export interface components {
          *       segment (DESIGN.md 3.6, and see :data:`MAX_BODY_DRIFT_FRACTION_OF_FRAME`).
          *
          *     ``None`` here means "not knowable until this runs", never zero
-         *     (architecture policy invariant 7); nothing may read these two fields without
+         *     (CLAUDE.md invariant 7); nothing may read these two fields without
          *     branching on it.
          */
         CompiledPanel: {
@@ -6329,7 +6362,7 @@ export interface components {
          *
          *     ``checked`` is ``False`` whenever no live reading was available (nothing
          *     connected, or the read failed): ``device_equ_mode`` and ``conflict`` are
-         *     then meaningless and must not be read as "no conflict" (architecture policy
+         *     then meaningless and must not be read as "no conflict" (CLAUDE.md
          *     invariant 7 — unknown is not zero).
          */
         DeviceMountModeCheck: {
@@ -6380,7 +6413,7 @@ export interface components {
         /**
          * Diagnostic
          * @description One finding against a plan or a compiled item — always with a reason
-         *     (architecture policy: "every decision is logged with its reason"). ``item_id`` is
+         *     (CLAUDE.md: "every decision is logged with its reason"). ``item_id`` is
          *     ``None`` for a plan-level diagnostic that names no single item.
          */
         Diagnostic: {
@@ -6867,7 +6900,7 @@ export interface components {
          * FocuserMoveRequest
          * @description ``Focuser.Move`` — an absolute step position. No upper bound is
          *     enforced here: ``Focuser.MaxStep`` is device-reported, not a constant
-         *     this schema may hardcode (architecture policy invariant 11's reasoning applied to
+         *     this schema may hardcode (CLAUDE.md invariant 11's reasoning applied to
          *     focuser travel, not just an address).
          */
         FocuserMoveRequest: {
@@ -6877,7 +6910,7 @@ export interface components {
         /**
          * FocuserPositionResponse
          * @description ``None`` when not connected or the device did not answer — never
-         *     guessed (architecture policy invariant 7). ``note`` carries why, mirroring
+         *     guessed (CLAUDE.md invariant 7). ``note`` carries why, mirroring
          *     ``AlpacaDeviceItem.note``: ``position is None`` alone conflates "not
          *     connected", "NotImplemented" and "the device timed out" into one
          *     unexplained gap.
@@ -7136,12 +7169,11 @@ export interface components {
          *     An unpaired device on the same Wi-Fi can reach ``/api/health`` — that is
          *     the point of a liveness check — but it gets nothing beyond "the process is
          *     up". ``seq``, ``database`` and ``device_gateway`` are filled in only for a
-         *     caller already holding a session cookie (architecture policy invariant 8's LAN-security
+         *     caller already holding a session cookie (CLAUDE.md invariant 8's LAN-security
          *     counterpart, DESIGN.md §9): a filesystem path naming the OS username and
          *     home-directory layout has no business answering an anonymous ``curl``.
          */
         HealthResponse: {
-            version?: string | null;
             /** Status */
             status: string;
             /** Schema Version */
@@ -7160,6 +7192,8 @@ export interface components {
             database?: string | null;
             /** Device Gateway */
             device_gateway?: string | null;
+            /** Version */
+            version?: string | null;
         };
         /** HeaterAutomationRequest */
         HeaterAutomationRequest: {
@@ -7454,7 +7488,7 @@ export interface components {
          *
          *     ``points`` is ``None`` when no profile has ever been recorded — *unknown*,
          *     never an empty list silently standing in for "no obstructions anywhere"
-         *     (architecture policy invariant 7). A recorded profile always has at least two points;
+         *     (CLAUDE.md invariant 7). A recorded profile always has at least two points;
          *     that is enforced at the API boundary (``ssc.api.schemas.HorizonRequest``),
          *     not here, so a value already accepted and stored can still be read back
          *     even if a future build tightens the rule.
@@ -8152,7 +8186,7 @@ export interface components {
          *     (``ssc.main.AlpacaDeviceGateway``), not on every poll tick, since these do
          *     not change while connected. ``None`` throughout until the first successful
          *     read; each field is independently ``None`` if its own member could not be
-         *     read, never a guessed or fabricated default (architecture policy invariant 7).
+         *     read, never a guessed or fabricated default (CLAUDE.md invariant 7).
          */
         MountCapabilities: {
             /**
@@ -8261,7 +8295,7 @@ export interface components {
          *     ``AlpacaDeviceGateway`` is the sole writer, publishing a fresh reading
          *     every tick while connected. Every scalar is independently ``None`` when
          *     its member could not be read on that tick; a failed read is never papered
-         *     over with the previous value (architecture policy invariant 7).
+         *     over with the previous value (CLAUDE.md invariant 7).
          *
          *     ``polled_at`` is the last tick that produced *this* reading — carried
          *     through unmodified while the link is down, rather than reset, so the
@@ -8275,12 +8309,12 @@ export interface components {
          *     test in ``tests/api/test_ws_replay.py`` re-validates a replayed snapshot
          *     with this same class, and ``extra="forbid"`` refuses a computed field as
          *     input even though pydantic happily emits it as output. Whoever constructs
-         *     a fresh reading sets ``stale=False`` (it was just taken); staleness that
-         *     accrues *without* a new reading is instead recomputed by
-         *     :func:`refresh_mount_staleness` at the two points a client is handed "the
-         *     truth" — ``GET /api/state`` and every WS ``snapshot`` frame — mirroring
-         *     how DESIGN.md already treats a forced resnapshot as the moment staleness
-         *     gets settled, not any arbitrary read in between.
+         *     a fresh reading sets ``stale=False``. The gateway validates its acquisition
+         *     timestamp before publication and emits a stale transition when a retained
+         *     reading expires, independently of blocked or failed polls. Staleness is
+         *     also recomputed by :func:`refresh_mount_staleness` for ``GET /api/state``
+         *     and every WS ``snapshot`` frame. Clients render that server decision;
+         *     their display clocks cannot override it.
          */
         MountState: {
             /**
@@ -8515,7 +8549,7 @@ export interface components {
         /**
          * ObjectInfoAttributionModel
          * @description One credit line, driven by the API that actually produced the
-         *     content it credits — never a static string (architecture policy invariant 7,
+         *     content it credits — never a static string (CLAUDE.md invariant 7,
          *     THIRD_PARTY_NOTICES.md requirement 4).
          */
         ObjectInfoAttributionModel: {
@@ -8776,10 +8810,10 @@ export interface components {
         Plan: {
             /**
              * Schema Version
-             * @default 7
+             * @default 8
              * @constant
              */
-            schema_version: 7;
+            schema_version: 8;
             /** Id */
             id: string;
             /** Name */
@@ -9047,7 +9081,7 @@ export interface components {
          *
          *     ``attempt`` counts every slew/capture/solve attempt made for this point —
          *     a point solved on attempt 2 recorded a real failure first (thin cloud,
-         *     low altitude, a 409 mid-slew), which is exactly the "why" architecture policy
+         *     low altitude, a 409 mid-slew), which is exactly the "why" CLAUDE.md
          *     invariant 7 wants kept rather than overwritten silently by the retry
          *     that eventually worked.
          */
@@ -9269,7 +9303,7 @@ export interface components {
          *     ``ssc.api.polar_alignment_service.PolarAlignmentService.start``'s
          *     ``start_point`` echoed back into the section so a client can show a
          *     computed field was a compromise rather than let it pass silently
-         *     (architecture policy invariant 7).
+         *     (CLAUDE.md invariant 7).
          * @enum {string}
          */
         PolarAlignmentStartMode: "best" | "current" | "seestar" | "explicit";
@@ -9291,7 +9325,7 @@ export interface components {
          *     together). Declination is held fixed across every point either way
          *     (``ssc.astro.polar``: rotate in RA only). Giving a coordinate while
          *     ``start_point`` is not ``explicit`` is refused rather than silently
-         *     picking one meaning (architecture policy invariant 7) — likewise ``explicit``
+         *     picking one meaning (CLAUDE.md invariant 7) — likewise ``explicit``
          *     with either coordinate missing. ``step_deg``'s **sign** is DESIGN.md
          *     §4.5's "direction" setting (east/west) — there is no separate field for
          *     it, since a negative step already rotates the other way
@@ -9299,7 +9333,7 @@ export interface components {
          *     docstring). ``gain`` is DESIGN.md §4.5's own setting too: applied once,
          *     before the first exposure — unbounded here since the camera's own
          *     ``GainMin``/``GainMax`` are per-device and read live by the driver,
-         *     never guessed at in this schema (architecture policy invariant 11's sibling rule).
+         *     never guessed at in this schema (CLAUDE.md invariant 11's sibling rule).
          */
         PolarAlignmentStartRequest: {
             /**
@@ -9867,7 +9901,7 @@ export interface components {
         /**
          * ResolvedEvent
          * @description One solved solar/lunar event, echoed with its outcome — never a bare
-         *     time that hides a polar absence (architecture policy invariant 7).
+         *     time that hides a polar absence (CLAUDE.md invariant 7).
          */
         ResolvedEvent: {
             /** Event */
@@ -10135,7 +10169,7 @@ export interface components {
         /**
          * RunState
          * @description The executor's position, published after every journal append so every
-         *     client renders the same run (architecture policy invariant 4). A projection of the
+         *     client renders the same run (CLAUDE.md invariant 4). A projection of the
          *     journal — the journal itself is ``GET /api/runs/{id}``.
          */
         RunState: {
@@ -10226,7 +10260,7 @@ export interface components {
         Scope: "view" | "control";
         /**
          * SecretNamesResponse
-         * @description Names only. A value never crosses this boundary (architecture policy invariant 8).
+         * @description Names only. A value never crosses this boundary (CLAUDE.md invariant 8).
          */
         SecretNamesResponse: {
             /** Names */
@@ -10246,7 +10280,7 @@ export interface components {
          *     Detected once at startup (``ssc.settings.secrets.probe_backend``), not
          *     per-request. Only weather providers that need an API key are gated by
          *     this — the device link, astro, scheduler and the rest of the UI are fully
-         *     functional without a keyring (architecture policy invariant 7: degraded and
+         *     functional without a keyring (CLAUDE.md invariant 7: degraded and
          *     visible, never fatal, never silent).
          */
         SecretsCapability: {
@@ -10436,7 +10470,6 @@ export interface components {
          * @description The non-secret settings a client renders. Never contains a key or a PIN.
          */
         SettingsSummary: {
-            workflow_guide_visible?: boolean;
             /** @default null */
             location_source_preference: components["schemas"]["LocationSource"] | null;
             /**
@@ -10481,6 +10514,11 @@ export interface components {
              * @default false
              */
             auth_required: boolean;
+            /**
+             * Workflow Guide Visible
+             * @default true
+             */
+            workflow_guide_visible: boolean;
             /**
              * Theme
              * @default dark
@@ -10556,7 +10594,7 @@ export interface components {
          * SizeFit
          * @description How an object's angular size compares to the field of view — only
          *     ever set when *both* the size and the field geometry are known
-         *     (architecture policy invariant 7: never guessed from one alone).
+         *     (CLAUDE.md invariant 7: never guessed from one alone).
          * @enum {string}
          */
         SizeFit: "fits_field" | "exceeds_field" | "too_small_to_resolve";
@@ -11634,7 +11672,7 @@ export interface components {
          *     A block with this count **must** carry an ``end``: without one there is no
          *     window to fill, which :func:`ssc.plan.validate.validate_plan` and the
          *     compiler both report rather than guessing a duration
-         *     (architecture policy invariant 7).
+         *     (CLAUDE.md invariant 7).
          */
         UntilBlockEndSpec: {
             /**
@@ -11826,7 +11864,7 @@ export interface components {
          *
          *     Restated here rather than imported, for exactly the reason
          *     :class:`ssc.store.capture.CaptureFrameRecord` restates it too: ``ssc.plan``
-         *     is pure (architecture policy invariant 3), and ``ssc.capture``'s package ``__init__``
+         *     is pure (CLAUDE.md invariant 3), and ``ssc.capture``'s package ``__init__``
          *     reaches ``ssc.store`` — importing it here would drag SQLite in behind the
          *     plan document. The two enums are held to the same four values by
          *     ``tests/plan/test_models.py``, which may import both.
@@ -16616,6 +16654,37 @@ export interface operations {
                 "multipart/form-data": components["schemas"]["Body_import_cache_api_skymap_import_post"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    solve_reference_api_skymap_solve_reference_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             202: {

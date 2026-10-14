@@ -47,6 +47,9 @@ from ssc.astro.targets import BodyTarget, SunNotATargetError, TrackingRate
 #: by :func:`parse_plan` with the version named, instead of that build silently
 #: dropping the one item the night was actually about.
 #:
+#: Version 8 (2026-10-14) adds an optional filter to scheduled autofocus.
+#: Older autofocus items retain the current filter when migrated.
+#:
 #: Version 7 (2026-09-16) added execution-safe comet targets. A comet is
 #: persisted by JPL identity and snapshot provenance, never by preview
 #: coordinates; the executor resolves the current bundled orbit immediately
@@ -68,10 +71,10 @@ from ssc.astro.targets import BodyTarget, SunNotATargetError, TrackingRate
 #: is *refused* by a v1 build, which is the point of the bump: a build that does
 #: not understand body targets must say so by version rather than silently
 #: dropping the target it cannot represent.
-CURRENT_PLAN_SCHEMA_VERSION: Final = 7
+CURRENT_PLAN_SCHEMA_VERSION: Final = 8
 
 #: Older versions :func:`parse_plan` knows how to bring forward.
-MIGRATABLE_PLAN_SCHEMA_VERSIONS: Final[frozenset[int]] = frozenset({1, 2, 3, 4, 5, 6})
+MIGRATABLE_PLAN_SCHEMA_VERSIONS: Final[frozenset[int]] = frozenset({1, 2, 3, 4, 5, 6, 7})
 
 
 class PlanModel(BaseModel):
@@ -561,6 +564,8 @@ class AutofocusItem(PlanItemBase):
 
     kind: Literal["autofocus"] = "autofocus"
     temperature_trigger_delta_c: float | None = None
+    #: None preserves the current wheel position, including for migrated plans.
+    filter_name: Annotated[str, Field(min_length=1)] | None = None
 
 
 class DitherSpec(PlanModel):
@@ -896,7 +901,7 @@ PlanItem = Annotated[
 class Plan(PlanModel):
     """A whole observing plan: portable JSON, versioned (DESIGN.md 4.2)."""
 
-    schema_version: Literal[7] = CURRENT_PLAN_SCHEMA_VERSION
+    schema_version: Literal[8] = CURRENT_PLAN_SCHEMA_VERSION
     id: Annotated[str, Field(min_length=1)]
 
     @model_validator(mode="before")

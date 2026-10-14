@@ -405,7 +405,7 @@ describe("take_exposures — the exposure block (DESIGN.md §4.3.0, schema_versi
 
 it("creates the complete M31 first-light plan without hand-edited JSON", () => {
   const plan = newM31FirstLightPlan();
-  expect(plan.schema_version).toBe(7);
+  expect(plan.schema_version).toBe(8);
   expect(plan.items.map((item) => item.kind)).toEqual([
     "polar_alignment", "wait", "take_exposures", "capture_calibration", "shutdown",
   ]);
@@ -434,4 +434,28 @@ it.each(["goto_and_stack", "mosaic", "take_exposures"] as const)("lets %s opt ou
   if (field === undefined) throw new Error("Missing live stacking field");
   expect(field.read(field.write(item, false))).toBe(false);
   expect(field.read(field.write(item, true))).toBe(true);
+});
+
+it("persists an optional autofocus filter and summarizes it with the temperature trigger", () => {
+  let item = newItem("autofocus", "focus-lp", { kind: "asap" });
+  expect(item).toMatchObject({ filter_name: null });
+  const filter = selectField(item, "filter_name");
+  expect(filter.dynamic).toBe("filter");
+  expect(filter.allowUnset).toBe(true);
+  expect(filter.hint).toContain("autofocus");
+  expect(filter.read(item)).toBeNull();
+  expect(itemSummary(item)).toBe("");
+  item = filter.write(item, "LP");
+  expect(filter.read(item)).toBe("LP");
+  expect(JSON.parse(JSON.stringify(item))).toMatchObject({ filter_name: "LP" });
+  expect(itemSummary(item)).toBe("LP");
+  item = typedField(item, "temperature_trigger_delta_c", "number").write(item, 2);
+  expect(itemSummary(item)).toBe("LP · Δ2 °C");
+  item = filter.write(item, "");
+  expect(filter.read(item)).toBeNull();
+  expect(itemSummary(item)).toBe("Δ2 °C");
+  const legacy = { ...item };
+  delete (legacy as unknown as { filter_name?: string | null }).filter_name;
+  expect(filter.read(legacy)).toBeNull();
+  expect(itemSummary(legacy)).toBe("Δ2 °C");
 });

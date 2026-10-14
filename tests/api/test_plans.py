@@ -501,3 +501,32 @@ def test_new_item_in_saved_old_night_recompiles_on_explicit_current_night(paired
     assert old.json()["schedule"]["items"][0]["start_utc"] != current.json()["schedule"]["items"][0]["start_utc"]
     assert current.json()["schedule"]["items"][0]["start_utc"].startswith("2026-10-13")
     assert paired.get("/api/plans/current-night-regression").json()["night_date"] == "2026-10-11"
+
+
+@requires_ephemeris
+def test_saved_autofocus_filter_survives_reload_and_recompile(paired: TestClient) -> None:
+    from ssc.plan.models import Plan
+    from ssc.scheduler.compiler import CompiledSchedule
+    from ssc.scheduler.executor import EffectName, EffectPhase, _phases_for
+
+    _set_location(paired, timezone="Europe/Bratislava")
+    document = _plan_document("focus-filter", "LP autofocus")
+    document["items"] = [{"kind": "autofocus", "id": "focus-lp",
+                          "start": {"kind": "event", "event": "astronomical_dusk", "offset_min": 0}}]
+    created = paired.post("/api/plans", json={"document": document})
+    assert created.status_code == 201, created.text
+    stored = paired.get("/api/plans/focus-filter").json()
+    assert stored["document"]["items"][0]["filter_name"] is None
+    stored["document"]["items"][0]["filter_name"] = "LP"
+    saved = paired.put("/api/plans/focus-filter", json={"document": stored["document"], "expected_revision": stored["revision"]})
+    assert saved.status_code == 200, saved.text
+    reloaded = paired.get("/api/plans/focus-filter").json()
+    assert reloaded["document"]["items"][0]["filter_name"] == "LP"
+    compiled = paired.post("/api/plans/focus-filter/compile", json={"night_date": "2026-10-14"})
+    assert compiled.status_code == 200, compiled.text
+    schedule = CompiledSchedule.model_validate(compiled.json()["schedule"])
+    source = Plan.model_validate(reloaded["document"])
+    phases = _phases_for(schedule.items[0], source.items[0])
+    effects = [phase.effect for phase in phases if isinstance(phase, EffectPhase)]
+    assert [effect.name for effect in effects] == [EffectName.SET_FILTER, EffectName.AUTOFOCUS]
+    assert effects[0].args == {"position": "LP"}

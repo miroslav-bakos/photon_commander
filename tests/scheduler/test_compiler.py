@@ -657,3 +657,27 @@ def test_altaz_high_altitude_transit_is_flagged(ephemeris: Ephemeris, profile: P
     )
     item = schedule.items[0]
     assert any(d.code == "high_altitude_meridian_crossing" for d in item.diagnostics)
+
+
+@pytest.mark.parametrize("filter_name, available, expected", [
+    (None, ("IR", "LP"), None),
+    ("LP", ("IR", "LP"), None),
+    ("lp", ("IR", "LP"), None),
+    ("missing", ("IR", "LP"), "unknown_filter_position"),
+    ("LP", (), "autofocus_filter_names_unknown"),
+])
+def test_autofocus_filter_validation(ephemeris: Ephemeris, profile: Profile,
+                                     filter_name: str | None, available: tuple[str, ...], expected: str | None) -> None:
+    from ssc.plan.models import AutofocusItem
+
+    plan = Plan(id="focus", name="Focus filter", created_at=_NOW, updated_at=_NOW,
+                items=(AutofocusItem(id="focus", start=RelativeTimeSpec(offset_min=0), filter_name=filter_name),))
+    schedule = compile_plan(plan, site=_SITE, tz=_TZ, night_date=_NIGHT_DATE,
+                            ephemeris=ephemeris, now=_NOW, profile=profile,
+                            camera_limits=CameraLimits(0.001, 1000, 0, 600, available))
+    codes = {diagnostic.code for diagnostic in schedule.items[0].diagnostics}
+    if expected is None:
+        assert "unknown_filter_position" not in codes
+        assert "autofocus_filter_names_unknown" not in codes
+    else:
+        assert expected in codes
