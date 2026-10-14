@@ -75,7 +75,7 @@ def require_arm64() -> None:
     machine = platform.machine().lower()
     if machine not in {"aarch64", "arm64"}:
         raise SystemExit(
-            f"build-deb: Nuitka requires a native ARM64 build host, not {machine or 'unknown'}"
+            f"build-deb: packaging requires a native ARM64 build host, not {machine or 'unknown'}"
         )
 
 
@@ -190,18 +190,45 @@ Description: Observatory control and imaging automation for smart telescopes
             os.utime(path, (epoch, epoch), follow_symlinks=False)
 
 
-def build_payloads() -> None:
+def materialize_bundle_links(root: Path) -> None:
+    """Keep artifact extraction link-free; only dereference internal file aliases."""
+    boundary = root.resolve()
+    links = []
+    for path in root.rglob("*"):
+        if path.is_symlink():
+            try:
+                target = path.resolve(strict=True)
+            except (OSError, RuntimeError) as exc:
+                raise SystemExit(f"build-deb: invalid bundle link: {path}") from exc
+            if not target.is_relative_to(boundary) or not target.is_file():
+                raise SystemExit(f"build-deb: unsafe bundle link: {path}")
+            links.append((path, target.read_bytes(), target.stat().st_mode))
+    for path, content, mode in links:
+        path.unlink()
+        path.write_bytes(content)
+        path.chmod(mode)
+
+
+def build_payloads(backend: str = "nuitka") -> None:
+    if backend not in {"nuitka", "pyinstaller"}:
+        raise ValueError(f"Unknown backend packager: {backend}")
     run("uv", "run", "python", "scripts/check-licenses.py", "--commercial")
     run("npm", "ci", cwd=ROOT / "web")
     run("npm", "run", "build", cwd=ROOT / "web")
-    run("uv", "run", "python", "scripts/build_nuitka.py", "--output", "dist/ssc-core")
+    if backend == "nuitka":
+        run("uv", "run", "python", "scripts/build_nuitka.py", "--output", "dist/ssc-core")
+    else:
+        environment = os.environ.copy()
+        environment["SSC_BUILD_COMMIT"] = run("git", "rev-parse", "HEAD")
+        run("bash", "scripts/build-package.sh", env=environment)
+        materialize_bundle_links(ROOT / "dist/ssc-core")
     validate_arm64_binary(ROOT / "dist/ssc-core/ssc-core")
 
 
-def build_deb(commit: str, *, output_dir: Path, sign_key: str | None) -> Path:
+def build_deb(commit: str, *, output_dir: Path, sign_key: str | None, backend: str = "nuitka") -> Path:
     require_arm64()
     version, epoch = validate_release_identity(commit)
-    build_payloads()
+    build_payloads(backend)
     output_dir.mkdir(parents=True, exist_ok=True)
     output = output_dir / f"{PACKAGE}_{version}_arm64.deb"
     with tempfile.TemporaryDirectory(prefix="photon-deb-") as temporary:
@@ -253,6 +280,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("commit", help="exact full release commit")
     parser.add_argument("--output-dir", type=Path, default=ROOT / "dist/debian")
+    parser.add_argument("--backend", choices=("nuitka", "pyinstaller"), default="nuitka",
+                        help="backend packager; pyinstaller bundles Python without compiling to C")
     signing = parser.add_mutually_exclusive_group()
     signing.add_argument(
         "--sign-key",
@@ -270,7 +299,7 @@ def main() -> None:
     args = parse_args()
     if args.sign_key is None and not args.unsigned:
         raise SystemExit("build-deb: pass --sign-key FINGERPRINT or explicitly pass --unsigned")
-    output = build_deb(args.commit, output_dir=args.output_dir, sign_key=args.sign_key)
+    output = build_deb(args.commit, output_dir=args.output_dir, sign_key=args.sign_key, backend=args.backend)
     print(f"build-deb: artifact {output}")
 
 
