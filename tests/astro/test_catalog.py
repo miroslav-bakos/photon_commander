@@ -661,3 +661,14 @@ def test_vdb_components_and_unnamed_ldn_are_not_invented(catalog):
     with pytest.raises(UnknownTargetError):catalog.resolve("NN")
     assert sum(o.source==catalog.sources[3] for o in catalog.objects)==163
     assert sum(o.source==catalog.sources[4] for o in catalog.objects)==1787
+
+
+@pytest.mark.parametrize("query,designation", [
+    ("Dark Shark Nebula", "LDN 1235"), ("dark   shark", "LDN 1235"),
+    ("Shark Nebula", "LDN 1235"), ("Shark", "LDN 1235"),
+    ("Ghost Nebula", "VdB 141"), ("Boogeyman Nebula", "LDN 1622"),
+])
+def test_familiar_nebula_names_resolve_and_suggest_same_object(catalog, query, designation):
+    target = catalog.resolve(designation)
+    assert catalog.resolve(query) is target
+    assert target in catalog.suggest(query)

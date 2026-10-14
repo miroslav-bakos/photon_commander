@@ -9,7 +9,8 @@
 # fetched: 2026-10-13
 # built_by: scripts/build-nebula-catalogs.py
 # Changes: 163 VDB-associated rows; VDB1a-d group exposed as VdB1 with its original group name retained; split components remain separate; NGC/IC and illuminating-star aliases omitted to avoid merging different centres; mixed C+E objects remain diffuse nebulae.
-# Only catalogue identifiers, J2000 positions and object classes are included.
+# Catalogue identifiers, J2000 positions, object classes and familiar-name facts only.
+# common_name_provenance: scripts/build-nebula-catalogs.py COMMON_NAMES (RASC, NASA APOD, NASA/IPAC Astropix/NOIRLab).
 # No descriptive prose, imagery, sizes inferred from area, or invented magnitudes.
 # The source explicitly declares equinox=2000; positions are retained, not precessed.
 designations,common_names,object_type,ra_j2000_deg,dec_j2000_deg,constellation,size_major_arcmin,size_minor_arcmin,position_angle_deg,magnitude,magnitude_band
@@ -156,7 +157,7 @@ VdB 137,,reflection_nebula,313.95416667,47.41694444,,,,,,
 VdB 138,,reflection_nebula,314.32083333,48.29583333,,,,,,
 VdB 139,,reflection_nebula,315.40416667,68.16277778,,,,,,
 VdB 140,,reflection_nebula,319.32916667,58.61222222,,,,,,
-VdB 141,,reflection_nebula,319.10833333,68.26027778,,,,,,
+VdB 141,Ghost Nebula;Ghost,reflection_nebula,319.10833333,68.26027778,,,,,,
 VdB 142,,reflection_nebula,324.17083333,57.50111111,,,,,,
 VdB 143,,reflection_nebula,324.24166667,68.185,,,,,,
 VdB 144,,reflection_nebula,325.18333333,54.87222222,,,,,,

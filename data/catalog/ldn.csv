@@ -9,7 +9,8 @@
 # fetched: 2026-10-13
 # built_by: scripts/build-nebula-catalogs.py
 # Changes: 1787 named LDN rows;4 unnamed NN rows omitted; Barnard cross-identifications omitted to avoid merging distinct cloud sections.
-# Only catalogue identifiers, J2000 positions and object classes are included.
+# Catalogue identifiers, J2000 positions, object classes and familiar-name facts only.
+# common_name_provenance: scripts/build-nebula-catalogs.py COMMON_NAMES (RASC, NASA APOD, NASA/IPAC Astropix/NOIRLab).
 # No descriptive prose, imagery, sizes inferred from area, or invented magnitudes.
 # The source explicitly declares equinox=2000; positions are retained, not precessed.
 designations,common_names,object_type,ra_j2000_deg,dec_j2000_deg,constellation,size_major_arcmin,size_minor_arcmin,position_angle_deg,magnitude,magnitude_band
@@ -1241,7 +1242,7 @@ LDN 1231,,dark_nebula,349.5465,61.2735,,,,,,
 LDN 1232,,dark_nebula,349.2923,61.7733,,,,,,
 LDN 1233,,dark_nebula,349.1133,62.3398,,,,,,
 LDN 1234,,dark_nebula,349.2896,62.4066,,,,,,
-LDN 1235,,dark_nebula,333.7283,73.4161,,,,,,
+LDN 1235,Dark Shark Nebula;Shark Nebula;Dark Shark;Shark,dark_nebula,333.7283,73.4161,,,,,,
 LDN 1236,,dark_nebula,343.1802,68.9329,,,,,,
 LDN 1237,,dark_nebula,350.6512,62.6078,,,,,,
 LDN 1238,,dark_nebula,353.0809,59.7762,,,,,,
@@ -1620,7 +1621,7 @@ LDN 1618,,dark_nebula,91.4116,4.3281,,,,,,
 LDN 1619,,dark_nebula,91.1608,4.1626,,,,,,
 LDN 1620,,dark_nebula,84.1398,-0.1367,,,,,,
 LDN 1621,,dark_nebula,88.7519,2.341,,,,,,
-LDN 1622,,dark_nebula,88.6503,2.0081,,,,,,
+LDN 1622,Boogeyman Nebula;Boogeyman,dark_nebula,88.6503,2.0081,,,,,,
 LDN 1623,,dark_nebula,91.9075,3.4923,,,,,,
 LDN 1624,,dark_nebula,89.4003,2.0045,,,,,,
 LDN 1625,,dark_nebula,96.9195,5.9681,,,,,,
