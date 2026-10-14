@@ -8,9 +8,8 @@ import { localMeanSiderealTimeHours, type SiteInstant } from "./sidereal";
 const RAD = Math.PI / 180;
 type Vector = readonly [number, number, number];
 
-/** An orthonormal camera frame in horizontal Cartesian space: x north,
- * y west (negated azimuth), z zenith. Unlike an altitude/azimuth pair this
- * retains screen orientation when the centre passes through the zenith. */
+/** A horizon-aligned camera in local Cartesian space: x north, y west,
+ * z zenith. Screen right/left stays parallel to the local horizon. */
 export interface HorizontalCamera {
   readonly forward: Vector;
   readonly east: Vector;
@@ -43,8 +42,7 @@ function cameraFromBasis(forward: Vector, east: Vector): HorizontalCamera {
   return { forward: f, east: e, up: cross(f, e), altDeg, azDeg: ((-negAz % 360) + 360) % 360 };
 }
 
-/** Seed once for a goto/first activation. Subsequent interactions rotate
- * this frame; recreating it from the centre would discard accumulated roll. */
+/** Rebuild the local horizon basis; navigation must never accumulate roll. */
 export function createHorizontalCamera(altDeg: number, azDeg: number): HorizontalCamera {
   const lon = -azDeg * RAD;
   return cameraFromBasis(vector(-azDeg, altDeg), [-Math.sin(lon), Math.cos(lon), 0]);
@@ -68,6 +66,17 @@ function siteRotation(site: SiteInstant) {
     },
   };
 }
+/** Explicit target/time/observer changes keep that equatorial field centred.
+ * This is not a pointer gesture: a zenith transit may legitimately reverse
+ * heading while the local horizon remains level. At the true pole only,
+ * preserve the existing heading rather than infer one from numerical noise. */
+export function horizontalCameraAtSkyPoint(site: SiteInstant, raDeg: number, decDeg: number, previous?: HorizontalCamera | null): HorizontalCamera {
+  const direction = siteRotation(site).toHorizontal(raDeg, decDeg);
+  const [longitude, altitude] = angles(direction);
+  const azimuth = Math.hypot(direction[0], direction[1]) < 1e-12 ? previous?.azDeg ?? 0 : -longitude;
+  return createHorizontalCamera(altitude, azimuth);
+}
+
 function localVector(camera: HorizontalCamera, v: Vector): Vector {
   return [dot(v, camera.forward), dot(v, camera.east), dot(v, camera.up)];
 }
@@ -99,27 +108,49 @@ function screenRay(camera: HorizontalCamera, fovDeg: number, widthPx: number, he
   return unit(horizontalVector(camera, [1, (widthPx / 2 - x) * scale, (heightPx / 2 - y) * scale]));
 }
 
-/** Rotate the whole camera by the shortest rotation taking the target
- * pixel's current ray onto the anchor. Rodrigues' formula solves the
- * anchor in one step, with no longitude/latitude iteration or pole clamp. */
+/** Solve a cursor anchor with the camera constrained to the local horizon.
+ * With local pixel ray [1,u,v], its zenith component is
+ * (sin(alt)+v*cos(alt))/sqrt(1+u²+v²). The two analytic altitude
+ * roots replace an unstable iterative longitude/latitude solve.
+ *
+ * A zenith/nadir anchor cannot reach an arbitrary sideways pixel without
+ * rolling the horizon. At that singularity, or when reaching an anchor would
+ * reverse the heading by over 90 degrees, preserve the previous azimuth and
+ * choose the closest achievable ray in altitude. This explicitly prioritises
+ * horizon-up continuity over exact cursor anchoring at a pole.
+ */
 function anchorCamera(camera: HorizontalCamera, anchor: Vector, fovDeg: number, widthPx: number, heightPx: number, x: number, y: number): HorizontalCamera {
-  const from = screenRay(camera, fovDeg, widthPx, heightPx, x, y);
   const to = unit(anchor);
-  const cosine = Math.max(-1, Math.min(1, dot(from, to)));
-  const axis = cross(from, to);
-  function rotate(v: Vector): Vector {
-    if (cosine < -1 + 1e-12) {
-      // Antipodal rays have no unique shortest rotation. Choose a stable
-      // perpendicular axis from the existing camera instead of dividing by 0.
-      const perpendicular = unit(cross(from, Math.abs(dot(from, camera.up)) < 0.9 ? camera.up : camera.east));
-      const along = dot(perpendicular, v);
-      return [2 * along * perpendicular[0] - v[0], 2 * along * perpendicular[1] - v[1], 2 * along * perpendicular[2] - v[2]];
+  const scale = fovDeg * RAD / heightPx;
+  const u = (widthPx / 2 - x) * scale;
+  const v = (heightPx / 2 - y) * scale;
+  const norm = Math.hypot(1, u, v);
+  const rhs = to[2] * norm / Math.hypot(1, v);
+  const currentLon = -camera.azDeg * RAD;
+  const currentAlt = camera.altDeg * RAD;
+  const wrap = (angle: number) => Math.atan2(Math.sin(angle), Math.cos(angle));
+  let best: { altitude: number; longitude: number; distance: number } | undefined;
+  // atan2 of a vanishing horizontal vector would invent an arbitrary heading.
+  if (Math.hypot(to[0], to[1]) > 1e-12 && Math.abs(rhs) <= 1 + 1e-12) {
+    const root = Math.asin(Math.max(-1, Math.min(1, rhs)));
+    const offset = Math.atan(v);
+    for (const raw of [root - offset, Math.PI - root - offset]) {
+      const altitude = wrap(raw);
+      if (Math.abs(altitude) > Math.PI / 2 + 1e-12) continue;
+      const longitude = Math.atan2(to[1], to[0]) - Math.atan2(u, Math.cos(altitude) - v * Math.sin(altitude));
+      const headingDelta = wrap(longitude - currentLon);
+      if (Math.abs(headingDelta) > Math.PI / 2 + 1e-12) continue;
+      const distance = Math.hypot(altitude - currentAlt, headingDelta);
+      if (!best || distance < best.distance) best = { altitude, longitude, distance };
     }
-    const first = cross(axis, v);
-    const second = cross(axis, first);
-    return [v[0] + first[0] + second[0] / (1 + cosine), v[1] + first[1] + second[1] / (1 + cosine), v[2] + first[2] + second[2] / (1 + cosine)];
   }
-  return cameraFromBasis(rotate(camera.forward), rotate(camera.east));
+  if (best) return createHorizontalCamera(Math.max(-90, Math.min(90, best.altitude / RAD)), -best.longitude / RAD);
+  // At fixed heading, maximise anchor dot ray: A*cos(alt)+B*sin(alt).
+  const radial = to[0] * Math.cos(currentLon) + to[1] * Math.sin(currentLon);
+  const a = radial + v * to[2];
+  const b = to[2] - v * radial;
+  const altitude = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, Math.atan2(b, a)));
+  return createHorizontalCamera(altitude / RAD, camera.azDeg);
 }
 
 /** The live pointer path keeps its equatorial anchor as a vector throughout

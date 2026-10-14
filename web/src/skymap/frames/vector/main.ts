@@ -62,13 +62,13 @@
  * `screenToWorld` regardless of backend — reused directly here for the
  * canvas's own drawing math rather than re-derived. Whenever a site and
  * instant are known, `currentViewport()` also attaches a `CoordTransform`
- * from `shared/horizontalCamera.ts` that rotates RA/Dec into a persistent
- * horizontal camera frame before the same gnomonic maths runs. Its basis
- * remains continuous through zenith. Drawing, labels, FOV hit-testing and
+ * from `shared/horizontalCamera.ts` that rotates RA/Dec into the observer's
+ * level horizontal camera frame before the same gnomonic maths runs.
+ * Drawing, labels, FOV hit-testing and
  * catalogue picking all use this same viewport.
  *
- * Pan/zoom: horizontal gestures rotate the whole camera frame to preserve
- * the pointer anchor, without iterative longitude/latitude corrections.
+ * Pan/zoom: analytic horizon-constrained anchors keep the local horizon
+ * level, accepting cursor residual at an unreachable zenith/nadir anchor.
  * Unsited equatorial views retain `shared/panZoom.ts`'s existing solver.
  */
 import {
@@ -97,12 +97,11 @@ import { pickCatalogObjectId } from "../shared/objectPick";
 import { centerForAnchor, zoomAboutScreenPoint } from "../shared/panZoom";
 import { makeRoleColorResolver, resolveShapeStyle } from "../shared/roleStyle";
 import {
-  raDecToAltAz,
   type SiteInstant,
 } from "../shared/sidereal";
 import { heldTargetNeedsReanchor } from "./cameraContinuity";
 import {
-  createHorizontalCamera,
+  horizontalCameraAtSkyPoint,
   horizontalCameraViewport,
   horizontalCameraCenter,
   panHorizontalCameraToSkyPoint,
@@ -212,12 +211,9 @@ let heightPx = 600;
 let horizonSite: { latitudeDeg: number; longitudeDeg: number } | null = null;
 let horizonInstant: Date | null = null;
 
-/** The horizontal camera owns a continuous Cartesian screen basis as well
- * as its altitude/azimuth centre. A centre alone loses screen orientation
- * at the zenith: normalizing across the pole flips the tangent plane, and
- * recreating azimuth from equatorial coordinates makes it arbitrary there.
- * Pan and zoom rotate this whole basis; draw and pick use it unchanged.
- * Only a goto or first activation seeds a fresh horizon-up orientation. */
+/** The horizontal camera remains level against the local horizon. Its stored
+ * azimuth supplies a stable heading at the zenith, where heading is undefined;
+ * navigation never introduces free roll merely to keep a cursor anchor. */
 let hzCamera: HorizontalCamera | null = null;
 
 /** `null`/`undefined` when `site`/`instant` are not both known (no Planning
@@ -265,8 +261,8 @@ function zoomBy(screenX: number, screenY: number, factor: number): void {
   publishViewChange();
 }
 
-/** Keep the gesture's fixed sky point under the current pointer. The
- * horizontal path rotates its full camera basis, including at zenith. */
+/** Keep the gesture anchor where the level camera can reach it. At the poles
+ * horizon alignment takes precedence over an impossible cursor constraint. */
 function panTo(anchorRaDeg: number, anchorDecDeg: number, fovDeg: number, screenX: number, screenY: number): void {
   const siteInstant = currentSiteInstant();
   if (hzCamera !== null && siteInstant !== null) {
@@ -283,15 +279,10 @@ function panTo(anchorRaDeg: number, anchorDecDeg: number, fovDeg: number, screen
   publishViewChange();
 }
 
-/** Seeds `hzCamera` from `view.ra`/`view.dec` — the one place this file
- * still derives alt/az from equatorial coordinates via the ill-conditioned
- * inverse (`hzCamera`'s own doc comment), used only where that is genuinely
- * correct: a `goto` (an external, discontinuous "point somewhere new"
- * command) and the horizontal view's first activation this session, neither
- * of which has continuous camera motion to preserve in the first place. */
+/** Explicit goto, observer and held-target time changes preserve the viewed
+ * equatorial field, deriving its level camera at the current site/instant. */
 function seedHzCameraFromView(site: SiteInstant): void {
-  const [altDeg, azDeg] = raDecToAltAz(view.ra, view.dec, site);
-  hzCamera = createHorizontalCamera(altDeg, azDeg);
+  hzCamera = horizontalCameraAtSkyPoint(site, view.ra, view.dec, hzCamera);
 }
 
 /** One viewport for drawing, labels, FOV hit-testing and catalogue
@@ -670,6 +661,7 @@ function applyDisplay(display: DisplayOptions): void {
   // never be fought by this, and with no site there is no horizon to hold
   // fixed in the first place.
   const previousInstant = horizonInstant;
+  const previousSite = horizonSite;
   horizonSite = site;
   horizonInstant = instantValid ? instant : null;
   const siteInstant = currentSiteInstant();
@@ -678,22 +670,15 @@ function applyDisplay(display: DisplayOptions): void {
     // activations either (`hzCamera`'s own doc comment: it is authoritative
     // *only* while a horizontal view exists).
     hzCamera = null;
-  } else if (hzCamera === null) {
-    // First activation this session (or reactivation after the site/instant
-    // were lost): there is no continuous camera history yet to preserve, so
-    // seed once from the current equatorial view and leave it there — same
-    // as the old code's behaviour of not moving the view on activation
-    // (the reanchor below only ever fired on an actual instant *change*).
+  } else if (hzCamera === null || previousSite?.latitudeDeg !== site?.latitudeDeg || previousSite?.longitudeDeg !== site?.longitudeDeg) {
+    // A changed observer has a different local horizon. Preserve the viewed
+    // equatorial field, and derive its new level alt/az camera at that site.
     seedHzCameraFromView(siteInstant);
   } else if (heldTargetNeedsReanchor(previousInstant, siteInstant.instant, display.holdOnTarget === true)) {
-    // Follow the fixed equatorial target at the new instant by rotating
-    // the existing basis. Re-seeding a pole-up frame here would restore the
-    // zenith flip during timeline scrubbing even though pointer pans work.
-    // Same-instant refreshes retain the drag-established basis unchanged.
-    hzCamera = panHorizontalCameraToSkyPoint(
-      hzCamera, view.fovDeg, widthPx, heightPx, siteInstant,
-      view.ra, view.dec, widthPx / 2, heightPx / 2,
-    );
+    // Explicit target tracking differs from a pointer gesture: keep the
+    // equatorial target centred even after a zenith transit. The local
+    // horizon remains level; retain heading only at the true pole itself.
+    seedHzCameraFromView(siteInstant);
   } else if (previousInstant !== null && previousInstant.getTime() !== siteInstant.instant.getTime()) {
     // Time moved on: hold the *same* alt/az and re-derive `view.ra`/
     // `view.dec` at the new instant — `hzCamera` itself is never touched
