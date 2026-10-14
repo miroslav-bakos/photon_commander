@@ -170,7 +170,7 @@ export function Card({
   const card = (
     <div
       {...rest}
-      className={`ssc-card relative rounded-lg border border-border bg-surface shadow-[0_1px_0_var(--color-shadow)] ${padded ? "p-4" : ""} ${unlocked && customizable ? "ring-1 ring-accent/60" : ""} ${collapsed ? "h-auto min-h-0 self-start" : ""} ${height === undefined ? "" : "overflow-y-auto"} ${className}`}
+      className={`ssc-card relative rounded-lg border border-border bg-surface shadow-[0_1px_0_var(--color-shadow)] ${padded ? "p-4" : ""} ${unlocked && customizable ? "ring-1 ring-accent/60" : ""} ${collapsed ? "h-auto min-h-0 shrink-0 self-start" : ""} ${height === undefined ? "" : "overflow-y-auto"} ${className}`}
       data-layout-card-id={customizable ? cardId : undefined}
       data-layout-panel={destination}
       style={{ ...rest.style, ...(height === undefined ? {} : { height, flex: "none" }), ...(customizable && (placement?.order !== undefined || defaultOrder !== undefined || tabCustomized) ? { order: placement?.order === undefined ? defaultOrder ?? 2000 : placement.order * 2 } : {}) }}
