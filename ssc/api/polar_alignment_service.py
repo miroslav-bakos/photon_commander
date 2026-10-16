@@ -59,7 +59,9 @@ import importlib.metadata
 import logging
 import math
 import tempfile
-from collections.abc import Awaitable, Callable
+import time
+from collections.abc import Awaitable, Callable, Iterator
+from contextlib import contextmanager
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Final, Protocol
@@ -631,6 +633,7 @@ class PolarAlignmentService:
         availability: AvailabilityFn = astap_availability,
         now: Callable[[], datetime] = lambda: datetime.now(tz=UTC),
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        monotonic: Callable[[], float] = time.monotonic,
         max_slew_attempts: int = _DEFAULT_MAX_SLEW_ATTEMPTS,
         slew_retry_delay_s: float = _DEFAULT_SLEW_RETRY_DELAY_S,
         preflight_timeout_s: float = _DEFAULT_PREFLIGHT_TIMEOUT_S,
@@ -667,6 +670,7 @@ class PolarAlignmentService:
                               else availability)
         self._now = now
         self._sleep = sleep
+        self._monotonic = monotonic
         self._max_slew_attempts = max_slew_attempts
         self._slew_retry_delay_s = slew_retry_delay_s
         self._preflight_timeout_s = preflight_timeout_s
@@ -702,6 +706,34 @@ class PolarAlignmentService:
         self._persist_pending: PolarAlignmentState | None = None
         self._persist_task: asyncio.Task[None] | None = None
         self._persist_lock = asyncio.Lock()
+
+    @contextmanager
+    def _timing(self, phase: str, index: int | None = None) -> Iterator[None]:
+        """Measure diagnostics only; UTC continues to govern state and deadlines."""
+        started = self._monotonic()
+        attempt = None if index is None else self._section.points[index].attempt
+        outcome = "completed"
+        try:
+            yield
+        except asyncio.CancelledError:
+            outcome = "cancelled"
+            raise
+        except BaseException:
+            outcome = "failed"
+            raise
+        finally:
+            self._log_timing(phase, started, outcome, index=index, attempt=attempt)
+
+    def _log_timing(
+        self, phase: str, started: float, outcome: str, *,
+        index: int | None = None, attempt: int | None = None,
+    ) -> None:
+        _log.info(
+            "polar alignment timing phase=%s duration_s=%.3f outcome=%s "
+            "point=%s attempt=%s run_started_at=%s",
+            phase, self._monotonic() - started, outcome, index, attempt,
+            self._section.started_at,
+        )
 
     def _ensure_current_night(self) -> None:
         if (self._night_key is None
@@ -1440,12 +1472,15 @@ class PolarAlignmentService:
         comparison_model: PolarAlignmentModel | None,
         step_deg: float,
     ) -> None:
+        sweep_started = self._monotonic()
         successful: list[PolarPoint] = []
         self._active_mount_dec_deg = None
         try:
             if self.before_acquisition is not None:
-                await self.before_acquisition()
-            mount = await self._await_mount_preflight()
+                with self._timing("acquisition_ready"):
+                    await self.before_acquisition()
+            with self._timing("preflight"):
+                mount = await self._await_mount_preflight()
             if mount.site_latitude_deg is None or mount.site_longitude_deg is None:
                 raise PolarAlignmentSiteUnknownError("mount site is unavailable after PA preflight")
             site = mount_site(Deg(mount.site_latitude_deg), Deg(mount.site_longitude_deg))
@@ -1596,7 +1631,10 @@ class PolarAlignmentService:
             )
 
         finally:
-            await self.flush_persistence()
+            try:
+                await self.flush_persistence()
+            finally:
+                self._log_timing("sweep_total", sweep_started, self._section.status.value)
 
     async def _await_mount_preflight(self) -> MountState:
         """Wait for one fresh, site-aware, stationary poll before point 0."""
@@ -1636,7 +1674,8 @@ class PolarAlignmentService:
         # took two slews and then solved first time reads ``attempt == 2``,
         # not a solve-only count that quietly erases the slew retries.
         attempt = await self._slew_with_retry(index, ra_h, dec_deg)
-        await self._ensure_tracking_after_slew()
+        with self._timing("tracking_ready", index):
+            await self._ensure_tracking_after_slew()
 
         last_error: BaseException | None = None
         for solve_attempt in range(1, self._max_solve_attempts + 1):
@@ -1658,7 +1697,8 @@ class PolarAlignmentService:
                 )
                 self._set_point(index, error=f"{type(exc).__name__}: {exc}")
                 if solve_attempt < self._max_solve_attempts:
-                    await self._sleep(self._solve_retry_delay_s)
+                    with self._timing("solve_retry_wait", index):
+                        await self._sleep(self._solve_retry_delay_s)
                 continue
             _log.info(
                 "polar alignment: point %d solved exposure_epoch=%s ra_j2000=%.9fh "
@@ -1721,11 +1761,12 @@ class PolarAlignmentService:
                 None if mount is None else mount.tracking,
             )
             try:
-                self._active_mount_dec_deg = await self._device.mount_slew_polar(
-                    ra_hours=ra_h,
-                    dec_deg=dec_deg,
-                    fixed_mount_dec_deg=self._active_mount_dec_deg,
-                )
+                with self._timing("command_ack", index):
+                    self._active_mount_dec_deg = await self._device.mount_slew_polar(
+                        ra_hours=ra_h,
+                        dec_deg=dec_deg,
+                        fixed_mount_dec_deg=self._active_mount_dec_deg,
+                    )
                 _log.info(
                     "polar alignment: point %d commanded device declination=%.9fdeg",
                     index,
@@ -1747,9 +1788,21 @@ class PolarAlignmentService:
                     attempt,
                     exc,
                 )
-                await self._sleep(self._slew_retry_delay_s)
+                with self._timing("slew_retry_wait", index):
+                    await self._sleep(self._slew_retry_delay_s)
 
     async def _settle(self, index: int) -> None:
+        with self._timing("telemetry_settle", index):
+            await self._await_settle(index)
+        if self._post_slew_settle_s > 0:
+            _log.info(
+                "polar alignment: point %d mount is stable; waiting %.1fs before capture",
+                index, self._post_slew_settle_s,
+            )
+            with self._timing("mechanical_damping", index):
+                await self._sleep(self._post_slew_settle_s)
+
+    async def _await_settle(self, index: int) -> None:
         """Wait until the mount's own reported position is stable across two
         distinct fresh polls with ``Slewing`` reading ``False`` — see the
         module docstring for why ``Slewing`` alone is not trusted."""
@@ -1825,14 +1878,6 @@ class PolarAlignmentService:
                             mount.slewing,
                             mount.tracking,
                         )
-                        if self._post_slew_settle_s > 0:
-                            _log.info(
-                                "polar alignment: point %d mount is stable; waiting %.1fs "
-                                "before capture",
-                                index,
-                                self._post_slew_settle_s,
-                            )
-                            await self._sleep(self._post_slew_settle_s)
                         return
                 else:
                     stable = 1
@@ -1891,25 +1936,28 @@ class PolarAlignmentService:
         assert self._camera is not None
         self._publish(exposure_started_at=self._now(), exposure_duration_s=exposure_s)
         try:
-            frame, _started_at = await drive_exposure(
-                camera=self._camera,
-                telescope=self._telescope,
-                filterwheel=self._filterwheel,
-                duration_s=exposure_s,
-                context=self._exposure_context(),
-                frame_type=FrameType.LIGHT,
-                now=self._now,
-                sleep=self._sleep,
-                metadata_mode="solver",
-            )
+            with self._timing("exposure_download", index):
+                frame, _started_at = await drive_exposure(
+                    camera=self._camera,
+                    telescope=self._telescope,
+                    filterwheel=self._filterwheel,
+                    duration_s=exposure_s,
+                    context=self._exposure_context(),
+                    frame_type=FrameType.LIGHT,
+                    now=self._now,
+                    sleep=self._sleep,
+                    metadata_mode="solver",
+                )
         finally:
             self._publish(exposure_started_at=None, exposure_duration_s=None)
         with tempfile.TemporaryDirectory(prefix="ssc-polar-") as tmp_dir:
             fits_path = Path(tmp_dir) / f"point-{index}.fits"
-            solve_frame = bin_2x2_for_solving(frame)
-            await _write_solver_frame(fits_path, solve_frame)
+            with self._timing("solver_frame_prepare", index):
+                solve_frame = bin_2x2_for_solving(frame)
+                await _write_solver_frame(fits_path, solve_frame)
             self._set_point(index, status=PolarAlignmentPointStatus.SOLVING)
-            return await self._solve_with_hints(fits_path, solve_frame=solve_frame)
+            with self._timing("solver", index):
+                return await self._solve_with_hints(fits_path, solve_frame=solve_frame)
 
     def _profile_field_height(self, frame: RawFrame) -> float | None:
         # Solver-mode captures omit optical telemetry to avoid per-exposure

@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """Bottom-up recovery verifies ownership/link/camera/tracking without moving."""
+import asyncio
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
@@ -17,7 +18,8 @@ from ssc.state.store import StateStore
 
 def service_for(camera):
     return CaptureService(camera=camera, telescope=None, filterwheel=None,
-                          repo=SimpleNamespace(), settings=SimpleNamespace(),
+                          repo=SimpleNamespace(pending_dual_runs=AsyncMock(return_value=[])),
+                          settings=SimpleNamespace(),
                           state=StateStore(StateSnapshot(server_started_at=datetime.now(UTC))),
                           tasks=TaskRegistry(), section=CaptureState(), sleep=AsyncMock())
 
@@ -104,14 +106,16 @@ async def test_explicit_disconnect_remains_authoritative():
 @pytest.mark.parametrize('error', [TimeoutError('camera timed out'), DeviceGatewayError('offline')])
 async def test_adapter_translates_operational_recovery_failures(error):
     port = object.__new__(AlpacaCapturePort)
+    port._repo = SimpleNamespace(dual_capture_lock=asyncio.Lock(),
+                                 pending_dual_owned=AsyncMock(return_value=[]))
+    port._run_id = "recovery-test"
+    port._camera = port._wide_camera = None
     port._recover_operation = AsyncMock(side_effect=error)
     with pytest.raises(DeviceCommandError, match=str(error)):
         await port.recover_operation(level=2, operation='expose_frame')
 
 
 async def test_recovery_reserves_camera_while_reconnect_waits():
-    import asyncio
-
     started, release = asyncio.Event(), asyncio.Event()
     camera = SimpleNamespace(get=AsyncMock(return_value=0), put=AsyncMock())
     service = service_for(camera)

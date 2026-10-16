@@ -963,16 +963,27 @@ class RunService:
                     # A failed park is retried with the same pending run effect.
                     # Do not turn an operator Stop into another observing run.
                     retry_at = self._clock.now() + timedelta(seconds=delay)
-                await self._wait_for_supervisor_retry(record, journal, retry_at)
-                latest = reduce(await journal.read_all(record.run_id))
-                recovery = getattr(capture, "recover_operation", None)
-                if latest.run_status is not RunStatus.STOPPED and recovery is not None:
+                while True:
+                    await self._wait_for_supervisor_retry(record, journal, retry_at)
+                    if record.run_id in self._dawn_stopped:
+                        return
+                    latest = reduce(await journal.read_all(record.run_id))
+                    recovery = getattr(capture, "recover_operation", None)
+                    if (latest.run_status is RunStatus.STOPPED or recovery is None
+                            or (item is not None and latest.items.get(
+                                item.item_id, ItemRunState()).status in TERMINAL_ITEM_STATUSES)
+                            or self._clock.now() >= deadline):
+                        break
                     self._supervisor_recovering = True
                     try:
                         await recovery(level=3, operation=stage)
+                        break
                     except asyncio.CancelledError:
                         raise
                     except Exception as recovery_exc:
+                        attempt += 1
+                        delay = (5, 15, 30, 60)[min(attempt - 1, 3)]
+                        retry_at = min(self._clock.now() + timedelta(seconds=delay), deadline)
                         _log.exception("run %s supervisor recovery stage=%s attempt=%d "
                             "deadline=%s recovery_exception=%s: %s; exact checkpoint retained",
                             record.run_id, stage, attempt, deadline.isoformat(),
@@ -985,11 +996,13 @@ class RunService:
                                 kind=RecordKind.ITEM_TRANSITION, item_id=item.item_id,
                                 step=repair_progress.step, attempt=repair_progress.attempt,
                                 panel_index=repair_progress.panel_index, status=repair_progress.status,
-                                retry_at=repair_progress.retry_at,
-                                recovery_attempts=repair_progress.recovery_attempts,
+                                retry_at=retry_at,
+                                recovery_attempts=max(attempt, repair_progress.recovery_attempts),
                                 reason=f"supervisor recovery repair failed level=3 stage={stage} "
                                     f"attempt={attempt} deadline={deadline.isoformat()} "
-                                    f"exception={type(recovery_exc).__name__}: {recovery_exc}; checkpoint retained",
+                                    f"exception={type(recovery_exc).__name__}: {recovery_exc}; "
+                                    f"retry_at={retry_at.isoformat()}; checkpoint retained; "
+                                    "waiting for repair before operation replay",
                             ))
                     finally:
                         self._supervisor_recovering = False

@@ -536,7 +536,7 @@ async def drive_exposure(
 
     Polls ``Camera.ImageReady`` rather than sleeping the exposure duration and
     assuming (DESIGN.md §9.5.2) — but does sleep the known-minimum
-    ``duration_s`` once before the first poll, since the device cannot
+    remaining portion of ``duration_s`` before the first poll, since the device cannot
     possibly be ready before then and polling through that stretch would only
     spin for a long exposure.
 
@@ -586,8 +586,14 @@ async def drive_exposure(
         duration_s + DEFAULT_READY_TIMEOUT_MARGIN_S if ready_timeout_s is None else ready_timeout_s
     )
     deadline = started_at + timedelta(seconds=timeout_s)
-    if duration_s > 0:
-        await sleep(duration_s)
+    # StartExposure acknowledgement and caller handoff already consume part
+    # of this exposure. Do not wait that time twice. A backward clock step
+    # cannot extend this initial wait beyond the requested duration; ImageReady
+    # remains authoritative even if a forward clock step makes us poll early.
+    elapsed_s = max(0.0, (now() - started_at).total_seconds())
+    remaining_s = max(0.0, duration_s - elapsed_s)
+    if remaining_s > 0:
+        await sleep(remaining_s)
     if on_stage is not None:
         on_stage(CaptureStage.DOWNLOADING)
     transient_failures = 0
@@ -811,11 +817,16 @@ async def drive_exposure(
             ),
         ),
     )
+    metadata_elapsed_s = time.perf_counter() - transfer_started
+    image_started = time.perf_counter()
     frame_bytes = await _download_image_array(camera)
     _log.info(
-        "exposure timing frame=%s ready=%.3fs metadata+transfer=%.3fs total=%.3fs",
+        "exposure timing frame=%s ready=%.3fs metadata=%.3fs transfer=%.3fs "
+        "metadata+transfer=%.3fs total=%.3fs",
         frame_type.value,
         ready_elapsed_s,
+        metadata_elapsed_s,
+        time.perf_counter() - image_started,
         time.perf_counter() - transfer_started,
         time.perf_counter() - drive_started,
     )

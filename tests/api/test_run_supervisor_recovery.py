@@ -111,8 +111,9 @@ async def test_controls_during_supervisor_backoff_remain_authoritative(tmp_path,
     await db.aclose()
 
 
+@pytest.mark.parametrize('repair_failures', [0, 2])
 async def test_real_executor_sqlite_supervisor_recovers_dither_without_repeated_offset(
-    tmp_path, ephemeris, profile  # noqa: F811 - imported pytest fixtures
+    tmp_path, ephemeris, profile, repair_failures  # noqa: F811 - imported pytest fixtures
 ):
     from datetime import date
     from zoneinfo import ZoneInfo
@@ -160,12 +161,14 @@ async def test_real_executor_sqlite_supervisor_recovers_dither_without_repeated_
 
         async def recover_operation(self, *, level, operation):
             self.hooks.append((level, operation))
+            if len(self.hooks) <= repair_failures:
+                raise OSError("link still unavailable; do not replay the offset")
 
     capture = Capture(device, clock=service._clock, cycle_s=60)
     await service._drive(record, journal, device, FakeDeviceEvents(), None, None, capture)
     records = await journal.read_all(record.run_id)
     assert capture.recovery_moves == [1]
-    assert capture.hooks == [(3, 'dither')]
+    assert capture.hooks == [(3, 'dither')] * (repair_failures + 1)
     assert any('supervisor recovery' in entry.reason for entry in records)
     assert reduce(records).items[target.id].status is ItemStatus.DONE
     assert len([name for name, _args in device.calls if name is EffectName.EXPOSE_FRAME]) >= 2
@@ -348,6 +351,62 @@ async def test_persistent_focus_poll_failure_expires_panel_and_next_panel_captur
             for name, args in device.calls)
         assert not any(entry.control is ControlKind.STOP for entry in records)
         assert any('persistent first-panel focus telemetry failure' in entry.reason for entry in records)
+        assert (await service._runs.get(record.run_id)).plan_revision == 64
+    finally:
+        await db.aclose()
+
+
+@pytest.mark.parametrize('finish', ['repaired', 'stop', 'deadline'])
+async def test_failed_supervisor_repair_does_not_replay_offline_operation(
+    tmp_path, monkeypatch, finish
+):
+    db, service, record, journal = await service_fixture(tmp_path)
+    effect = EffectCall(name=EffectName.AUTOFOCUS)
+    await journal.append(JournalRecord(at=BASE_UTC, run_id=record.run_id,
+        kind=RecordKind.ITEM_TRANSITION, item_id='startup', step=2, attempt=7,
+        status=ItemStatus.RUNNING, effect=effect))
+    calls = 0
+    repairs = 0
+
+    async def executor(**kwargs):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise ExecutorRecoveryRestartError('autofocus transport unavailable')
+        if repairs != 3:
+            return  # Assert outside the supervisor, which retries operational exceptions.
+        state = reduce(await journal.read_all(record.run_id))
+        assert state.items['startup'].step == 2
+        assert state.items['startup'].attempt == 7
+        if finish == 'stop':
+            assert state.run_status is RunStatus.STOPPED
+        else:
+            assert state.items['startup'].pending_effect == effect
+
+    class Capture:
+        async def recover_operation(self, **kwargs):
+            nonlocal repairs
+            repairs += 1
+            if repairs < 3:
+                raise OSError('device still offline')
+            if finish == 'stop':
+                service._controls.push(ControlCommand(kind=ControlKind.STOP))
+                raise OSError('offline when Stop arrived')
+            if finish == 'deadline':
+                await service._clock.sleep_until(record.schedule.items[0].end_utc)
+                raise OSError('offline at item deadline')
+
+    monkeypatch.setattr(module, 'run', executor)
+    try:
+        await service._drive(record, journal, FakeDeviceCommands(), FakeDeviceEvents(),
+            None, None, Capture())
+        assert calls == 2
+        assert repairs == 3, 'failed repair must not replay autofocus offline'
+        entries = await journal.read_all(record.run_id)
+        failures = [e for e in entries if 'recovery repair failed' in e.reason]
+        assert len(failures) == (2 if finish == 'repaired' else 3)
+        assert all(e.retry_at is not None for e in failures)
+        assert failures[1].retry_at > failures[0].retry_at
         assert (await service._runs.get(record.run_id)).plan_revision == 64
     finally:
         await db.aclose()

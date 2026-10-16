@@ -1031,3 +1031,54 @@ async def test_capture_records_unknown_cfa_without_inventing_mono_or_filter(sens
         assert "SENSTYPE" not in header
     else:
         assert header["SENSTYPE"] == sensor_type
+
+
+@pytest.mark.parametrize('elapsed,expected_wait', [(2.0, 8.0), (12.0, 0.0), (-2.0, 10.0)])
+async def test_already_started_exposure_waits_only_remaining_duration(elapsed, expected_wait):
+    sleeps = []
+
+    async def sleep(seconds):
+        sleeps.append(seconds)
+
+    camera = _camera()
+    await drive_exposure(
+        camera=camera, telescope=None, filterwheel=None,
+        duration_s=10, context=_context(), frame_type=FrameType.LIGHT,
+        started_at=FIXED_NOW, now=lambda: FIXED_NOW + timedelta(seconds=elapsed),
+        sleep=sleep,
+    )
+    assert sleeps == ([expected_wait] if expected_wait else [])
+    assert camera.start_exposure_calls == []
+    assert camera.image_ready_calls >= 1
+
+
+async def test_start_ack_latency_overlaps_wait_without_bypassing_image_ready():
+    current = FIXED_NOW
+    sleeps = []
+
+    class SlowAckCamera(FakeCamera):
+        async def start_exposure(self, duration_s, *, light=True):
+            nonlocal current
+            await super().start_exposure(duration_s, light=light)
+            current += timedelta(seconds=2)
+
+    async def sleep(seconds):
+        nonlocal current
+        sleeps.append(seconds)
+        current += timedelta(seconds=seconds)
+
+    base = _camera()
+    base.properties["lastexposureduration"] = 10.0
+    camera = SlowAckCamera(frame=base.frame, connected=True, properties=base.properties,
+        ready_after_polls=2)
+    frame, started = await drive_exposure(
+        camera=camera, telescope=None, filterwheel=None,
+        duration_s=10, context=_context(), frame_type=FrameType.LIGHT,
+        now=lambda: current, sleep=sleep,
+    )
+    assert sleeps == [8, 0.1]
+    assert camera.start_exposure_calls == [(10, True)]
+    assert camera.image_ready_calls == 2
+    assert started == FIXED_NOW
+    assert frame.metadata.exposure_s == 10
+    assert np.array_equal(frame.pixels, base.frame.array.T)

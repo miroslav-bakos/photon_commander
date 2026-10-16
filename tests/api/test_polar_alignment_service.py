@@ -357,6 +357,7 @@ def _build_service(
     interactive_solve_timeout_s: float = 30.0,
     refresh_mount_polls: bool = True,
     settle_timeout_s: float = 5.0,
+    monotonic: Callable[[], float] | None = None,
 ) -> tuple[PolarAlignmentService, StateStore]:
     state = mount._state
     clock_now = now if now is not None else fixed_now()
@@ -393,6 +394,7 @@ def _build_service(
         max_solve_attempts=3,
         solve_retry_delay_s=0.0,
         interactive_solve_timeout_s=interactive_solve_timeout_s,
+        **({"monotonic": monotonic} if monotonic is not None else {}),
     )
     return service, state
 
@@ -489,11 +491,17 @@ async def test_cancel_without_a_run_refuses(ephemeris: Ephemeris) -> None:
 # --- the full run, and its progress ------------------------------------------ #
 
 
-async def test_settle_allows_mechanical_damping_after_stable_mount(ephemeris: Ephemeris) -> None:
+async def test_settle_allows_mechanical_damping_after_stable_mount(
+    ephemeris: Ephemeris, caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level("INFO", logger="ssc.api.polar_alignment_service")
+    elapsed = 0.0
     sleeps: list[float] = []
 
     async def record_sleep(seconds: float) -> None:
+        nonlocal elapsed
         sleeps.append(seconds)
+        elapsed += seconds
 
     mount = FakeMountControl(_state_with_mount(_initial_mount_state(ra_h=10.0, dec_deg=DEC_DEG)))
     service, _ = _build_service(
@@ -511,6 +519,7 @@ async def test_settle_allows_mechanical_damping_after_stable_mount(ephemeris: Ep
             ]
         ),
         sleep=record_sleep,
+        monotonic=lambda: elapsed,
         post_slew_settle_s=_DEFAULT_POST_SLEW_SETTLE_S,
         settle_poll_interval_s=_DEFAULT_SETTLE_POLL_INTERVAL_S,
     )
@@ -518,6 +527,8 @@ async def test_settle_allows_mechanical_damping_after_stable_mount(ephemeris: Ep
     await service._settle(0)
 
     assert sleeps == [_DEFAULT_SETTLE_POLL_INTERVAL_S, _DEFAULT_POST_SLEW_SETTLE_S]
+    assert "phase=telemetry_settle duration_s=0.250 outcome=completed point=0" in caplog.text
+    assert "phase=mechanical_damping duration_s=3.000 outcome=completed point=0" in caplog.text
 
 
 async def test_settle_does_not_accept_the_previous_point_as_the_new_target(
@@ -686,7 +697,10 @@ async def test_tracking_transition_retries_only_when_not_already_tracking(
     assert mount.tracking is True
 
 
-async def test_full_run_completes_and_publishes_progress(ephemeris: Ephemeris) -> None:
+async def test_full_run_completes_and_publishes_progress(
+    ephemeris: Ephemeris, caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level("INFO", logger="ssc.api.polar_alignment_service")
     start_ra_h, dec_deg, targets = _targets_for(ephemeris, count=5)
     mount_state = _initial_mount_state(ra_h=start_ra_h, dec_deg=dec_deg)
     mount = FakeMountControl(_state_with_mount(mount_state))
@@ -720,6 +734,12 @@ async def test_full_run_completes_and_publishes_progress(ephemeris: Ephemeris) -
     assert mount.slew_calls == targets
     assert solver.calls == 5
     assert mount.tracking_calls == 0
+    timing = [r.message for r in caplog.records if "polar alignment timing" in r.message]
+    for phase in ("preflight", "command_ack", "telemetry_settle", "tracking_ready",
+                  "exposure_download", "solver", "sweep_total"):
+        assert any(f"phase={phase} " in message for message in timing), phase
+    assert any("phase=sweep_total " in message and "outcome=completed" in message
+               for message in timing)
 
     # Progress was published incrementally, not only at the end — a client
     # connected mid-run would have seen every one of these.
@@ -873,7 +893,10 @@ async def test_a_slew_refusal_is_retried_not_fatal(ephemeris: Ephemeris) -> None
     assert mount.slew_calls.count(targets[0]) == 2
 
 
-async def test_a_solve_failure_is_retried_then_the_point_is_skipped(ephemeris: Ephemeris) -> None:
+async def test_a_solve_failure_is_retried_then_the_point_is_skipped(
+    ephemeris: Ephemeris, caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level("INFO", logger="ssc.api.polar_alignment_service")
     start_ra_h, dec_deg, targets = _targets_for(ephemeris, count=5)
     mount = FakeMountControl(
         _state_with_mount(_initial_mount_state(ra_h=start_ra_h, dec_deg=dec_deg))
@@ -910,9 +933,19 @@ async def test_a_solve_failure_is_retried_then_the_point_is_skipped(ephemeris: E
     assert final.points[1].attempt == 4
     assert final.points[2].status is PolarAlignmentPointStatus.FAILED
     assert final.points[2].error is not None and "not enough stars" in final.points[2].error
+    failed = [r.message for r in caplog.records
+              if "phase=solver " in r.message and "outcome=failed" in r.message]
+    assert len(failed) == 5
+    assert any("point=1 attempt=2 " in message for message in failed)
+    assert any("point=1 attempt=3 " in message for message in failed)
+    retries = [r.message for r in caplog.records if "phase=solve_retry_wait " in r.message]
+    assert len(retries) == 4
 
 
-async def test_too_few_usable_points_refuses_clearly(ephemeris: Ephemeris) -> None:
+async def test_too_few_usable_points_refuses_clearly(
+    ephemeris: Ephemeris, caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level("INFO", logger="ssc.api.polar_alignment_service")
     start_ra_h, dec_deg, targets = _targets_for(ephemeris, count=5)
     mount = FakeMountControl(
         _state_with_mount(_initial_mount_state(ra_h=start_ra_h, dec_deg=dec_deg))
@@ -939,6 +972,8 @@ async def test_too_few_usable_points_refuses_clearly(ephemeris: Ephemeris) -> No
     assert final.result is None
     assert final.error is not None
     assert "only 2 of 5" in final.error
+    assert any("phase=sweep_total " in r.message and "outcome=failed" in r.message
+               for r in caplog.records)
 
 
 async def test_a_camera_failure_is_retried_and_recovers(ephemeris: Ephemeris) -> None:
@@ -986,7 +1021,10 @@ async def test_a_camera_failure_is_retried_and_recovers(ephemeris: Ephemeris) ->
 # --- cancellation -------------------------------------------------------------- #
 
 
-async def test_cancel_stops_the_mount_and_leaves_state_coherent(ephemeris: Ephemeris) -> None:
+async def test_cancel_stops_the_mount_and_leaves_state_coherent(
+    ephemeris: Ephemeris, caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level("INFO", logger="ssc.api.polar_alignment_service")
     start_ra_h, dec_deg, targets = _targets_for(ephemeris, count=3)
     mount = FakeMountControl(
         _state_with_mount(_initial_mount_state(ra_h=start_ra_h, dec_deg=dec_deg))
@@ -1027,6 +1065,9 @@ async def test_cancel_stops_the_mount_and_leaves_state_coherent(ephemeris: Ephem
     assert final.points[0].error == "Polar alignment cancelled during this point"
     assert all(point.error is None for point in final.points[1:])
     assert mount.stop_calls == 1
+    for phase in ("solver", "sweep_total"):
+        assert any(f"phase={phase} " in r.message and "outcome=cancelled" in r.message
+                   for r in caplog.records)
     gate.set()  # release the blocked solve so nothing is left dangling
 
 
